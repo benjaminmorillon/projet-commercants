@@ -353,6 +353,18 @@ button#restart {
   margin-top: 16px;
 }
 
+.friend-row {
+  margin-top: 16px;
+}
+
+.friend-row p {
+  margin: 0 0 10px;
+}
+
+.friend-request-list:empty {
+  margin: 0;
+}
+
 .examine-btn {
   width: 100%;
   margin-top: 10px;

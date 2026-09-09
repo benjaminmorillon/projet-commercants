@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Amis</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <nav class="top-nav">
+      <a href="index.html">Mon profil</a>
+      <a href="missions.html">Missions</a>
+      <a href="lieux.html">Lieux</a>
+      <a href="validation.html">Validation</a>
+      <a href="amis.html" class="active">Amis</a>
+      <a href="commercant.html">Espace commerçant</a>
+    </nav>
+
+    <header>
+      <h1>Amis</h1>
+      <p class="subtitle">Ajoute des joueurs et découvre leur profil et leurs missions.</p>
+    </header>
+
+    <section id="no-player-warning" class="card" hidden>
+      <p>Tu n'as pas encore de profil joueur. <a href="index.html">Crée ton compte</a> d'abord.</p>
+    </section>
+
+    <section id="main-content" hidden>
+      <section class="card">
+        <h2>Ajouter un ami</h2>
+        <form id="add-friend-form">
+          <label>
+            Pseudo exact
+            <input type="text" id="friend-pseudo" required minlength="2" maxlength="40" placeholder="Ex : Bob" />
+          </label>
+          <button type="submit">Envoyer la demande</button>
+        </form>
+        <p id="add-friend-error" class="error" hidden></p>
+        <p id="add-friend-success" class="success" hidden></p>
+      </section>
+
+      <section class="card">
+        <h2>Demandes reçues</h2>
+        <div id="received-list" class="friend-request-list"></div>
+        <p id="received-empty" class="hint" hidden>Aucune demande en attente.</p>
+      </section>
+
+      <section class="card">
+        <h2>Demandes envoyées</h2>
+        <div id="sent-list" class="friend-request-list"></div>
+        <p id="sent-empty" class="hint" hidden>Aucune demande envoyée.</p>
+      </section>
+
+      <section class="card">
+        <h2>Mes amis</h2>
+        <div id="friends-list" class="friend-request-list"></div>
+        <p id="friends-empty" class="hint" hidden>Tu n'as pas encore d'amis — envoie une demande ci-dessus.</p>
+      </section>
+
+      <section id="friend-profile-section" class="card" hidden>
+        <h2 id="friend-profile-title">Profil</h2>
+        <div id="friend-profile-scores" class="scores"></div>
+        <h3>Missions accomplies récemment</h3>
+        <div id="friend-profile-missions" class="missions-list"></div>
+        <p id="friend-profile-missions-empty" class="hint" hidden>Aucune mission accomplie pour l'instant.</p>
+      </section>
+    </section>
+  </main>
+
+  <script src="utils.js"></script>
+  <script src="amis.js"></script>
+</body>
+</html>

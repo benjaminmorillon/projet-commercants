@@ -9,7 +9,8 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 3 : l'interface commerçant basique** — un commerçant crée son compte établissement, poste ses propres missions, et voit la liste de ce qu'il a publié.
 - ✅ **Brique 4 : check-in et avis** — un joueur doit être physiquement sur place (position GPS vérifiée) pour pouvoir laisser un avis sur un lieu.
 - ✅ **Brique 5 : accomplir une mission et portefeuille de crédits** — un joueur marque une mission comme accomplie, gagne du crédit, et choisit de le dépenser, le donner, ou l'accumuler.
-- ✅ **Brique 6 : validation des missions par un tiers** — une mission n'est créditée qu'une fois confirmée par un tiers (le commerçant si la mission est liée à un lieu, sinon un autre joueur désigné), via un onglet "Validation" avec pop-up de confirmation.
+- ✅ **Brique 6 : validation des missions par un tiers** — une mission n'est créditée qu'une fois confirmée par un tiers (le commerçant si la mission est liée à un lieu, avec check-in GPS obligatoire en plus ; sinon un autre joueur désigné), via un onglet "Validation" avec pop-up de confirmation.
+- ✅ **Brique 7 : système d'amis** — ajouter un ami par pseudo, accepter/refuser une demande, et consulter le profil (scores + missions accomplies) d'un ami.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -90,6 +91,8 @@ Le validateur retrouve les demandes en attente sur l'onglet **"Validation"** : c
 
 > **Note sur la "pop-up de validation"** : c'est une fenêtre qui s'affiche dans la page dès que vous ouvrez l'onglet "Validation" et cliquez sur une demande — pas une notification push envoyée sur le téléphone en temps réel (ça demanderait une brique technique supplémentaire, à envisager plus tard si besoin).
 
+L'onglet **"Amis"** permet d'ajouter un joueur en tapant son pseudo exact (recherche par pseudo comme pour la validation — un vrai carnet d'adresses/suggestions viendra plus tard). La personne voit la demande arriver dans "Demandes reçues" et clique Accepter ou Refuser. Une fois amis, chacun peut cliquer "Voir le profil" de l'autre pour voir ses 4 scores d'archétype et ses missions récemment accomplies — **réservé aux amis** : un joueur qui n'est pas ami ne peut pas consulter ce profil (testé côté API, retourne une erreur).
+
 ### 5. Arrêter le serveur
 
 Dans le terminal où il tourne, faites `Ctrl+C`.
@@ -141,17 +144,23 @@ projet-commercants/
     │   │   ├── wallet.entity.ts / transaction.entity.ts
     │   │   ├── wallet.service.ts          ← applique le gain, appelé par le module validations
     │   │   └── wallet.controller.ts       ← GET du solde + historique
-    │   └── validations/           Validation d'une mission par un tiers
-    │       ├── mission-validation.entity.ts
-    │       ├── validations.service.ts     ← détermine le validateur (commerçant ou joueur), résout la demande
-    │       ├── player-validations.controller.ts   ← demander une validation, ses propres demandes
-    │       ├── business-validations.controller.ts ← demandes à valider (commerçant)
-    │       └── validations.controller.ts  ← valider / refuser
+    │   ├── validations/           Validation d'une mission par un tiers
+    │   │   ├── mission-validation.entity.ts
+    │   │   ├── validations.service.ts     ← détermine le validateur (commerçant ou joueur), résout la demande
+    │   │   ├── player-validations.controller.ts   ← demander une validation, ses propres demandes
+    │   │   ├── business-validations.controller.ts ← demandes à valider (commerçant)
+    │   │   └── validations.controller.ts  ← valider / refuser
+    │   └── friends/                Système d'amis
+    │       ├── friendship.entity.ts
+    │       ├── friends.service.ts         ← demande, accepte/refuse, liste, profil d'un ami (réservé aux amis)
+    │       ├── player-friends.controller.ts
+    │       └── friend-requests.controller.ts      ← accepter / refuser
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── utils.js                       ← échappement du texte affiché (sécurité)
         ├── index.html / app.js            ← profil joueur + portefeuille
         ├── missions.html / missions.js    ← consultation des missions, demande de validation
         ├── validation.html / validation.js ← pop-up de validation (joueur et/ou commerçant)
+        ├── amis.html / amis.js            ← demandes d'ami, liste, profil d'un ami
         ├── commercant.html / commercant.js ← espace commerçant
         ├── lieux.html / lieux.js          ← check-in, avis, carte des lieux
         └── vendor/leaflet/                ← bibliothèque de carte (embarquée, pas de CDN)
@@ -159,4 +168,4 @@ projet-commercants/
 
 ## Et après ?
 
-La prochaine brique, décidée avec l'utilisateur : le **système d'amis** — ajouter des amis et voir leur profil/missions, côté joueur. Ensuite viendra l'**espace professionnel étendu** (création d'événements, ciblage de particuliers, envoi de publicité au-delà des simples missions), qui rejoint le "système de paiement et de ciblage" prévu section 7 des specs.
+La prochaine brique, décidée avec l'utilisateur : l'**espace professionnel étendu** — création d'événements, ciblage de particuliers, envoi de publicité au-delà des simples missions. Ça rejoint le "système de paiement et de ciblage" prévu section 7 des specs.

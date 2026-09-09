@@ -1,0 +1,19 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Mission } from '../missions/mission.entity';
+import { PlayerProfile } from '../players/player-profile.entity';
+import { User } from '../users/user.entity';
+import { MissionValidation } from '../validations/mission-validation.entity';
+import { FriendRequestsController } from './friend-requests.controller';
+import { Friendship } from './friendship.entity';
+import { FriendsService } from './friends.service';
+import { PlayerFriendsController } from './player-friends.controller';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([Friendship, User, PlayerProfile, MissionValidation, Mission]),
+  ],
+  controllers: [PlayerFriendsController, FriendRequestsController],
+  providers: [FriendsService],
+})
+export class FriendsModule {}

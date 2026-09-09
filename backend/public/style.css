@@ -26,6 +26,26 @@ body {
   padding: 32px 20px 80px;
 }
 
+.top-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.top-nav a {
+  text-decoration: none;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.top-nav a.active {
+  color: var(--accent);
+  background: #f1e9ff;
+}
+
 header h1 {
   font-size: 1.6rem;
   margin-bottom: 4px;
@@ -148,4 +168,77 @@ button#restart {
   height: 100%;
   background: var(--accent);
   border-radius: 999px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.filters label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  gap: 6px;
+}
+
+.filters select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  background: white;
+}
+
+.missions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mission-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.mission-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.mission-card-header h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.mission-card p {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.reward {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge {
+  background: #f1e9ff;
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
 }

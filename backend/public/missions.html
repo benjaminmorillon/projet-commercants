@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Missions</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <nav class="top-nav">
+      <a href="index.html">Mon profil</a>
+      <a href="missions.html" class="active">Missions</a>
+    </nav>
+
+    <header>
+      <h1>Missions</h1>
+      <p class="subtitle">Le catalogue de missions disponibles dans les lieux partenaires.</p>
+    </header>
+
+    <section class="card">
+      <h2>Filtrer</h2>
+      <form id="filters-form" class="filters">
+        <label>
+          Archétype
+          <select id="filter-archetype">
+            <option value="">Tous</option>
+            <option value="explorateur">Explorateur</option>
+            <option value="accomplisseur">Accomplisseur</option>
+            <option value="competiteur">Compétiteur</option>
+            <option value="socialisateur">Socialisateur</option>
+            <option value="mixte">Mixte (duo/groupe)</option>
+          </select>
+        </label>
+
+        <label>
+          Durée
+          <select id="filter-duree">
+            <option value="">Toutes</option>
+            <option value="courte">Courte (&lt; 15 min)</option>
+            <option value="moyenne">Moyenne (15-45 min)</option>
+            <option value="longue">Longue (45 min+)</option>
+          </select>
+        </label>
+
+        <label>
+          Thème
+          <select id="filter-theme">
+            <option value="">Tous</option>
+            <option value="culture">Culture</option>
+            <option value="gastronomie">Gastronomie</option>
+            <option value="musique">Musique</option>
+            <option value="art">Art</option>
+            <option value="humour_insolite">Humour / insolite</option>
+            <option value="sport">Sport</option>
+            <option value="jeux_esprit">Jeux d'esprit</option>
+          </select>
+        </label>
+
+        <label>
+          Mode
+          <select id="filter-mode">
+            <option value="">Tous</option>
+            <option value="solo">Solo</option>
+            <option value="duo_affinite_naturelle">Duo — affinité naturelle</option>
+            <option value="duo_defi_complementarite">Duo — défi complémentarité</option>
+            <option value="groupe">Groupe</option>
+          </select>
+        </label>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 id="missions-count">Missions</h2>
+      <div id="missions-list" class="missions-list"></div>
+      <p id="missions-empty" class="hint" hidden>Aucune mission ne correspond à ces filtres.</p>
+    </section>
+  </main>
+
+  <script src="missions.js"></script>
+</body>
+</html>

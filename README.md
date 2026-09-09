@@ -2,7 +2,10 @@
 
 Application (escape game urbain géolocalisé connectant joueurs et commerçants locaux). Voir `docs/` pour les spécifications complètes du projet.
 
-Ce dépôt contient, brique par brique, l'implémentation du projet. **Brique 1 (en cours) : le profil joueur** — questionnaire à sliders et calcul des 4 scores d'archétypes de Bartle.
+Ce dépôt contient, brique par brique, l'implémentation du projet.
+
+- ✅ **Brique 1 : le profil joueur** — questionnaire à sliders et calcul des 4 scores d'archétypes de Bartle.
+- ✅ **Brique 2 : les missions standards** — catalogue de missions consultable avec filtres (archétype, durée, thème, mode d'interaction).
 
 ---
 
@@ -62,6 +65,8 @@ Vous devriez voir s'afficher `Serveur démarré sur http://localhost:3000`.
 
 Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur. Vous devriez voir la page "Ton profil de joueur". Créez un compte, répondez au questionnaire, et vérifiez que vos 4 scores s'affichent bien à la fin.
 
+Un lien "Missions" en haut de la page mène au catalogue de missions (35 missions importées automatiquement depuis `docs/missions-catalogue.json` au premier démarrage), avec des filtres par archétype, durée, thème et mode d'interaction.
+
 ### 5. Arrêter le serveur
 
 Dans le terminal où il tourne, faites `Ctrl+C`.
@@ -91,14 +96,20 @@ projet-commercants/
 └── backend/
     ├── src/
     │   ├── users/                 Compte utilisateur (User)
-    │   └── players/               Profil joueur, questionnaire, calcul des scores
-    │       ├── archetype-scoring.ts       ← la formule de calcul des 4 scores
-    │       ├── archetype-scoring.spec.ts  ← ses tests
-    │       ├── players.controller.ts      ← les routes de l'API
-    │       └── players.service.ts         ← la logique métier
+    │   ├── players/               Profil joueur, questionnaire, calcul des scores
+    │   │   ├── archetype-scoring.ts       ← la formule de calcul des 4 scores
+    │   │   ├── archetype-scoring.spec.ts  ← ses tests
+    │   │   ├── players.controller.ts      ← les routes de l'API
+    │   │   └── players.service.ts         ← la logique métier
+    │   └── missions/              Catalogue de missions et consultation
+    │       ├── mission.entity.ts
+    │       ├── missions.service.ts        ← import du catalogue + filtres
+    │       └── missions.controller.ts     ← les routes de l'API
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
+        ├── index.html / app.js            ← profil joueur
+        └── missions.html / missions.js    ← consultation des missions
 ```
 
 ## Et après ?
 
-D'après l'ordre de construction recommandé dans les specs (`docs/projet-commercant-specs.md`, section 7), la prochaine brique est : **les missions standards** (création et consultation, sans logique IA). Le catalogue de missions de départ est déjà prêt dans `docs/missions-catalogue.json`.
+D'après l'ordre de construction recommandé dans les specs (`docs/projet-commercant-specs.md`, section 7), la prochaine brique est : **l'interface commerçant basique** (poster une mission/offre, voir les infos essentielles).

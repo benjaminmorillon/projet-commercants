@@ -89,11 +89,31 @@ label {
 }
 
 input[type="text"],
-input[type="email"] {
+input[type="email"],
+input[type="number"],
+select,
+textarea {
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
   font-size: 1rem;
+  font-family: inherit;
+  background: white;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.success {
+  color: #16a34a;
+  font-size: 0.9rem;
 }
 
 .slider-block {

@@ -6,6 +6,8 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 
 - ✅ **Brique 1 : le profil joueur** — questionnaire à sliders et calcul des 4 scores d'archétypes de Bartle.
 - ✅ **Brique 2 : les missions standards** — catalogue de missions consultable avec filtres (archétype, durée, thème, mode d'interaction).
+- ✅ **Brique 3 : l'interface commerçant basique** — un commerçant crée son compte établissement, poste ses propres missions, et voit la liste de ce qu'il a publié.
+- ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
 
@@ -67,6 +69,8 @@ Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur. Vou
 
 Un lien "Missions" en haut de la page mène au catalogue de missions (35 missions importées automatiquement depuis `docs/missions-catalogue.json` au premier démarrage), avec des filtres par archétype, durée, thème et mode d'interaction.
 
+Un lien "Espace commerçant" permet à un établissement de créer son compte, de poster ses propres missions (elles apparaissent alors aussi dans le catalogue consulté par les joueurs), et de voir la liste de ce qu'il a publié.
+
 ### 5. Arrêter le serveur
 
 Dans le terminal où il tourne, faites `Ctrl+C`.
@@ -101,15 +105,20 @@ projet-commercants/
     │   │   ├── archetype-scoring.spec.ts  ← ses tests
     │   │   ├── players.controller.ts      ← les routes de l'API
     │   │   └── players.service.ts         ← la logique métier
-    │   └── missions/              Catalogue de missions et consultation
-    │       ├── mission.entity.ts
-    │       ├── missions.service.ts        ← import du catalogue + filtres
-    │       └── missions.controller.ts     ← les routes de l'API
+    │   ├── missions/              Catalogue de missions et consultation
+    │   │   ├── mission.entity.ts
+    │   │   ├── missions.service.ts        ← import du catalogue + filtres + création par un commerçant
+    │   │   └── missions.controller.ts     ← les routes de consultation publique
+    │   └── businesses/            Compte et missions d'un commerçant
+    │       ├── business.entity.ts
+    │       ├── businesses.service.ts
+    │       └── businesses.controller.ts   ← créer un compte, poster/lister ses missions
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── index.html / app.js            ← profil joueur
-        └── missions.html / missions.js    ← consultation des missions
+        ├── missions.html / missions.js    ← consultation des missions
+        └── commercant.html / commercant.js ← espace commerçant
 ```
 
 ## Et après ?
 
-D'après l'ordre de construction recommandé dans les specs (`docs/projet-commercant-specs.md`, section 7), la prochaine brique est : **l'interface commerçant basique** (poster une mission/offre, voir les infos essentielles).
+D'après l'ordre de construction recommandé dans les specs (`docs/projet-commercant-specs.md`, section 7), la prochaine brique est : **check-in et avis** (le joueur doit être physiquement sur place pour laisser un avis — brique nécessaire à la fois pour les missions et pour la fiabilité des données).

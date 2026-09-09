@@ -1,8 +1,10 @@
 import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { randomUUID } from 'crypto';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { FindOptionsWhere, Repository } from 'typeorm';
+import { CreateMissionDto } from './dto/create-mission.dto';
 import { Mission } from './mission.entity';
 import { MissionsCatalogue } from './missions-catalogue.types';
 
@@ -76,5 +78,28 @@ export class MissionsService implements OnModuleInit {
       throw new NotFoundException('Mission introuvable.');
     }
     return mission;
+  }
+
+  createForBusiness(businessId: string, dto: CreateMissionDto): Promise<Mission> {
+    return this.missions.save(
+      this.missions.create({
+        id: randomUUID(),
+        businessId,
+        titre: dto.titre,
+        description: dto.description,
+        archetypeDominant: dto.archetypeDominant,
+        duree: dto.duree,
+        theme: dto.theme,
+        modeInteraction: dto.modeInteraction,
+        recompenseBase: dto.recompenseBase,
+      }),
+    );
+  }
+
+  findByBusiness(businessId: string): Promise<Mission[]> {
+    return this.missions.find({
+      where: { businessId },
+      order: { createdAt: 'DESC' },
+    });
   }
 }

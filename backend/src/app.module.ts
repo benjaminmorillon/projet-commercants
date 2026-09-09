@@ -7,13 +7,15 @@ import { User } from './users/user.entity';
 import { PlayerProfile } from './players/player-profile.entity';
 import { MissionsModule } from './missions/missions.module';
 import { Mission } from './missions/mission.entity';
+import { BusinessesModule } from './businesses/businesses.module';
+import { Business } from './businesses/business.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'better-sqlite3',
       database: join(__dirname, '..', 'data', 'app.sqlite'),
-      entities: [User, PlayerProfile, Mission],
+      entities: [User, PlayerProfile, Mission, Business],
       synchronize: true,
     }),
     ServeStaticModule.forRoot({
@@ -21,6 +23,7 @@ import { Mission } from './missions/mission.entity';
     }),
     PlayersModule,
     MissionsModule,
+    BusinessesModule,
   ],
 })
 export class AppModule {}

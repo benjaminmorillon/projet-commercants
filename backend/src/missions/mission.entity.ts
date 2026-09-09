@@ -48,4 +48,12 @@ export class Mission {
 
   @Column({ type: 'varchar', nullable: true })
   debloqueMissionId: string | null;
+
+  // Lieu partenaire qui propose cette mission. Absent pour les missions du
+  // catalogue de départ (pas encore rattachées à un commerçant réel).
+  @Column({ type: 'varchar', nullable: true })
+  businessId: string | null;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
 }

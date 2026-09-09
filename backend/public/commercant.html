@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Espace commerçant</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <nav class="top-nav">
+      <a href="index.html">Mon profil</a>
+      <a href="missions.html">Missions</a>
+      <a href="commercant.html" class="active">Espace commerçant</a>
+    </nav>
+
+    <header>
+      <h1>Espace commerçant</h1>
+      <p class="subtitle">Poste tes missions et fais venir de nouveaux joueurs.</p>
+    </header>
+
+    <section id="step-account" class="card">
+      <h2>1. Crée ton compte établissement</h2>
+      <form id="account-form">
+        <label>
+          Nom de l'établissement
+          <input type="text" id="nom" required minlength="2" maxlength="100" placeholder="Ex : Le Comptoir" />
+        </label>
+        <label>
+          Email
+          <input type="email" id="email" required placeholder="contact@exemple.fr" />
+        </label>
+        <label>
+          Adresse
+          <input type="text" id="adresse" required minlength="5" maxlength="200" placeholder="12 rue de la Paix, Paris" />
+        </label>
+        <label>
+          Type d'établissement
+          <select id="typeEtablissement" required>
+            <option value="bar">Bar</option>
+            <option value="hotel">Hôtel</option>
+            <option value="restaurant">Restaurant</option>
+            <option value="autre">Autre</option>
+          </select>
+        </label>
+        <label>
+          Capacité estimée (optionnel)
+          <input type="number" id="capaciteEstimee" min="1" placeholder="Ex : 60" />
+        </label>
+        <button type="submit">Continuer</button>
+      </form>
+      <p id="account-error" class="error" hidden></p>
+    </section>
+
+    <section id="step-dashboard" class="dashboard" hidden>
+      <section class="card">
+        <h2>2. Poster une mission</h2>
+        <form id="mission-form">
+          <label>
+            Titre
+            <input type="text" id="titre" required minlength="2" maxlength="100" placeholder="Ex : Le cocktail mystère" />
+          </label>
+          <label>
+            Description
+            <textarea id="description" required minlength="10" maxlength="1000" rows="3" placeholder="Ce que le joueur doit faire..."></textarea>
+          </label>
+          <label>
+            Archétype visé
+            <select id="archetypeDominant">
+              <option value="explorateur">Explorateur</option>
+              <option value="accomplisseur">Accomplisseur</option>
+              <option value="competiteur">Compétiteur</option>
+              <option value="socialisateur">Socialisateur</option>
+              <option value="mixte">Mixte (duo/groupe)</option>
+            </select>
+          </label>
+          <label>
+            Durée
+            <select id="duree">
+              <option value="courte">Courte (&lt; 15 min)</option>
+              <option value="moyenne">Moyenne (15-45 min)</option>
+              <option value="longue">Longue (45 min+)</option>
+            </select>
+          </label>
+          <label>
+            Thème
+            <select id="theme">
+              <option value="culture">Culture</option>
+              <option value="gastronomie">Gastronomie</option>
+              <option value="musique">Musique</option>
+              <option value="art">Art</option>
+              <option value="humour_insolite">Humour / insolite</option>
+              <option value="sport">Sport</option>
+              <option value="jeux_esprit">Jeux d'esprit</option>
+            </select>
+          </label>
+          <label>
+            Mode d'interaction
+            <select id="modeInteraction">
+              <option value="solo">Solo</option>
+              <option value="duo_affinite_naturelle">Duo — affinité naturelle</option>
+              <option value="duo_defi_complementarite">Duo — défi complémentarité</option>
+              <option value="groupe">Groupe</option>
+            </select>
+          </label>
+          <label>
+            Récompense (en crédits)
+            <input type="number" id="recompenseBase" required min="0.5" step="0.5" placeholder="Ex : 2" />
+          </label>
+          <button type="submit">Publier la mission</button>
+        </form>
+        <p id="mission-error" class="error" hidden></p>
+        <p id="mission-success" class="success" hidden></p>
+      </section>
+
+      <section class="card">
+        <h2>3. Tes missions postées</h2>
+        <div id="business-missions" class="missions-list"></div>
+        <p id="business-missions-empty" class="hint" hidden>Tu n'as pas encore posté de mission.</p>
+      </section>
+    </section>
+  </main>
+
+  <script src="commercant.js"></script>
+</body>
+</html>

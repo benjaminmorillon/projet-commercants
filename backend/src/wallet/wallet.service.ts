@@ -1,11 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CheckIn } from '../checkins/checkin.entity';
-import { Mission } from '../missions/mission.entity';
 import { User, UserType } from '../users/user.entity';
-import { CompleteMissionDto } from './dto/complete-mission.dto';
-import { Transaction } from './transaction.entity';
+import { Transaction, TransactionType } from './transaction.entity';
 import { Wallet } from './wallet.entity';
 
 export interface WalletSummary {
@@ -18,10 +15,6 @@ export class WalletService {
   constructor(
     @InjectRepository(User)
     private readonly users: Repository<User>,
-    @InjectRepository(Mission)
-    private readonly missions: Repository<Mission>,
-    @InjectRepository(CheckIn)
-    private readonly checkIns: Repository<CheckIn>,
     @InjectRepository(Wallet)
     private readonly wallets: Repository<Wallet>,
     @InjectRepository(Transaction)
@@ -44,38 +37,15 @@ export class WalletService {
     return this.wallets.save(this.wallets.create({ playerId, solde: 0 }));
   }
 
-  async completeMission(
+  // Appelé par le module "validations" une fois qu'un tiers a validé la
+  // mission — jamais directement par le joueur qui l'a accomplie.
+  async applyMissionReward(
     playerId: string,
     missionId: string,
-    dto: CompleteMissionDto,
-  ): Promise<WalletSummary> {
-    await this.getPlayerOrThrow(playerId);
-
-    const mission = await this.missions.findOne({ where: { id: missionId } });
-    if (!mission) {
-      throw new NotFoundException('Mission introuvable.');
-    }
-
-    if (mission.businessId) {
-      const checkin = await this.checkIns.findOne({
-        where: { playerId, businessId: mission.businessId },
-      });
-      if (!checkin) {
-        throw new BadRequestException(
-          'Tu dois être check-iné sur ce lieu pour valider cette mission.',
-        );
-      }
-    }
-
-    const alreadyDone = await this.transactions.findOne({
-      where: { playerId, reference: missionId, type: 'gagne' },
-    });
-    if (alreadyDone) {
-      throw new BadRequestException('Tu as déjà accompli cette mission.');
-    }
-
+    montant: number,
+    choix: 'depense' | 'don' | 'accumulation',
+  ): Promise<Transaction[]> {
     const wallet = await this.getOrCreateWallet(playerId);
-    const montant = mission.recompenseBase;
     const created: Transaction[] = [];
 
     wallet.solde += montant;
@@ -90,14 +60,14 @@ export class WalletService {
       ),
     );
 
-    const { choix } = dto;
     if (choix !== 'accumulation') {
+      const type: TransactionType = choix;
       wallet.solde -= montant;
       created.push(
         await this.transactions.save(
           this.transactions.create({
             playerId,
-            type: choix,
+            type,
             montant: -montant,
             reference: missionId,
           }),
@@ -108,7 +78,7 @@ export class WalletService {
     wallet.updatedAt = new Date();
     await this.wallets.save(wallet);
 
-    return { solde: wallet.solde, transactions: created };
+    return created;
   }
 
   async getWallet(playerId: string): Promise<WalletSummary> {

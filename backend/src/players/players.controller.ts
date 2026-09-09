@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { PlayersService } from './players.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { SubmitQuestionnaireDto } from './dto/submit-questionnaire.dto';
@@ -11,6 +11,11 @@ export class PlayersController {
   async create(@Body() dto: CreatePlayerDto) {
     const user = await this.players.createPlayer(dto);
     return { id: user.id, pseudo: user.pseudo, email: user.email };
+  }
+
+  @Get('search')
+  search(@Query('pseudo') pseudo: string) {
+    return this.players.searchByPseudo(pseudo);
   }
 
   @Post(':id/questionnaire')

@@ -15,6 +15,8 @@ import { Review } from './checkins/review.entity';
 import { WalletModule } from './wallet/wallet.module';
 import { Wallet } from './wallet/wallet.entity';
 import { Transaction } from './wallet/transaction.entity';
+import { ValidationsModule } from './validations/validations.module';
+import { MissionValidation } from './validations/mission-validation.entity';
 
 @Module({
   imports: [
@@ -30,6 +32,7 @@ import { Transaction } from './wallet/transaction.entity';
         Review,
         Wallet,
         Transaction,
+        MissionValidation,
       ],
       synchronize: true,
     }),
@@ -41,6 +44,7 @@ import { Transaction } from './wallet/transaction.entity';
     BusinessesModule,
     CheckinsModule,
     WalletModule,
+    ValidationsModule,
   ],
 })
 export class AppModule {}

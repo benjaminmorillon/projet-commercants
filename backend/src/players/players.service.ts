@@ -4,8 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../users/user.entity';
+import { ILike, Repository } from 'typeorm';
+import { User, UserType } from '../users/user.entity';
 import { PlayerProfile } from './player-profile.entity';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { SubmitQuestionnaireDto } from './dto/submit-questionnaire.dto';
@@ -55,5 +55,18 @@ export class PlayersService {
     });
 
     return this.profiles.save(profile);
+  }
+
+  // Recherche légère par pseudo, utilisée pour désigner un autre joueur comme
+  // validateur d'une mission (en attendant un vrai système d'amis).
+  async searchByPseudo(pseudo: string): Promise<{ id: string; pseudo: string }[]> {
+    if (!pseudo || pseudo.trim().length < 2) {
+      return [];
+    }
+    const matches = await this.users.find({
+      where: { pseudo: ILike(`%${pseudo.trim()}%`), type: UserType.PARTICULIER },
+      take: 5,
+    });
+    return matches.map((u) => ({ id: u.id, pseudo: u.pseudo }));
   }
 }

@@ -318,6 +318,13 @@ button#restart {
   margin: 4px 0 0;
 }
 
+.mission-pending {
+  color: #b45309;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 4px 0 0;
+}
+
 .complete-btn {
   width: 100%;
   margin-top: 4px;
@@ -340,6 +347,58 @@ button#restart {
   border: 1px solid var(--accent);
   padding: 8px 6px;
   font-size: 0.85rem;
+}
+
+.validation-row {
+  margin-top: 16px;
+}
+
+.examine-btn {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 36, 48, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.popup-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 380px;
+  width: 100%;
+}
+
+.popup-card h3 {
+  margin-top: 0;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.popup-actions button {
+  flex: 1;
+}
+
+.popup-refuser {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+}
+
+.popup-valider {
+  background: #16a34a;
 }
 
 .map {

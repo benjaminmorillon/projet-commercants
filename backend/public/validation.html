@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Validation</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <nav class="top-nav">
+      <a href="index.html">Mon profil</a>
+      <a href="missions.html">Missions</a>
+      <a href="lieux.html">Lieux</a>
+      <a href="validation.html" class="active">Validation</a>
+      <a href="commercant.html">Espace commerçant</a>
+    </nav>
+
+    <header>
+      <h1>Validation de missions</h1>
+      <p class="subtitle">Confirme qu'un autre joueur a bien accompli sa mission.</p>
+    </header>
+
+    <section id="no-account-warning" class="card" hidden>
+      <p>Tu n'as ni profil joueur ni compte commerçant sur cet appareil. <a href="index.html">Crée un profil joueur</a> ou <a href="commercant.html">un compte établissement</a> pour recevoir des demandes de validation.</p>
+    </section>
+
+    <section id="player-section" class="card" hidden>
+      <h2>Demandes en tant que joueur</h2>
+      <div id="player-requests" class="validation-list"></div>
+      <p id="player-requests-empty" class="hint" hidden>Aucune demande en attente.</p>
+    </section>
+
+    <section id="business-section" class="card" hidden>
+      <h2>Demandes en tant que commerçant</h2>
+      <div id="business-requests" class="validation-list"></div>
+      <p id="business-requests-empty" class="hint" hidden>Aucune demande en attente.</p>
+    </section>
+  </main>
+
+  <script src="utils.js"></script>
+  <script src="validation.js"></script>
+</body>
+</html>

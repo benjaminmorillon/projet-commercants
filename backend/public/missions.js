@@ -72,6 +72,19 @@ function renderWalletBanner(solde) {
   walletBanner.innerHTML = `Ton solde : <strong>${solde} crédit${solde > 1 ? 's' : ''}</strong>`;
 }
 
+// Pour chaque mission, ne garde que la demande de validation la plus récente
+// (une mission refusée peut être re-demandée, donc il peut y en avoir plusieurs).
+function latestStatusByMission(validationRequests) {
+  const latest = new Map();
+  validationRequests.forEach((req) => {
+    const current = latest.get(req.missionId);
+    if (!current || new Date(req.createdAt) > new Date(current.createdAt)) {
+      latest.set(req.missionId, req);
+    }
+  });
+  return latest;
+}
+
 async function loadMissions() {
   const params = new URLSearchParams();
   if (filterArchetype.value) params.set('archetype', filterArchetype.value);
@@ -81,21 +94,22 @@ async function loadMissions() {
 
   const missions = await apiCall('GET', `/missions?${params.toString()}`);
 
-  let completedMissionIds = new Set();
+  let statusByMission = new Map();
   let solde = 0;
   if (playerId) {
-    const wallet = await apiCall('GET', `/players/${playerId}/wallet`);
+    const [wallet, requested] = await Promise.all([
+      apiCall('GET', `/players/${playerId}/wallet`),
+      apiCall('GET', `/players/${playerId}/validations/requested`),
+    ]);
     solde = wallet.solde;
-    completedMissionIds = new Set(
-      wallet.transactions.filter((t) => t.type === 'gagne').map((t) => t.reference),
-    );
+    statusByMission = latestStatusByMission(requested);
   }
 
   renderWalletBanner(solde);
-  renderMissions(missions, completedMissionIds);
+  renderMissions(missions, statusByMission);
 }
 
-function renderMissions(missions, completedMissionIds) {
+function renderMissions(missions, statusByMission) {
   missionsList.innerHTML = '';
   missionsCount.textContent = `Missions (${missions.length})`;
   missionsEmpty.hidden = missions.length > 0;
@@ -115,7 +129,7 @@ function renderMissions(missions, completedMissionIds) {
       .map((label) => `<span class="badge">${label}</span>`)
       .join('');
 
-    const isDone = completedMissionIds.has(mission.id);
+    const status = statusByMission.get(mission.id);
 
     card.innerHTML = `
       <div class="mission-card-header">
@@ -124,25 +138,45 @@ function renderMissions(missions, completedMissionIds) {
       </div>
       <p>${escapeHtml(mission.description)}</p>
       <div class="badges">${badges}</div>
-      ${playerId ? renderCompletionArea(isDone) : ''}
+      ${playerId ? renderCompletionArea(mission, status) : ''}
     `;
 
-    if (playerId && !isDone) {
-      wireCompletionArea(card, mission.id);
+    if (playerId && (!status || status.statut === 'refusee')) {
+      wireCompletionArea(card, mission);
     }
 
     missionsList.appendChild(card);
   });
 }
 
-function renderCompletionArea(isDone) {
-  if (isDone) {
+function renderCompletionArea(mission, status) {
+  if (status?.statut === 'validee') {
     return `<p class="mission-done">✓ Mission accomplie</p>`;
   }
+  if (status?.statut === 'en_attente') {
+    return `<p class="mission-pending">⏳ En attente de validation${status.validatorType === 'commercant' ? ' par le commerçant' : ''}</p>`;
+  }
+
+  const refusedNote =
+    status?.statut === 'refusee'
+      ? `<p class="hint">Ta demande précédente a été refusée — tu peux réessayer.</p>`
+      : '';
+
+  const validatorField = mission.businessId
+    ? ''
+    : `
+      <label>
+        Pseudo du joueur qui doit valider
+        <input type="text" class="validator-pseudo" placeholder="Ex : Bob" />
+      </label>
+    `;
+
   return `
+    ${refusedNote}
     <button type="button" class="complete-btn">J'ai terminé cette mission</button>
     <div class="choix-credit" hidden>
-      <p class="hint">Que fais-tu du crédit gagné ?</p>
+      ${validatorField}
+      <p class="hint">Que fais-tu du crédit gagné (une fois validé) ?</p>
       <div class="choix-buttons">
         <button type="button" data-choix="depense">Dépenser</button>
         <button type="button" data-choix="don">Donner</button>
@@ -153,10 +187,11 @@ function renderCompletionArea(isDone) {
   `;
 }
 
-function wireCompletionArea(card, missionId) {
+function wireCompletionArea(card, mission) {
   const completeBtn = card.querySelector('.complete-btn');
   const choixEl = card.querySelector('.choix-credit');
   const errorEl = card.querySelector('.complete-error');
+  const validatorInput = card.querySelector('.validator-pseudo');
 
   completeBtn.addEventListener('click', () => {
     completeBtn.hidden = true;
@@ -166,16 +201,22 @@ function wireCompletionArea(card, missionId) {
   choixEl.querySelectorAll('button[data-choix]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       errorEl.hidden = true;
+
+      const dto = { choix: btn.dataset.choix };
+      if (validatorInput) {
+        dto.validatorPseudo = validatorInput.value.trim();
+      }
+
       try {
-        await apiCall('POST', `/players/${playerId}/missions/${missionId}/complete`, {
-          choix: btn.dataset.choix,
-        });
+        await apiCall(
+          'POST',
+          `/players/${playerId}/missions/${mission.id}/request-validation`,
+          dto,
+        );
         loadMissions();
       } catch (error) {
         errorEl.textContent = error.message;
         errorEl.hidden = false;
-        choixEl.hidden = true;
-        completeBtn.hidden = false;
       }
     });
   });

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Profil joueur</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Ton profil de joueur</h1>
+      <p class="subtitle">Découvre ton style de jeu en quelques secondes.</p>
+    </header>
+
+    <section id="step-account" class="card">
+      <h2>1. Crée ton compte</h2>
+      <form id="account-form">
+        <label>
+          Pseudo
+          <input type="text" id="pseudo" required minlength="2" maxlength="40" placeholder="Ex : Alex" />
+        </label>
+        <label>
+          Email
+          <input type="email" id="email" required placeholder="toi@exemple.fr" />
+        </label>
+        <button type="submit">Continuer</button>
+      </form>
+      <p id="account-error" class="error" hidden></p>
+    </section>
+
+    <section id="step-questionnaire" class="card" hidden>
+      <h2>2. Réponds au questionnaire</h2>
+      <p class="hint">Pour chaque curseur, place-toi là où tu te sens le plus juste — il n'y a pas de bonne réponse.</p>
+      <form id="questionnaire-form">
+        <div class="slider-block">
+          <div class="slider-labels">
+            <span>Découverte</span>
+            <span>Habitude</span>
+          </div>
+          <input type="range" min="0" max="100" value="50" id="decouverteHabitude" />
+        </div>
+
+        <div class="slider-block">
+          <div class="slider-labels">
+            <span>Compétition</span>
+            <span>Coopération</span>
+          </div>
+          <input type="range" min="0" max="100" value="50" id="competitionCooperation" />
+        </div>
+
+        <div class="slider-block">
+          <div class="slider-labels">
+            <span>Seul</span>
+            <span>En groupe</span>
+          </div>
+          <input type="range" min="0" max="100" value="50" id="seulGroupe" />
+        </div>
+
+        <div class="slider-block">
+          <div class="slider-labels">
+            <span>Objectif clair</span>
+            <span>Improvisation</span>
+          </div>
+          <input type="range" min="0" max="100" value="50" id="objectifImprovisation" />
+        </div>
+
+        <button type="submit">Voir mon profil</button>
+      </form>
+      <p id="questionnaire-error" class="error" hidden></p>
+    </section>
+
+    <section id="step-result" class="card" hidden>
+      <h2>3. Ton profil</h2>
+      <div id="scores" class="scores"></div>
+      <button id="restart">Recommencer</button>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

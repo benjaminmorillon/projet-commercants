@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Projet Commerçant — Lieux</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
 <body>
   <main class="app">
@@ -24,9 +25,14 @@
       <p>Tu n'as pas encore de profil joueur. <a href="index.html">Crée ton compte</a> d'abord pour pouvoir check-in.</p>
     </section>
 
+    <div id="map" class="map"></div>
+    <p id="map-empty" class="hint" hidden>Aucun lieu partenaire pour l'instant.</p>
+
     <div id="places-list"></div>
   </main>
 
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="utils.js"></script>
   <script src="lieux.js"></script>
 </body>
 </html>

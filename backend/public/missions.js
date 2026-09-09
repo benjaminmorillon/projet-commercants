@@ -78,10 +78,10 @@ function renderMissions(missions) {
 
     card.innerHTML = `
       <div class="mission-card-header">
-        <h3>${mission.titre}</h3>
+        <h3>${escapeHtml(mission.titre)}</h3>
         <span class="reward">+${mission.recompenseBase} crédit${mission.recompenseBase > 1 ? 's' : ''}</span>
       </div>
-      <p>${mission.description}</p>
+      <p>${escapeHtml(mission.description)}</p>
       <div class="badges">${badges}</div>
     `;
     missionsList.appendChild(card);

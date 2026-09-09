@@ -72,7 +72,7 @@ Un lien "Missions" en haut de la page mène au catalogue de missions (35 mission
 
 Un lien "Espace commerçant" permet à un établissement de créer son compte, de poster ses propres missions (elles apparaissent alors aussi dans le catalogue consulté par les joueurs), et de voir la liste de ce qu'il a publié.
 
-Un lien "Lieux" liste les établissements partenaires. Un joueur peut s'y "check-in" (le navigateur demande l'accès à la position GPS) : le check-in n'est validé que si vous êtes à moins de 150m des coordonnées enregistrées par le commerçant. Une fois check-iné, un formulaire d'avis (note + commentaire) apparaît.
+Un lien "Lieux" liste les établissements partenaires sur une petite carte (avec un cercle indiquant la zone de 150m où le check-in est accepté) et en dessous sous forme de fiches. Un joueur peut s'y "check-in" (le navigateur demande l'accès à la position GPS) : le check-in n'est validé que si vous êtes à moins de 150m des coordonnées enregistrées par le commerçant. Une fois check-iné, un formulaire d'avis (note + commentaire) apparaît.
 
 > **Pour tester ça vous-même en local** : créez d'abord un compte "Espace commerçant" (le navigateur enregistre votre position réelle comme coordonnées du lieu), puis allez sur "Lieux" et faites "Check-in" sur ce même lieu — comme vous êtes physiquement au même endroit, ça doit fonctionner. Sur un ordinateur de bureau (sans GPS), la position est parfois approximative (basée sur le wifi/l'IP) : si le check-in échoue en indiquant une distance de plusieurs centaines de mètres alors que vous êtes bien sur place, c'est une limite de précision de votre ordinateur, pas un bug — ça sera beaucoup plus fiable sur un téléphone avec un vrai GPS (futur usage prévu avec l'appli mobile).
 
@@ -124,10 +124,12 @@ projet-commercants/
     │       ├── checkins.service.ts        ← vérifie la distance, exige un check-in pour un avis
     │       └── checkins.controller.ts     ← les routes de l'API
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
+        ├── utils.js                       ← échappement du texte affiché (sécurité)
         ├── index.html / app.js            ← profil joueur
         ├── missions.html / missions.js    ← consultation des missions
         ├── commercant.html / commercant.js ← espace commerçant
-        └── lieux.html / lieux.js          ← check-in et avis
+        ├── lieux.html / lieux.js          ← check-in, avis, carte des lieux
+        └── vendor/leaflet/                ← bibliothèque de carte (embarquée, pas de CDN)
 ```
 
 ## Et après ?

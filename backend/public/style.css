@@ -263,6 +263,14 @@ button#restart {
   font-weight: 600;
 }
 
+.map {
+  height: 280px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  margin-top: 20px;
+  background: var(--card-bg);
+}
+
 .place-card {
   margin-top: 16px;
 }

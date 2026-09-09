@@ -114,10 +114,10 @@ async function loadMissions() {
     const date = new Date(mission.createdAt).toLocaleDateString('fr-FR');
     card.innerHTML = `
       <div class="mission-card-header">
-        <h3>${mission.titre}</h3>
+        <h3>${escapeHtml(mission.titre)}</h3>
         <span class="reward">+${mission.recompenseBase} crédit${mission.recompenseBase > 1 ? 's' : ''}</span>
       </div>
-      <p>${mission.description}</p>
+      <p>${escapeHtml(mission.description)}</p>
       <p class="hint">Publiée le ${date}</p>
     `;
     businessMissionsEl.appendChild(card);

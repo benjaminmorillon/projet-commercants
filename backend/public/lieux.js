@@ -46,10 +46,10 @@ function renderPlace(place) {
   card.className = 'card place-card';
   card.innerHTML = `
     <div class="mission-card-header">
-      <h3>${place.nom}</h3>
+      <h3>${escapeHtml(place.nom)}</h3>
       <span class="reward">${ratingLabel(place)}</span>
     </div>
-    <p class="hint">${place.typeEtablissement} — ${place.adresse}</p>
+    <p class="hint">${escapeHtml(place.typeEtablissement)} — ${escapeHtml(place.adresse)}</p>
     <button type="button" class="checkin-btn">Check-in ici</button>
     <p class="checkin-status hint" hidden></p>
     <form class="review-form" hidden>
@@ -130,7 +130,7 @@ function renderPlace(place) {
             (review) => `
               <div class="review-item">
                 <strong>${'★'.repeat(review.note)}${'☆'.repeat(5 - review.note)}</strong>
-                ${review.commentaire ? `<p>${review.commentaire}</p>` : ''}
+                ${review.commentaire ? `<p>${escapeHtml(review.commentaire)}</p>` : ''}
               </div>
             `,
           )
@@ -154,10 +154,53 @@ function renderPlace(place) {
   return card;
 }
 
+function renderMap(places) {
+  const mapEl = document.getElementById('map');
+  const mapEmpty = document.getElementById('map-empty');
+
+  if (places.length === 0) {
+    mapEl.hidden = true;
+    mapEmpty.hidden = false;
+    return;
+  }
+
+  mapEl.hidden = false;
+  mapEmpty.hidden = true;
+
+  const map = L.map(mapEl);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(map);
+
+  const markers = places.map((place) => {
+    // Cercle illustrant la zone dans laquelle le check-in est accepté (150m).
+    L.circle([place.latitude, place.longitude], {
+      radius: 150,
+      color: '#7c3aed',
+      weight: 1,
+      fillOpacity: 0.08,
+    }).addTo(map);
+
+    const marker = L.marker([place.latitude, place.longitude]).addTo(map);
+    marker.bindPopup(
+      `<strong>${escapeHtml(place.nom)}</strong><br>${escapeHtml(place.adresse)}<br>${ratingLabel(place)}`,
+    );
+    return marker;
+  });
+
+  if (markers.length === 1) {
+    map.setView(markers[0].getLatLng(), 16);
+  } else {
+    map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));
+  }
+}
+
 async function loadPlaces() {
   const places = await apiCall('GET', '/businesses');
   placesList.innerHTML = '';
   places.forEach((place) => placesList.appendChild(renderPlace(place)));
+  renderMap(places);
 }
 
 noPlayerWarning.hidden = Boolean(playerId);

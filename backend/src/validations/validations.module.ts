@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
 import { User } from '../users/user.entity';
 import { WalletModule } from '../wallet/wallet.module';
@@ -10,7 +11,10 @@ import { ValidationsController } from './validations.controller';
 import { ValidationsService } from './validations.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MissionValidation, Mission, User]), WalletModule],
+  imports: [
+    TypeOrmModule.forFeature([MissionValidation, Mission, User, CheckIn]),
+    WalletModule,
+  ],
   controllers: [
     PlayerValidationsController,
     BusinessValidationsController,

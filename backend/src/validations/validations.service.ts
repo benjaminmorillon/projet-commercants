@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
 import { User, UserType } from '../users/user.entity';
 import { WalletService } from '../wallet/wallet.service';
@@ -22,6 +23,8 @@ export class ValidationsService {
     private readonly missions: Repository<Mission>,
     @InjectRepository(User)
     private readonly users: Repository<User>,
+    @InjectRepository(CheckIn)
+    private readonly checkIns: Repository<CheckIn>,
     private readonly wallet: WalletService,
   ) {}
 
@@ -61,6 +64,14 @@ export class ValidationsService {
     let validatorPlayerId: string | null = null;
 
     if (mission.businessId) {
+      const checkin = await this.checkIns.findOne({
+        where: { playerId, businessId: mission.businessId },
+      });
+      if (!checkin) {
+        throw new BadRequestException(
+          'Tu dois être check-iné sur ce lieu avant de demander la validation de cette mission.',
+        );
+      }
       validatorType = 'commercant';
       validatorBusinessId = mission.businessId;
     } else {

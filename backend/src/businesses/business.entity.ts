@@ -25,6 +25,14 @@ export class Business {
   @Column()
   adresse: string;
 
+  // Coordonnées réelles du lieu, utilisées pour vérifier qu'un joueur qui
+  // check-in est physiquement sur place (section 2.4 des specs).
+  @Column({ type: 'float' })
+  latitude: number;
+
+  @Column({ type: 'float' })
+  longitude: number;
+
   // bar / hôtel / restaurant, etc. (section 1 des specs) — texte libre pour l'instant.
   @Column()
   typeEtablissement: string;

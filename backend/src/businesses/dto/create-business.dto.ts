@@ -1,4 +1,12 @@
-import { IsEmail, IsInt, IsOptional, IsPositive, Length } from 'class-validator';
+import {
+  IsEmail,
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsOptional,
+  IsPositive,
+  Length,
+} from 'class-validator';
 
 export class CreateBusinessDto {
   @IsEmail()
@@ -9,6 +17,12 @@ export class CreateBusinessDto {
 
   @Length(5, 200)
   adresse: string;
+
+  @IsLatitude()
+  latitude: number;
+
+  @IsLongitude()
+  longitude: number;
 
   @Length(2, 40)
   typeEtablissement: string;

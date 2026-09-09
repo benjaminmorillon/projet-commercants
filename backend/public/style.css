@@ -262,3 +262,55 @@ button#restart {
   font-size: 0.75rem;
   font-weight: 600;
 }
+
+.place-card {
+  margin-top: 16px;
+}
+
+.checkin-btn {
+  width: 100%;
+}
+
+.checkin-btn:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.checkin-status {
+  margin: 10px 0 0;
+}
+
+.review-form {
+  margin-top: 14px;
+  gap: 12px;
+}
+
+.toggle-reviews-btn {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  margin-top: 12px;
+  width: 100%;
+}
+
+.reviews-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.review-item {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  font-size: 0.9rem;
+}
+
+.review-item strong {
+  color: var(--accent);
+}
+
+.review-item p {
+  margin: 4px 0 0;
+}

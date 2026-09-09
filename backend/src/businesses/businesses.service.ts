@@ -37,6 +37,8 @@ export class BusinessesService {
         userId: user.id,
         nom: dto.nom,
         adresse: dto.adresse,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
         typeEtablissement: dto.typeEtablissement,
         capaciteEstimee: dto.capaciteEstimee ?? null,
       }),
@@ -49,5 +51,9 @@ export class BusinessesService {
       throw new NotFoundException('Commerçant introuvable.');
     }
     return business;
+  }
+
+  findAll(): Promise<Business[]> {
+    return this.businesses.find({ order: { createdAt: 'DESC' } });
   }
 }

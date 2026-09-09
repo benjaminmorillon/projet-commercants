@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { CheckinsService } from '../checkins/checkins.service';
 import { CreateMissionDto } from '../missions/dto/create-mission.dto';
 import { MissionsService } from '../missions/missions.service';
 import { BusinessesService } from './businesses.service';
@@ -9,11 +10,24 @@ export class BusinessesController {
   constructor(
     private readonly businesses: BusinessesService,
     private readonly missions: MissionsService,
+    private readonly checkins: CheckinsService,
   ) {}
 
   @Post()
   create(@Body() dto: CreateBusinessDto) {
     return this.businesses.createBusiness(dto);
+  }
+
+  @Get()
+  async findAll() {
+    const businesses = await this.businesses.findAll();
+    const ratings = await this.checkins.getRatingsSummary(businesses.map((b) => b.id));
+
+    return businesses.map((business) => ({
+      ...business,
+      noteMoyenne: ratings.get(business.id)?.noteMoyenne ?? null,
+      nombreAvis: ratings.get(business.id)?.nombreAvis ?? 0,
+    }));
   }
 
   @Get(':id')

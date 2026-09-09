@@ -7,6 +7,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 1 : le profil joueur** — questionnaire à sliders et calcul des 4 scores d'archétypes de Bartle.
 - ✅ **Brique 2 : les missions standards** — catalogue de missions consultable avec filtres (archétype, durée, thème, mode d'interaction).
 - ✅ **Brique 3 : l'interface commerçant basique** — un commerçant crée son compte établissement, poste ses propres missions, et voit la liste de ce qu'il a publié.
+- ✅ **Brique 4 : check-in et avis** — un joueur doit être physiquement sur place (position GPS vérifiée) pour pouvoir laisser un avis sur un lieu.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -26,7 +27,7 @@ Les spécifications visent une vraie appli mobile (React Native) à terme. Mais 
 
 ## Pourquoi SQLite et pas PostgreSQL ?
 
-PostgreSQL (prévu dans les specs, pour plus tard) demande d'installer et de faire tourner un serveur de base de données séparé. SQLite, c'est juste un fichier (`backend/data/app.sqlite`), créé automatiquement, zéro configuration. On basculera vers PostgreSQL quand on ajoutera la géolocalisation (section 4 des specs), qui nécessite l'extension PostGIS de Postgres.
+PostgreSQL (prévu dans les specs, pour plus tard) demande d'installer et de faire tourner un serveur de base de données séparé. SQLite, c'est juste un fichier (`backend/data/app.sqlite`), créé automatiquement, zéro configuration. La vérification de check-in (brique 4) ne demande pas encore PostGIS : la distance entre deux points GPS est calculée directement dans le code (formule de Haversine), pas par une requête géospatiale en base. On basculera vers PostgreSQL/PostGIS quand ça deviendra nécessaire (ex: "trouve tous les lieux à moins de 500m de moi" en une requête, section 4 des specs).
 
 ---
 
@@ -71,6 +72,10 @@ Un lien "Missions" en haut de la page mène au catalogue de missions (35 mission
 
 Un lien "Espace commerçant" permet à un établissement de créer son compte, de poster ses propres missions (elles apparaissent alors aussi dans le catalogue consulté par les joueurs), et de voir la liste de ce qu'il a publié.
 
+Un lien "Lieux" liste les établissements partenaires. Un joueur peut s'y "check-in" (le navigateur demande l'accès à la position GPS) : le check-in n'est validé que si vous êtes à moins de 150m des coordonnées enregistrées par le commerçant. Une fois check-iné, un formulaire d'avis (note + commentaire) apparaît.
+
+> **Pour tester ça vous-même en local** : créez d'abord un compte "Espace commerçant" (le navigateur enregistre votre position réelle comme coordonnées du lieu), puis allez sur "Lieux" et faites "Check-in" sur ce même lieu — comme vous êtes physiquement au même endroit, ça doit fonctionner. Sur un ordinateur de bureau (sans GPS), la position est parfois approximative (basée sur le wifi/l'IP) : si le check-in échoue en indiquant une distance de plusieurs centaines de mètres alors que vous êtes bien sur place, c'est une limite de précision de votre ordinateur, pas un bug — ça sera beaucoup plus fiable sur un téléphone avec un vrai GPS (futur usage prévu avec l'appli mobile).
+
 ### 5. Arrêter le serveur
 
 Dans le terminal où il tourne, faites `Ctrl+C`.
@@ -81,14 +86,14 @@ Dans le terminal où il tourne, faites `Ctrl+C`.
 
 ## Comment vérifier que tout fonctionne correctement (tests automatiques)
 
-Le calcul des scores d'archétypes est couvert par des tests automatiques. Pour les lancer :
+Le calcul des scores d'archétypes et la formule de distance GPS sont couverts par des tests automatiques. Pour les lancer :
 
 ```bash
 cd backend
 npm test
 ```
 
-Tout doit passer en vert (`3 passed`).
+Tout doit passer en vert (`6 passed`).
 
 ---
 
@@ -109,16 +114,22 @@ projet-commercants/
     │   │   ├── mission.entity.ts
     │   │   ├── missions.service.ts        ← import du catalogue + filtres + création par un commerçant
     │   │   └── missions.controller.ts     ← les routes de consultation publique
-    │   └── businesses/            Compte et missions d'un commerçant
-    │       ├── business.entity.ts
-    │       ├── businesses.service.ts
-    │       └── businesses.controller.ts   ← créer un compte, poster/lister ses missions
+    │   ├── businesses/            Compte et missions d'un commerçant
+    │   │   ├── business.entity.ts
+    │   │   ├── businesses.service.ts
+    │   │   └── businesses.controller.ts   ← créer un compte, poster/lister ses missions, lister les lieux
+    │   └── checkins/              Check-in et avis
+    │       ├── geo.ts / geo.spec.ts       ← distance GPS (Haversine) + seuil de validation
+    │       ├── checkin.entity.ts / review.entity.ts
+    │       ├── checkins.service.ts        ← vérifie la distance, exige un check-in pour un avis
+    │       └── checkins.controller.ts     ← les routes de l'API
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── index.html / app.js            ← profil joueur
         ├── missions.html / missions.js    ← consultation des missions
-        └── commercant.html / commercant.js ← espace commerçant
+        ├── commercant.html / commercant.js ← espace commerçant
+        └── lieux.html / lieux.js          ← check-in et avis
 ```
 
 ## Et après ?
 
-D'après l'ordre de construction recommandé dans les specs (`docs/projet-commercant-specs.md`, section 7), la prochaine brique est : **check-in et avis** (le joueur doit être physiquement sur place pour laisser un avis — brique nécessaire à la fois pour les missions et pour la fiabilité des données).
+D'après l'ordre de construction recommandé dans les specs (`docs/projet-commercant-specs.md`, section 7), la prochaine brique est : **le système de paiement et de ciblage** (plus complexe — à construire maintenant que le squelette des briques précédentes est validé).

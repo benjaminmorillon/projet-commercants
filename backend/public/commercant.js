@@ -16,6 +16,20 @@ function showDashboard(show) {
   stepDashboard.hidden = !show;
 }
 
+function getCurrentPosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Ton navigateur ne supporte pas la géolocalisation."));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve(position.coords),
+      () => reject(new Error("Impossible d'obtenir ta position. Autorise l'accès à la localisation et réessaie (tu dois être sur place pour créer ta fiche établissement).")),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  });
+}
+
 async function apiCall(method, path, body) {
   const response = await fetch(path, {
     method,
@@ -38,15 +52,19 @@ accountForm.addEventListener('submit', async (event) => {
 
   const capacite = document.getElementById('capaciteEstimee').value;
 
-  const dto = {
-    nom: document.getElementById('nom').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    adresse: document.getElementById('adresse').value.trim(),
-    typeEtablissement: document.getElementById('typeEtablissement').value,
-    ...(capacite ? { capaciteEstimee: Number(capacite) } : {}),
-  };
-
   try {
+    const coords = await getCurrentPosition();
+
+    const dto = {
+      nom: document.getElementById('nom').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      adresse: document.getElementById('adresse').value.trim(),
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      typeEtablissement: document.getElementById('typeEtablissement').value,
+      ...(capacite ? { capaciteEstimee: Number(capacite) } : {}),
+    };
+
     const business = await apiCall('POST', '/businesses', dto);
     businessId = business.id;
     localStorage.setItem('businessId', businessId);

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Lieux</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <nav class="top-nav">
+      <a href="index.html">Mon profil</a>
+      <a href="missions.html">Missions</a>
+      <a href="lieux.html" class="active">Lieux</a>
+      <a href="commercant.html">Espace commerçant</a>
+    </nav>
+
+    <header>
+      <h1>Lieux partenaires</h1>
+      <p class="subtitle">Check-in sur place pour débloquer la possibilité de laisser un avis.</p>
+    </header>
+
+    <section id="no-player-warning" class="card" hidden>
+      <p>Tu n'as pas encore de profil joueur. <a href="index.html">Crée ton compte</a> d'abord pour pouvoir check-in.</p>
+    </section>
+
+    <div id="places-list"></div>
+  </main>
+
+  <script src="lieux.js"></script>
+</body>
+</html>

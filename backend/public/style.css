@@ -263,6 +263,85 @@ button#restart {
   font-weight: 600;
 }
 
+.wallet-solde {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.wallet-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transaction-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.transaction-row .positive {
+  color: #16a34a;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.transaction-row .negative {
+  color: #dc2626;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wallet-banner {
+  background: #f1e9ff;
+  color: var(--accent);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 16px;
+}
+
+.wallet-banner a {
+  color: inherit;
+}
+
+.mission-done {
+  color: #16a34a;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 4px 0 0;
+}
+
+.complete-btn {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.choix-credit {
+  margin-top: 10px;
+}
+
+.choix-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.choix-buttons button {
+  flex: 1;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 8px 6px;
+  font-size: 0.85rem;
+}
+
 .map {
   height: 280px;
   border-radius: 16px;

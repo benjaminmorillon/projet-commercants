@@ -8,6 +8,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 2 : les missions standards** — catalogue de missions consultable avec filtres (archétype, durée, thème, mode d'interaction).
 - ✅ **Brique 3 : l'interface commerçant basique** — un commerçant crée son compte établissement, poste ses propres missions, et voit la liste de ce qu'il a publié.
 - ✅ **Brique 4 : check-in et avis** — un joueur doit être physiquement sur place (position GPS vérifiée) pour pouvoir laisser un avis sur un lieu.
+- ✅ **Brique 5 : accomplir une mission et portefeuille de crédits** — un joueur marque une mission comme accomplie, gagne du crédit, et choisit de le dépenser, le donner, ou l'accumuler.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -76,6 +77,8 @@ Un lien "Lieux" liste les établissements partenaires sur une petite carte (avec
 
 > **Pour tester ça vous-même en local** : créez d'abord un compte "Espace commerçant" (le navigateur enregistre votre position réelle comme coordonnées du lieu), puis allez sur "Lieux" et faites "Check-in" sur ce même lieu — comme vous êtes physiquement au même endroit, ça doit fonctionner. Sur un ordinateur de bureau (sans GPS), la position est parfois approximative (basée sur le wifi/l'IP) : si le check-in échoue en indiquant une distance de plusieurs centaines de mètres alors que vous êtes bien sur place, c'est une limite de précision de votre ordinateur, pas un bug — ça sera beaucoup plus fiable sur un téléphone avec un vrai GPS (futur usage prévu avec l'appli mobile).
 
+Sur la page "Missions", chaque mission a un bouton **"J'ai terminé cette mission"** (visible une fois que vous avez un profil joueur). En cliquant, on vous demande ce que vous faites du crédit gagné : le **dépenser**, le **donner**, ou l'**accumuler** — seule l'accumulation garde le crédit dans votre solde disponible, les deux autres choix le "consomment" immédiatement (ce sont pour l'instant des actions symboliques, tracées comme un comportement, sans vraie transaction bancaire). Une mission postée par un commerçant (donc liée à un lieu) ne peut être marquée accomplie qu'après un check-in validé sur ce lieu. Votre solde et l'historique de vos gains/dépenses sont visibles sur la page "Mon profil".
+
 ### 5. Arrêter le serveur
 
 Dans le terminal où il tourne, faites `Ctrl+C`.
@@ -118,11 +121,15 @@ projet-commercants/
     │   │   ├── business.entity.ts
     │   │   ├── businesses.service.ts
     │   │   └── businesses.controller.ts   ← créer un compte, poster/lister ses missions, lister les lieux
-    │   └── checkins/              Check-in et avis
-    │       ├── geo.ts / geo.spec.ts       ← distance GPS (Haversine) + seuil de validation
-    │       ├── checkin.entity.ts / review.entity.ts
-    │       ├── checkins.service.ts        ← vérifie la distance, exige un check-in pour un avis
-    │       └── checkins.controller.ts     ← les routes de l'API
+    │   ├── checkins/              Check-in et avis
+    │   │   ├── geo.ts / geo.spec.ts       ← distance GPS (Haversine) + seuil de validation
+    │   │   ├── checkin.entity.ts / review.entity.ts
+    │   │   ├── checkins.service.ts        ← vérifie la distance, exige un check-in pour un avis
+    │   │   └── checkins.controller.ts     ← les routes de l'API
+    │   └── wallet/                Accomplissement de mission et portefeuille
+    │       ├── wallet.entity.ts / transaction.entity.ts
+    │       ├── wallet.service.ts          ← crédite le joueur, exige un check-in si la mission a un lieu
+    │       └── wallet.controller.ts       ← les routes de l'API
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── utils.js                       ← échappement du texte affiché (sécurité)
         ├── index.html / app.js            ← profil joueur

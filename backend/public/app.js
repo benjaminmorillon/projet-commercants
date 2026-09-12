@@ -50,6 +50,22 @@ async function apiPost(path, body) {
   return data;
 }
 
+async function apiPut(path, body) {
+  const response = await fetch(path, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = Array.isArray(data.message)
+      ? data.message.join(', ')
+      : data.message || 'Une erreur est survenue.';
+    throw new Error(message);
+  }
+  return data;
+}
+
 async function apiGet(path) {
   const response = await fetch(path);
   const data = await response.json().catch(() => ({}));
@@ -94,6 +110,73 @@ async function loadProgression() {
     .join('');
   document.getElementById('badges-a-debloquer').innerHTML = progression.badgesADebloquer
     .map((b) => carte(b, false))
+    .join('');
+}
+
+// Titres et objets de collection : la partie « ce que tu as vécu » de la
+// progression (section 2.9).
+async function loadCollection() {
+  if (!playerId) return;
+
+  const collection = await apiGet(`/players/${playerId}/collection`).catch(() => null);
+  if (!collection) return;
+
+  document.getElementById('collection-section').hidden = false;
+
+  document.getElementById('titres-liste').innerHTML = collection.titres
+    .map((titre) => {
+      const actif = collection.titreEquipe?.id === titre.id;
+      if (!titre.obtenu) {
+        return `
+          <div class="titre verrouille">
+            <strong>🔒 ${escapeHtml(titre.libelle)}</strong>
+            <span class="hint">${escapeHtml(titre.condition)}</span>
+          </div>
+        `;
+      }
+      return `
+        <button type="button" class="titre${actif ? ' actif' : ''}" data-titre="${escapeHtml(titre.id)}">
+          <strong>${escapeHtml(titre.libelle)}</strong>
+          <span class="hint">${actif ? 'Affiché sur ton profil' : 'Cliquer pour l’afficher'}</span>
+        </button>
+      `;
+    })
+    .join('');
+
+  document.querySelectorAll('#titres-liste .titre[data-titre]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      // Recliquer sur le titre affiché le retire.
+      const actuel = collection.titreEquipe?.id;
+      const choisi = btn.dataset.titre === actuel ? null : btn.dataset.titre;
+      await apiPut(`/players/${playerId}/titre`, { titreId: choisi ?? undefined });
+      loadCollection();
+    });
+  });
+
+  document.getElementById('series-collection').innerHTML = collection.series
+    .map(
+      (serie) => `
+        <div class="serie">
+          <div class="serie-titre">
+            <strong>${escapeHtml(serie.nom)}</strong>
+            <span class="hint">${serie.obtenus} / ${serie.total}${serie.complete ? ' — complète !' : ''}</span>
+          </div>
+          <p class="hint">${escapeHtml(serie.description)}</p>
+          <div class="objets">
+            ${serie.items
+              .map(
+                (item) => `
+                  <div class="objet${item.obtenu ? '' : ' verrouille'}" title="${escapeHtml(item.obtenuPar)}">
+                    <span class="objet-icone">${item.obtenu ? item.icone : '·'}</span>
+                    <span>${item.obtenu ? escapeHtml(item.nom) : '???'}</span>
+                  </div>
+                `,
+              )
+              .join('')}
+          </div>
+        </div>
+      `,
+    )
     .join('');
 }
 
@@ -286,6 +369,7 @@ restartButton.addEventListener('click', () => {
   document.getElementById('profil-vivant').hidden = true;
   document.getElementById('progression-section').hidden = true;
   document.getElementById('parcours-section').hidden = true;
+  document.getElementById('collection-section').hidden = true;
   showStep('account');
 });
 
@@ -294,6 +378,7 @@ if (playerId) {
   showStep('questionnaire');
   loadParcours();
   loadProgression();
+  loadCollection();
   loadProfilVivant();
   loadWallet();
 } else {

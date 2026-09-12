@@ -118,7 +118,10 @@ function renderFriends(friends) {
 async function loadFriendProfile(friendId) {
   const data = await apiCall('GET', `/players/${playerId}/friends/${friendId}`);
   friendProfileSection.hidden = false;
-  friendProfileTitle.textContent = `Profil de ${data.friend.pseudo}`;
+  // Le titre que l'ami a choisi d'afficher s'affiche à côté de son pseudo.
+  friendProfileTitle.innerHTML = `Profil de ${escapeHtml(data.friend.pseudo)}${
+    data.titre ? `<span class="titre-joueur">${escapeHtml(data.titre)}</span>` : ''
+  }`;
 
   friendProfileScores.innerHTML = '';
   if (data.profile) {

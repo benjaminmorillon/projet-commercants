@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
+import { CollectionService } from '../collection/collection.service';
 import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
@@ -21,6 +22,8 @@ export interface EnrichedFriendRequest extends Friendship {
 
 export interface FriendProfile {
   friend: FriendSummary;
+  // Le titre que l'ami a choisi d'afficher (section 2.9), s'il en a un.
+  titre: string | null;
   profile: PlayerProfile | null;
   missionsAccomplies: { titre: string; recompenseBase: number; date: Date }[];
 }
@@ -40,6 +43,7 @@ export class FriendsService {
     private readonly missions: Repository<Mission>,
     private readonly playerEvents: PlayerEventsService,
     private readonly unlocking: UnlockingService,
+    private readonly collection: CollectionService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -169,8 +173,11 @@ export class FriendsService {
       : [];
     const missionById = new Map(missions.map((m) => [m.id, m]));
 
+    const titres = await this.collection.getTitresEquipes([friendId]);
+
     return {
       friend: { id: friend.id, pseudo: friend.pseudo },
+      titre: titres.get(friendId) ?? null,
       profile: profile ?? null,
       missionsAccomplies: validated.map((v) => ({
         titre: missionById.get(v.missionId)?.titre ?? 'Mission',

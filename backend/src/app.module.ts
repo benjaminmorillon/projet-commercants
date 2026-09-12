@@ -34,6 +34,7 @@ import { CampaignsModule } from './campaigns/campaigns.module';
 import { Campaign } from './campaigns/campaign.entity';
 import { CampaignTarget } from './campaigns/campaign-target.entity';
 import { MapModule } from './map/map.module';
+import { CollectionModule } from './collection/collection.module';
 import { UnlockingModule } from './unlocking/unlocking.module';
 import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
 
@@ -83,6 +84,7 @@ import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
     DuosModule,
     MapModule,
     UnlockingModule,
+    CollectionModule,
   ],
 })
 export class AppModule {}

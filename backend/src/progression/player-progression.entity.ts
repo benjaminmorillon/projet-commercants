@@ -14,6 +14,10 @@ export class PlayerProgression {
   @Column({ type: 'int', default: 1 })
   niveauActuel: number;
 
+  // Titre que le joueur a choisi d'afficher sur son profil (section 2.9).
+  @Column({ type: 'varchar', nullable: true })
+  titreEquipe: string | null;
+
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 }

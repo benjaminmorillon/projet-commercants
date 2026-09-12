@@ -18,6 +18,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 12 : missions duo et matching** — l'appli trouve un binôme selon l'affinité ou la complémentarité des profils, propose une mission brise-glace dans un lieu sous-fréquenté, garde le partenaire secret jusqu'à l'accord des deux, et chacun valide l'autre à la fin.
 - ✅ **Brique 13 : la carte 3D** — une carte plein écran qu'on parcourt comme un plan Google (on incline, on tourne, on zoome), où les partenaires apparaissent avec leur étiquette et leurs missions en éventail (solo ou duo), et où un clic ouvre la fiche du partenaire avec ses missions, ses avis et le check-in.
 - ✅ **Brique 14 : déblocage progressif** — tutoriel obligatoire en 3 étapes, carte voilée qu'on lève quartier par quartier en allant sur place, nombre de missions limité par jour, et fonctionnalités (profils des autres, duos, don) qui s'ouvrent au fil de la progression.
+- ✅ **Brique 15 : titres et objets de collection** — une étiquette gagnée par le comportement, que le joueur choisit d'afficher sur son profil, et deux séries d'objets souvenirs à compléter (un par type de lieu poussé, un par thème de mission mené jusqu'au bout).
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -249,6 +250,32 @@ Ces verrous sont appliqués **côté serveur**, pas seulement masqués dans la p
 
 > **Note** : si vous ouvrez la carte sans profil joueur (pas encore de compte), tout s'affiche — il n'y a personne dont on puisse connaître les découvertes. Le voile ne s'applique qu'à un joueur identifié.
 
+### Les titres et la collection
+
+La dernière partie du système de récompenses (section 2.9) : ce qui ne sert à rien mécaniquement, mais qui raconte ce que le joueur a vécu. Tout est dans la section **« Titres et collection »** de la page "Mon profil".
+
+**Les titres** sont des étiquettes gagnées par le comportement. Le joueur en choisit **une** à afficher à côté de son pseudo — ses amis la voient sur son profil. Les titres pas encore gagnés restent visibles, avec leur condition en clair, pour donner un objectif :
+
+| Titre | Condition |
+| --- | --- |
+| Nouveau venu | Offert dès l'inscription |
+| Habitué du quartier | Revenir 5 fois dans **le même** établissement |
+| Arpenteur | Lever 5 quartiers sur la carte |
+| Curieux des rues | Visiter 10 établissements différents |
+| Bon public | Publier 5 avis |
+| Âme du duo | Accomplir 3 missions à deux |
+| Main tendue | Donner 3 fois son crédit à une cause |
+| Figure locale | Atteindre le niveau 5 |
+
+Un clic sur un titre gagné l'affiche, un second clic le retire. Le serveur refuse d'équiper un titre non gagné, même en appelant l'API directement.
+
+**Les objets de collection** sont deux séries à compléter, affichées comme une vitrine où les cases non gagnées restent en `???` :
+
+- **Souvenirs de comptoir** (8 objets) — un objet par *type* d'endroit où le joueur a fait un check-in : le sous-bock 🍺 pour un bar, la tasse ébréchée ☕ pour un café, le marque-page 📚 pour une librairie, la clé de chambre 🛏️ pour un hôtel… Le type d'établissement étant saisi en texte libre par le commerçant, la reconnaissance accepte les variantes (« Bar à vin », « restaurant italien », « Café » tombent bien dans les bonnes cases).
+- **Carnet de missions** (7 objets) — un objet par thème de la taxonomie des missions mené jusqu'à validation : le carnet de notes 📜 pour la culture, la fourchette tordue 🍴 pour la gastronomie, la pièce du puzzle 🧩 pour les jeux d'esprit…
+
+Comme pour les badges, rien n'est stocké en double : titres et objets sont recalculés à partir des check-ins, des missions validées et du journal d'actions du joueur. Seul le titre *choisi* est enregistré.
+
 ### Les amis
 
 L'onglet **"Amis"** permet d'ajouter un joueur en tapant son pseudo exact (recherche par pseudo comme pour la validation — un vrai carnet d'adresses/suggestions viendra plus tard). La personne voit la demande arriver dans "Demandes reçues" et clique Accepter ou Refuser. Une fois amis, chacun peut cliquer "Voir le profil" de l'autre pour voir ses 4 scores d'archétype et ses missions récemment accomplies — **réservé aux amis** : un joueur qui n'est pas ami ne peut pas consulter ce profil (testé côté API, retourne une erreur).
@@ -270,7 +297,7 @@ cd backend
 npm test
 ```
 
-Tout doit passer en vert (`58 passed`).
+Tout doit passer en vert (`69 passed`).
 
 ---
 
@@ -344,10 +371,13 @@ projet-commercants/
     │   │   ├── missions-types.ts / .spec.ts       ← les 3 missions types proposées par chaque lieu
     │   │   ├── map.service.ts             ← lieux + missions + bonus + avancement du joueur, en un appel
     │   │   └── map.controller.ts          ← GET /map
-    │   └── unlocking/            Déblocage progressif
-    │       ├── unlock-rules.ts / .spec.ts         ← tutoriel, conditions d'ouverture, quota du jour, quadrillage de la carte
-    │       ├── zone-decouverte.entity.ts          ← les quartiers qu'un joueur a levés
-    │       └── unlocking.service.ts       ← état du joueur, verrous côté serveur, découverte d'un quartier
+    │   ├── unlocking/            Déblocage progressif
+    │   │   ├── unlock-rules.ts / .spec.ts         ← tutoriel, conditions d'ouverture, quota du jour, quadrillage de la carte
+    │   │   ├── zone-decouverte.entity.ts          ← les quartiers qu'un joueur a levés
+    │   │   └── unlocking.service.ts       ← état du joueur, verrous côté serveur, découverte d'un quartier
+    │   └── collection/           Titres et objets de collection
+    │       ├── collection-rules.ts / .spec.ts     ← catalogue des titres et des deux séries d'objets
+    │       └── collection.service.ts      ← recalcule tout depuis les actions du joueur, équipe un titre
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── utils.js                       ← échappement du texte affiché (sécurité)
         ├── index.html / app.js            ← profil joueur + portefeuille
@@ -364,6 +394,10 @@ projet-commercants/
 
 ## Et après ?
 
-Les grandes briques des specs encore ouvertes :
+Les grandes briques fonctionnelles des specs sont désormais toutes implémentées. Ce qui reste, c'est le passage du prototype à un vrai produit :
 
-- **Titres et objets de collection** (section 2.9) — le reste du système de récompenses.
+- **Le visuel** — l'interface est fonctionnelle mais volontairement brute (sauf la carte). C'est le prochain gros chantier.
+- **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
+- **Les comptes et la sécurité** — il n'y a pas encore de mot de passe ni de session : chaque page se souvient simplement de l'identifiant du joueur dans le navigateur. Indispensable avant toute mise en ligne.
+- **Les vraies transactions** — "dépenser" et "donner" sont pour l'instant symboliques, tracés comme un comportement, sans paiement réel.
+- **Les notifications push** — les validations et invitations s'affichent quand on ouvre l'onglet, pas en temps réel sur le téléphone.

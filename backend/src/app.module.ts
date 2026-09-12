@@ -24,6 +24,10 @@ import { Event } from './events/event.entity';
 import { PlayerEventsModule } from './player-events/player-events.module';
 import { PlayerEvent } from './player-events/player-event.entity';
 import { ProgressionModule } from './progression/progression.module';
+import { DuosModule } from './duos/duos.module';
+import { GroupMission } from './duos/group-mission.entity';
+import { GroupMissionParticipant } from './duos/group-mission-participant.entity';
+import { PairingOutcome } from './duos/pairing-outcome.entity';
 import { PlayerProgression } from './progression/player-progression.entity';
 import { PlayerBadge } from './progression/player-badge.entity';
 import { CampaignsModule } from './campaigns/campaigns.module';
@@ -52,6 +56,9 @@ import { CampaignTarget } from './campaigns/campaign-target.entity';
         PlayerEvent,
         PlayerProgression,
         PlayerBadge,
+        GroupMission,
+        GroupMissionParticipant,
+        PairingOutcome,
       ],
       synchronize: true,
     }),
@@ -69,6 +76,7 @@ import { CampaignTarget } from './campaigns/campaign-target.entity';
     CampaignsModule,
     PlayerEventsModule,
     ProgressionModule,
+    DuosModule,
   ],
 })
 export class AppModule {}

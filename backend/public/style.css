@@ -277,6 +277,35 @@ button#restart {
   font-weight: 600;
 }
 
+.duo-choix {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.duo-mode {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--accent);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px;
+}
+
+.duo-mode strong {
+  color: var(--accent);
+}
+
+.duo-card {
+  margin-top: 16px;
+}
+
+.mystere {
+  color: var(--accent);
+}
+
 .niveau-header {
   display: flex;
   justify-content: space-between;

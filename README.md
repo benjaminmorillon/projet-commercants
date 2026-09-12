@@ -15,6 +15,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 9 : rééquilibrage dynamique de la fréquentation** — les lieux de qualité encore peu fréquentés font gagner plus au joueur et paient moins cher leur ciblage ; les lieux saturés au regard de leur note, l'inverse.
 - ✅ **Brique 10 : profil vivant** — le profil n'est plus figé après le questionnaire : chaque action (découverte d'un lieu, mission accomplie, ami ajouté, invitation acceptée) le déplace en moyenne mobile, et le joueur voit ce qui l'a fait bouger.
 - ✅ **Brique 11 : progression** — XP gagnée à chaque action, niveaux à paliers croissants, et 8 badges qui se débloquent tout seuls.
+- ✅ **Brique 12 : missions duo et matching** — l'appli trouve un binôme selon l'affinité ou la complémentarité des profils, propose une mission brise-glace dans un lieu sous-fréquenté, garde le partenaire secret jusqu'à l'accord des deux, et chacun valide l'autre à la fin.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -131,6 +132,23 @@ Le questionnaire ne donne qu'un point de départ. Ensuite, **chaque action dépl
 
 Le calcul est une **moyenne mobile** : à chaque événement, un score ne parcourt que 8 % de la distance qui le sépare de son extrême. Un seul événement bouge donc à peine le profil (+4 points), c'est la répétition qui compte — et les pas se réduisent au fur et à mesure (4 → 3,7 → 3,4...), si bien qu'un score ne peut jamais sortir de 0–100. Sur la page **"Mon profil"**, le joueur voit ses scores à jour et la liste de ce qui les a déplacés, action par action.
 
+### Les duos
+
+C'est le cœur du projet : *« le prétexte, c'est la mission — l'important, c'est la rencontre »*. Depuis l'onglet **"Duos"**, un joueur demande un binôme selon deux modes :
+
+- **Affinité naturelle** — quelqu'un avec qui ça devrait couler tout seul ;
+- **Défi de complémentarité** — un profil à l'opposé, plus rare, plus fort si ça marche.
+
+L'appariement suit le tableau de `docs/guide-missions-sociales.md` (explorateur + socialisateur et accomplisseur + compétiteur sont "naturelles", compétiteur + socialisateur et accomplisseur + explorateur sont des "défis"), puis départage les candidats sur l'écart de profil — faible en affinité, fort en défi. Trois détails fidèles aux specs :
+
+- **La mission proposée est une brise-glace** quand il en existe une : on ne demande pas un gros effort à deux inconnus dès le premier contact (section 2.7).
+- **Le point de rendez-vous est un lieu sous-fréquenté de qualité**, choisi via le multiplicateur de rééquilibrage (section 2.2).
+- **Le partenaire reste "Partenaire mystère"** tant que les deux n'ont pas accepté, pour garder le suspense (`statut_révélation` des specs).
+
+À la fin, **chacun confirme de son côté** : c'est la validation entre partenaires pour les missions à plusieurs. Quand les deux ont confirmé, tous les deux sont crédités (récompense × multiplicateur du lieu), leur profil et leur XP bougent, et le résultat est enregistré dans `PairingOutcome`.
+
+> **Le matching apprend.** Ces résultats alimentent un taux de réussite par combinaison d'archétypes, qui départage ensuite les candidats — le "fonctionnent bien ensemble historiquement" des specs. L'historique ne pèse qu'à partir de quelques duos et ne peut jamais sauver ni couler un appariement à lui seul, juste trancher entre candidats proches.
+
 ### La progression
 
 Par-dessus le crédit monétaire, chaque action rapporte de l'**XP** (section 2.9 des specs) : 25 pour un lieu inédit, 35 pour une mission à plusieurs, 30 pour un défi compétitif, 20 pour une mission solo ou un ami, 15 pour un don ou une invitation acceptée, 10 pour un avis, 5 pour un retour dans un lieu connu.
@@ -174,14 +192,14 @@ Dans le terminal où il tourne, faites `Ctrl+C`.
 
 ## Comment vérifier que tout fonctionne correctement (tests automatiques)
 
-Le calcul des scores d'archétypes, la formule de distance GPS, le multiplicateur de rééquilibrage, le moteur d'évolution du profil et le barème d'XP/badges sont couverts par des tests automatiques. Pour les lancer :
+Le calcul des scores d'archétypes, la formule de distance GPS, le multiplicateur de rééquilibrage, le moteur d'évolution du profil, le barème d'XP/badges et le matching des duos sont couverts par des tests automatiques. Pour les lancer :
 
 ```bash
 cd backend
 npm test
 ```
 
-Tout doit passer en vert (`27 passed`).
+Tout doit passer en vert (`39 passed`).
 
 ---
 
@@ -234,6 +252,11 @@ projet-commercants/
     │   │   ├── event-weights.ts / .spec.ts        ← poids par action + moyenne mobile
     │   │   ├── player-event.entity.ts
     │   │   └── player-events.service.ts   ← enregistre l'action, recalcule le profil
+    │   ├── duos/                 Missions à plusieurs et matching
+    │   │   ├── matching.ts / .spec.ts             ← affinité, complémentarité, choix du lieu
+    │   │   ├── group-mission.entity.ts / group-mission-participant.entity.ts
+    │   │   ├── pairing-outcome.entity.ts          ← ce que le duo a donné, pour apprendre
+    │   │   └── duos.service.ts            ← proposer, accepter, valider mutuellement
     │   ├── progression/          XP, niveaux et badges
     │   │   ├── xp-rules.ts / .spec.ts             ← barème, courbe de niveaux, catalogue de badges
     │   │   ├── player-progression.entity.ts / player-badge.entity.ts
@@ -262,6 +285,5 @@ projet-commercants/
 
 Les grandes briques des specs encore ouvertes :
 
-- **Missions duo/groupe et IA de matching** (sections 2.2 et 2.7) — la brique la plus avancée, qui permettrait aussi la validation de mission entre partenaires de duo.
 - **Déblocage progressif** (section 2.9) — carte voilée au départ, fonctionnalités et missions qui s'ouvrent avec le niveau.
 - **Titres et objets de collection** (section 2.9) — le reste du système de récompenses.

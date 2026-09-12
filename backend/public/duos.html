@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Duos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <nav class="top-nav">
+      <a href="index.html">Mon profil</a>
+      <a href="missions.html">Missions</a>
+      <a href="duos.html" class="active">Duos</a>
+      <a href="lieux.html">Lieux</a>
+      <a href="invitations.html">Invitations</a>
+      <a href="validation.html">Validation</a>
+      <a href="amis.html">Amis</a>
+      <a href="commercant.html">Espace commerçant</a>
+    </nav>
+
+    <header>
+      <h1>Duos</h1>
+      <p class="subtitle">On te trouve quelqu'un avec qui faire une mission. Le prétexte, c'est la mission — l'important, c'est la rencontre.</p>
+    </header>
+
+    <section id="no-player-warning" class="card" hidden>
+      <p>Tu n'as pas encore de profil joueur. <a href="index.html">Crée ton compte</a> et réponds au questionnaire pour qu'on puisse t'apparier.</p>
+    </section>
+
+    <section id="proposer-section" class="card" hidden>
+      <h2>Trouve-moi un binôme</h2>
+      <div class="duo-choix">
+        <button type="button" class="duo-mode" data-mode="affinite_naturelle">
+          <strong>Affinité naturelle</strong>
+          <span class="hint">Quelqu'un avec qui ça devrait couler tout seul.</span>
+        </button>
+        <button type="button" class="duo-mode" data-mode="defi_complementarite">
+          <strong>Défi de complémentarité</strong>
+          <span class="hint">Un profil à l'opposé du tien. Plus rare, plus fort si ça marche.</span>
+        </button>
+      </div>
+      <p id="proposer-error" class="error" hidden></p>
+    </section>
+
+    <div id="duos-list"></div>
+    <p id="duos-empty" class="hint" hidden>Aucun duo pour l'instant.</p>
+  </main>
+
+  <script src="utils.js"></script>
+  <script src="duos.js"></script>
+</body>
+</html>

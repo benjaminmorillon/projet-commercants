@@ -277,6 +277,46 @@ button#restart {
   font-weight: 600;
 }
 
+.niveau-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.niveau-badge {
+  background: var(--accent);
+  color: white;
+  border-radius: 999px;
+  padding: 5px 16px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.badge-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.82rem;
+}
+
+.badge-card.verrouille {
+  opacity: 0.45;
+}
+
+.badge-icone {
+  font-size: 1.5rem;
+}
+
 .events-list {
   display: flex;
   flex-direction: column;

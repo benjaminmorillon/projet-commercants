@@ -86,6 +86,24 @@
       <button id="restart">Recommencer</button>
     </section>
 
+    <section id="progression-section" class="card" hidden>
+      <div class="niveau-header">
+        <span class="niveau-badge" id="niveau-actuel">Niveau 1</span>
+        <span class="hint" id="xp-total">0 XP</span>
+      </div>
+      <div class="score-bar-track">
+        <div class="score-bar-fill" id="xp-bar" style="width: 0%"></div>
+      </div>
+      <p class="hint" id="xp-detail"></p>
+
+      <h3>Badges obtenus</h3>
+      <div id="badges-obtenus" class="badges-grid"></div>
+      <p id="badges-obtenus-empty" class="hint" hidden>Aucun badge pour l'instant — ça va venir.</p>
+
+      <h3>À débloquer</h3>
+      <div id="badges-a-debloquer" class="badges-grid"></div>
+    </section>
+
     <section id="profil-vivant" class="card" hidden>
       <h2>Ton profil aujourd'hui</h2>
       <p class="hint">Ton profil n'est pas figé : il bouge à chaque action — un lieu découvert, une mission accomplie, une rencontre.</p>

@@ -14,6 +14,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 8 : espace professionnel** — carte de la concurrence avec filtres, création d'événements en quelques clics, ciblage de joueurs (curseurs de profil, missions réussies, somme allouée par personne), message + image envoyés aux cibles, qui acceptent ou refusent et laissent un retour que le commerçant voit.
 - ✅ **Brique 9 : rééquilibrage dynamique de la fréquentation** — les lieux de qualité encore peu fréquentés font gagner plus au joueur et paient moins cher leur ciblage ; les lieux saturés au regard de leur note, l'inverse.
 - ✅ **Brique 10 : profil vivant** — le profil n'est plus figé après le questionnaire : chaque action (découverte d'un lieu, mission accomplie, ami ajouté, invitation acceptée) le déplace en moyenne mobile, et le joueur voit ce qui l'a fait bouger.
+- ✅ **Brique 11 : progression** — XP gagnée à chaque action, niveaux à paliers croissants, et 8 badges qui se débloquent tout seuls.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -130,6 +131,14 @@ Le questionnaire ne donne qu'un point de départ. Ensuite, **chaque action dépl
 
 Le calcul est une **moyenne mobile** : à chaque événement, un score ne parcourt que 8 % de la distance qui le sépare de son extrême. Un seul événement bouge donc à peine le profil (+4 points), c'est la répétition qui compte — et les pas se réduisent au fur et à mesure (4 → 3,7 → 3,4...), si bien qu'un score ne peut jamais sortir de 0–100. Sur la page **"Mon profil"**, le joueur voit ses scores à jour et la liste de ce qui les a déplacés, action par action.
 
+### La progression
+
+Par-dessus le crédit monétaire, chaque action rapporte de l'**XP** (section 2.9 des specs) : 25 pour un lieu inédit, 35 pour une mission à plusieurs, 30 pour un défi compétitif, 20 pour une mission solo ou un ami, 15 pour un don ou une invitation acceptée, 10 pour un avis, 5 pour un retour dans un lieu connu.
+
+Les **niveaux** demandent 100 XP de plus à chaque palier (niveau 2 à 100 XP, niveau 3 à 300, niveau 4 à 600...), donc la montée ralentit naturellement. Huit **badges** se débloquent tout seuls dès que la condition est remplie : première mission, 5 puis 15 lieux différents, 5 missions, première mission à plusieurs, 3 avis, 3 amis, premier don. La page "Mon profil" affiche le niveau, la barre d'XP vers le palier suivant, les badges obtenus et ceux qui restent à débloquer (grisés, avec leur condition).
+
+> Les badges sont recalculés à partir du **journal d'événements** : c'est la même source de vérité que le profil vivant, pas des compteurs tenus en parallèle qui pourraient diverger.
+
 ### Le rééquilibrage de la fréquentation
 
 C'est le principe central des specs (section 4) : pousser les joueurs vers les lieux **qualitatifs mais sous-fréquentés**, sans jamais avantager un lieu simplement parce qu'il est vide. Chaque établissement reçoit un **multiplicateur**, recalculé à la volée :
@@ -165,14 +174,14 @@ Dans le terminal où il tourne, faites `Ctrl+C`.
 
 ## Comment vérifier que tout fonctionne correctement (tests automatiques)
 
-Le calcul des scores d'archétypes, la formule de distance GPS, le multiplicateur de rééquilibrage et le moteur d'évolution du profil sont couverts par des tests automatiques. Pour les lancer :
+Le calcul des scores d'archétypes, la formule de distance GPS, le multiplicateur de rééquilibrage, le moteur d'évolution du profil et le barème d'XP/badges sont couverts par des tests automatiques. Pour les lancer :
 
 ```bash
 cd backend
 npm test
 ```
 
-Tout doit passer en vert (`19 passed`).
+Tout doit passer en vert (`27 passed`).
 
 ---
 
@@ -225,6 +234,10 @@ projet-commercants/
     │   │   ├── event-weights.ts / .spec.ts        ← poids par action + moyenne mobile
     │   │   ├── player-event.entity.ts
     │   │   └── player-events.service.ts   ← enregistre l'action, recalcule le profil
+    │   ├── progression/          XP, niveaux et badges
+    │   │   ├── xp-rules.ts / .spec.ts             ← barème, courbe de niveaux, catalogue de badges
+    │   │   ├── player-progression.entity.ts / player-badge.entity.ts
+    │   │   └── progression.service.ts     ← crédite l'XP et attribue les badges
     │   ├── balancing/            Rééquilibrage de la fréquentation
     │   │   ├── place-multiplier.ts / .spec.ts     ← la formule et ses tests
     │   │   └── balancing.service.ts       ← visites 14 jours, note, multiplicateur par lieu
@@ -250,5 +263,5 @@ projet-commercants/
 Les grandes briques des specs encore ouvertes :
 
 - **Missions duo/groupe et IA de matching** (sections 2.2 et 2.7) — la brique la plus avancée, qui permettrait aussi la validation de mission entre partenaires de duo.
-- **Progression du joueur** (section 2.9) — XP, niveaux, badges, déblocage progressif de la carte.
-- **Évolution continue du profil** (section 2.1) — recalculer les 4 scores à chaque action du joueur via un moteur d'événements, au lieu du seul questionnaire initial.
+- **Déblocage progressif** (section 2.9) — carte voilée au départ, fonctionnalités et missions qui s'ouvrent avec le niveau.
+- **Titres et objets de collection** (section 2.9) — le reste du système de récompenses.

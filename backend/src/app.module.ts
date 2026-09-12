@@ -23,6 +23,9 @@ import { EventsModule } from './events/events.module';
 import { Event } from './events/event.entity';
 import { PlayerEventsModule } from './player-events/player-events.module';
 import { PlayerEvent } from './player-events/player-event.entity';
+import { ProgressionModule } from './progression/progression.module';
+import { PlayerProgression } from './progression/player-progression.entity';
+import { PlayerBadge } from './progression/player-badge.entity';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { Campaign } from './campaigns/campaign.entity';
 import { CampaignTarget } from './campaigns/campaign-target.entity';
@@ -47,6 +50,8 @@ import { CampaignTarget } from './campaigns/campaign-target.entity';
         Campaign,
         CampaignTarget,
         PlayerEvent,
+        PlayerProgression,
+        PlayerBadge,
       ],
       synchronize: true,
     }),
@@ -63,6 +68,7 @@ import { CampaignTarget } from './campaigns/campaign-target.entity';
     EventsModule,
     CampaignsModule,
     PlayerEventsModule,
+    ProgressionModule,
   ],
 })
 export class AppModule {}

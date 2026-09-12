@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PlayerProfile } from '../players/player-profile.entity';
+import { ProgressionService } from '../progression/progression.service';
 import {
   applyEventToScores,
   ArchetypeScores,
@@ -25,6 +26,7 @@ export class PlayerEventsService {
     private readonly events: Repository<PlayerEvent>,
     @InjectRepository(PlayerProfile)
     private readonly profiles: Repository<PlayerProfile>,
+    private readonly progression: ProgressionService,
   ) {}
 
   /**
@@ -54,7 +56,7 @@ export class PlayerEventsService {
     Object.assign(profile, apres, { updatedAt: new Date() });
     await this.profiles.save(profile);
 
-    return this.events.save(
+    const evenement = await this.events.save(
       this.events.create({
         playerId,
         type,
@@ -66,6 +68,11 @@ export class PlayerEventsService {
         missionId: context.missionId ?? null,
       }),
     );
+
+    // La même action nourrit la progression : XP, niveau et badges.
+    await this.progression.awardForEvent(playerId, type);
+
+    return evenement;
   }
 
   async listForPlayer(playerId: string) {

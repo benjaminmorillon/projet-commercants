@@ -66,6 +66,37 @@ const DIMENSIONS = [
   ['deltaSocialisateur', 'Socialisateur'],
 ];
 
+// XP, niveau et badges (section 2.9 des specs).
+async function loadProgression() {
+  if (!playerId) return;
+
+  const progression = await apiGet(`/players/${playerId}/progression`).catch(() => null);
+  if (!progression) return;
+
+  document.getElementById('progression-section').hidden = false;
+  document.getElementById('niveau-actuel').textContent = `Niveau ${progression.niveau}`;
+  document.getElementById('xp-total').textContent = `${progression.xpTotal} XP`;
+  document.getElementById('xp-bar').style.width = `${progression.progressionVersNiveauSuivant}%`;
+  document.getElementById('xp-detail').textContent =
+    `${progression.xpNiveauActuel} / ${progression.xpProchainNiveau} XP vers le niveau ${progression.niveau + 1}`;
+
+  const carte = (badge, obtenu) => `
+    <div class="badge-card${obtenu ? '' : ' verrouille'}">
+      <span class="badge-icone">${badge.icone}</span>
+      <strong>${escapeHtml(badge.nom)}</strong>
+      <span class="hint">${escapeHtml(badge.description)}</span>
+    </div>
+  `;
+
+  document.getElementById('badges-obtenus-empty').hidden = progression.badgesObtenus.length > 0;
+  document.getElementById('badges-obtenus').innerHTML = progression.badgesObtenus
+    .map((b) => carte(b, true))
+    .join('');
+  document.getElementById('badges-a-debloquer').innerHTML = progression.badgesADebloquer
+    .map((b) => carte(b, false))
+    .join('');
+}
+
 // Le profil évolue à chaque action : on affiche les scores à jour et ce qui
 // les a récemment déplacés.
 async function loadProfilVivant() {
@@ -160,6 +191,7 @@ questionnaireForm.addEventListener('submit', async (event) => {
     const profile = await apiPost(`/players/${playerId}/questionnaire`, sliders);
     renderScores(profile);
     showStep('result');
+    loadProgression();
     loadProfilVivant();
   } catch (error) {
     questionnaireError.textContent = error.message;
@@ -197,12 +229,14 @@ restartButton.addEventListener('click', () => {
   questionnaireForm.reset();
   walletSection.hidden = true;
   document.getElementById('profil-vivant').hidden = true;
+  document.getElementById('progression-section').hidden = true;
   showStep('account');
 });
 
 // Si un joueur a déjà un compte (localStorage), on saute directement au questionnaire.
 if (playerId) {
   showStep('questionnaire');
+  loadProgression();
   loadProfilVivant();
   loadWallet();
 } else {

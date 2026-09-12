@@ -4,10 +4,23 @@ import { In, Repository } from 'typeorm';
 import { BalancingService } from '../balancing/balancing.service';
 import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
+import { PlayerEventType } from '../player-events/event-weights';
+import { PlayerEventsService } from '../player-events/player-events.service';
 import { User, UserType } from '../users/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 import { RequestValidationDto } from './dto/request-validation.dto';
 import { MissionValidation, ValidationStatut } from './mission-validation.entity';
+
+// Quelle facette du joueur une mission accomplie révèle-t-elle ?
+function typeEvenementMission(mission: Mission): PlayerEventType {
+  if (mission.modeInteraction !== 'solo') {
+    return 'mission_groupe_terminee';
+  }
+  if (mission.archetypeDominant === 'competiteur') {
+    return 'mission_competitive_terminee';
+  }
+  return 'mission_solo_terminee';
+}
 
 export interface EnrichedValidation extends MissionValidation {
   missionTitre: string;
@@ -28,6 +41,7 @@ export class ValidationsService {
     private readonly checkIns: Repository<CheckIn>,
     private readonly wallet: WalletService,
     private readonly balancing: BalancingService,
+    private readonly playerEvents: PlayerEventsService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -156,6 +170,19 @@ export class ValidationsService {
           record.choix,
           `Mission : ${mission.titre}`,
         );
+
+        // Le type de mission accomplie déplace le profil du joueur
+        // (section 2.1 : le profil évolue à chaque action).
+        await this.playerEvents.record(record.playerId, typeEvenementMission(mission), {
+          businessId: mission.businessId,
+          missionId: mission.id,
+        });
+
+        if (record.choix === 'don') {
+          await this.playerEvents.record(record.playerId, 'don_effectue', {
+            missionId: mission.id,
+          });
+        }
       }
     }
 

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Business } from '../businesses/business.entity';
+import { PlayerEventsService } from '../player-events/player-events.service';
 import { User, UserType } from '../users/user.entity';
 import { CreateCheckinDto } from './dto/create-checkin.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -25,6 +26,7 @@ export class CheckinsService {
     private readonly checkIns: Repository<CheckIn>,
     @InjectRepository(Review)
     private readonly reviews: Repository<Review>,
+    private readonly playerEvents: PlayerEventsService,
   ) {}
 
   private async getBusinessOrThrow(businessId: string): Promise<Business> {
@@ -60,7 +62,13 @@ export class CheckinsService {
       );
     }
 
-    return this.checkIns.save(
+    // Découvrir un lieu ou revenir dans un lieu connu ne dit pas la même
+    // chose du joueur : le moteur d'événements fait la différence.
+    const dejaVenu = await this.checkIns.findOne({
+      where: { playerId: dto.playerId, businessId },
+    });
+
+    const checkin = await this.checkIns.save(
       this.checkIns.create({
         playerId: dto.playerId,
         businessId,
@@ -69,6 +77,14 @@ export class CheckinsService {
         distanceMeters: distance,
       }),
     );
+
+    await this.playerEvents.record(
+      dto.playerId,
+      dejaVenu ? 'lieu_habituel_visite' : 'lieu_inedit_visite',
+      { businessId },
+    );
+
+    return checkin;
   }
 
   async createReview(businessId: string, dto: CreateReviewDto): Promise<Review> {
@@ -86,7 +102,7 @@ export class CheckinsService {
       );
     }
 
-    return this.reviews.save(
+    const review = await this.reviews.save(
       this.reviews.create({
         playerId: dto.playerId,
         businessId,
@@ -95,6 +111,10 @@ export class CheckinsService {
         commentaire: dto.commentaire ?? null,
       }),
     );
+
+    await this.playerEvents.record(dto.playerId, 'avis_publie', { businessId });
+
+    return review;
   }
 
   findReviewsForBusiness(businessId: string): Promise<Review[]> {

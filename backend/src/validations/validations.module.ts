@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BalancingModule } from '../balancing/balancing.module';
 import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
+import { PlayerEventsModule } from '../player-events/player-events.module';
 import { User } from '../users/user.entity';
 import { WalletModule } from '../wallet/wallet.module';
 import { BusinessValidationsController } from './business-validations.controller';
@@ -16,6 +17,7 @@ import { ValidationsService } from './validations.service';
     TypeOrmModule.forFeature([MissionValidation, Mission, User, CheckIn]),
     WalletModule,
     BalancingModule,
+    PlayerEventsModule,
   ],
   controllers: [
     PlayerValidationsController,

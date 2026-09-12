@@ -277,6 +277,39 @@ button#restart {
   font-weight: 600;
 }
 
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.event-effets {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.event-effets .positive {
+  color: #16a34a;
+}
+
+.event-effets .negative {
+  color: var(--error);
+}
+
 .wallet-solde {
   font-weight: 700;
   font-size: 1.1rem;

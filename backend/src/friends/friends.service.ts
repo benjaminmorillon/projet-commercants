@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Mission } from '../missions/mission.entity';
+import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { User, UserType } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
@@ -36,6 +37,7 @@ export class FriendsService {
     private readonly validations: Repository<MissionValidation>,
     @InjectRepository(Mission)
     private readonly missions: Repository<Mission>,
+    private readonly playerEvents: PlayerEventsService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -114,7 +116,15 @@ export class FriendsService {
     }
     record.statut = statut;
     record.resolvedAt = new Date();
-    return this.friendships.save(record);
+    const saved = await this.friendships.save(record);
+
+    // Se lier à quelqu'un compte pour les deux côtés de l'amitié.
+    if (statut === 'acceptee') {
+      await this.playerEvents.record(record.requesterId, 'ami_ajoute');
+      await this.playerEvents.record(record.receiverId, 'ami_ajoute');
+    }
+
+    return saved;
   }
 
   async listFriends(playerId: string): Promise<FriendSummary[]> {

@@ -13,6 +13,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 7 : système d'amis** — ajouter un ami par pseudo, accepter/refuser une demande, et consulter le profil (scores + missions accomplies) d'un ami.
 - ✅ **Brique 8 : espace professionnel** — carte de la concurrence avec filtres, création d'événements en quelques clics, ciblage de joueurs (curseurs de profil, missions réussies, somme allouée par personne), message + image envoyés aux cibles, qui acceptent ou refusent et laissent un retour que le commerçant voit.
 - ✅ **Brique 9 : rééquilibrage dynamique de la fréquentation** — les lieux de qualité encore peu fréquentés font gagner plus au joueur et paient moins cher leur ciblage ; les lieux saturés au regard de leur note, l'inverse.
+- ✅ **Brique 10 : profil vivant** — le profil n'est plus figé après le questionnaire : chaque action (découverte d'un lieu, mission accomplie, ami ajouté, invitation acceptée) le déplace en moyenne mobile, et le joueur voit ce qui l'a fait bouger.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -111,6 +112,24 @@ L'onglet **"Espace commerçant"** est organisé en trois écrans (conformément 
 
 Côté joueur, l'onglet **"Invitations"** liste ce que les établissements proposent, avec l'image, le message et l'événement s'il y en a un. Le crédit est déjà versé à la réception ; les boutons "Ça m'intéresse" / "Pas intéressé" servent uniquement à renvoyer l'information au commerçant.
 
+### Le profil vivant
+
+Le questionnaire ne donne qu'un point de départ. Ensuite, **chaque action déplace le profil** (section 2.1 des specs). Les actions déjà branchées :
+
+| Action | Effet |
+|---|---|
+| Check-in dans un lieu jamais visité | ++ Explorateur |
+| Retour dans un lieu déjà visité | − Explorateur, + Accomplisseur |
+| Mission solo accomplie | ++ Accomplisseur, − Socialisateur |
+| Mission duo/groupe accomplie | ++ Socialisateur, + Accomplisseur |
+| Mission d'archétype compétiteur accomplie | ++ Compétiteur, + Accomplisseur |
+| Avis publié | + Explorateur |
+| Ami ajouté (des deux côtés) | ++ Socialisateur |
+| Invitation d'un commerçant acceptée | ++ Socialisateur, + Explorateur |
+| Crédit donné à une cause | tracé, sans effet — il alimentera le futur axe "impact/générosité" (section 2.5) |
+
+Le calcul est une **moyenne mobile** : à chaque événement, un score ne parcourt que 8 % de la distance qui le sépare de son extrême. Un seul événement bouge donc à peine le profil (+4 points), c'est la répétition qui compte — et les pas se réduisent au fur et à mesure (4 → 3,7 → 3,4...), si bien qu'un score ne peut jamais sortir de 0–100. Sur la page **"Mon profil"**, le joueur voit ses scores à jour et la liste de ce qui les a déplacés, action par action.
+
 ### Le rééquilibrage de la fréquentation
 
 C'est le principe central des specs (section 4) : pousser les joueurs vers les lieux **qualitatifs mais sous-fréquentés**, sans jamais avantager un lieu simplement parce qu'il est vide. Chaque établissement reçoit un **multiplicateur**, recalculé à la volée :
@@ -146,14 +165,14 @@ Dans le terminal où il tourne, faites `Ctrl+C`.
 
 ## Comment vérifier que tout fonctionne correctement (tests automatiques)
 
-Le calcul des scores d'archétypes, la formule de distance GPS et le multiplicateur de rééquilibrage sont couverts par des tests automatiques. Pour les lancer :
+Le calcul des scores d'archétypes, la formule de distance GPS, le multiplicateur de rééquilibrage et le moteur d'évolution du profil sont couverts par des tests automatiques. Pour les lancer :
 
 ```bash
 cd backend
 npm test
 ```
 
-Tout doit passer en vert (`13 passed`).
+Tout doit passer en vert (`19 passed`).
 
 ---
 
@@ -202,6 +221,10 @@ projet-commercants/
     │   │   ├── event.entity.ts
     │   │   ├── events.service.ts
     │   │   └── events.controller.ts
+    │   ├── player-events/        Profil vivant (moteur d'événements)
+    │   │   ├── event-weights.ts / .spec.ts        ← poids par action + moyenne mobile
+    │   │   ├── player-event.entity.ts
+    │   │   └── player-events.service.ts   ← enregistre l'action, recalcule le profil
     │   ├── balancing/            Rééquilibrage de la fréquentation
     │   │   ├── place-multiplier.ts / .spec.ts     ← la formule et ses tests
     │   │   └── balancing.service.ts       ← visites 14 jours, note, multiplicateur par lieu

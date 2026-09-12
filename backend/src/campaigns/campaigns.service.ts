@@ -4,6 +4,7 @@ import { In, MoreThanOrEqual, Repository } from 'typeorm';
 import { BalancingService } from '../balancing/balancing.service';
 import { Business } from '../businesses/business.entity';
 import { Event } from '../events/event.entity';
+import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { User, UserType } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
@@ -50,6 +51,7 @@ export class CampaignsService {
     private readonly validations: Repository<MissionValidation>,
     private readonly wallet: WalletService,
     private readonly balancing: BalancingService,
+    private readonly playerEvents: PlayerEventsService,
   ) {}
 
   private async getBusinessOrThrow(businessId: string): Promise<Business> {
@@ -326,7 +328,15 @@ export class CampaignsService {
     target.reaction = dto.reaction ?? null;
     target.commentaire = dto.commentaire ?? null;
     target.respondedAt = new Date();
+    const saved = await this.targets.save(target);
 
-    return this.targets.save(target);
+    if (statut === 'acceptee') {
+      const campaign = await this.campaigns.findOne({ where: { id: target.campaignId } });
+      await this.playerEvents.record(target.playerId, 'invitation_acceptee', {
+        businessId: campaign?.businessId ?? null,
+      });
+    }
+
+    return saved;
   }
 }

@@ -59,6 +59,50 @@ async function apiGet(path) {
   return data;
 }
 
+const DIMENSIONS = [
+  ['deltaExplorateur', 'Explorateur'],
+  ['deltaAccomplisseur', 'Accomplisseur'],
+  ['deltaCompetiteur', 'Compétiteur'],
+  ['deltaSocialisateur', 'Socialisateur'],
+];
+
+// Le profil évolue à chaque action : on affiche les scores à jour et ce qui
+// les a récemment déplacés.
+async function loadProfilVivant() {
+  if (!playerId) return;
+
+  const [profile, events] = await Promise.all([
+    apiGet(`/players/${playerId}/profile`).catch(() => null),
+    apiGet(`/players/${playerId}/events`).catch(() => []),
+  ]);
+  if (!profile) return;
+
+  document.getElementById('profil-vivant').hidden = false;
+  renderScoresInto(document.getElementById('profil-scores'), profile);
+
+  const container = document.getElementById('profil-events');
+  document.getElementById('profil-events-empty').hidden = events.length > 0;
+
+  container.innerHTML = events
+    .map((event) => {
+      const effets = DIMENSIONS.filter(([champ]) => Math.abs(event[champ]) >= 0.1)
+        .map(([champ, label]) => {
+          const valeur = event[champ];
+          const signe = valeur > 0 ? '+' : '';
+          return `<span class="${valeur > 0 ? 'positive' : 'negative'}">${signe}${valeur} ${label}</span>`;
+        })
+        .join(' ');
+
+      return `
+        <div class="event-row">
+          <span>${escapeHtml(event.libelle)} <span class="hint">(${new Date(event.createdAt).toLocaleDateString('fr-FR')})</span></span>
+          <span class="event-effets">${effets || '<span class="hint">tracé, sans effet sur les 4 profils</span>'}</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
 async function loadWallet() {
   if (!playerId) return;
 
@@ -116,17 +160,18 @@ questionnaireForm.addEventListener('submit', async (event) => {
     const profile = await apiPost(`/players/${playerId}/questionnaire`, sliders);
     renderScores(profile);
     showStep('result');
+    loadProfilVivant();
   } catch (error) {
     questionnaireError.textContent = error.message;
     questionnaireError.hidden = false;
   }
 });
 
-function renderScores(profile) {
-  scoresEl.innerHTML = '';
+function renderScoresInto(container, profile) {
+  container.innerHTML = '';
 
   Object.entries(ARCHETYPE_LABELS)
-    .map(([key, label]) => ({ key, label, value: profile[key] }))
+    .map(([key, label]) => ({ label, value: profile[key] }))
     .sort((a, b) => b.value - a.value)
     .forEach(({ label, value }) => {
       const row = document.createElement('div');
@@ -137,8 +182,12 @@ function renderScores(profile) {
           <div class="score-bar-fill" style="width: ${value}%"></div>
         </div>
       `;
-      scoresEl.appendChild(row);
+      container.appendChild(row);
     });
+}
+
+function renderScores(profile) {
+  renderScoresInto(scoresEl, profile);
 }
 
 restartButton.addEventListener('click', () => {
@@ -147,12 +196,14 @@ restartButton.addEventListener('click', () => {
   accountForm.reset();
   questionnaireForm.reset();
   walletSection.hidden = true;
+  document.getElementById('profil-vivant').hidden = true;
   showStep('account');
 });
 
 // Si un joueur a déjà un compte (localStorage), on saute directement au questionnaire.
 if (playerId) {
   showStep('questionnaire');
+  loadProfilVivant();
   loadWallet();
 } else {
   showStep('account');

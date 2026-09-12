@@ -21,6 +21,8 @@ import { FriendsModule } from './friends/friends.module';
 import { Friendship } from './friends/friendship.entity';
 import { EventsModule } from './events/events.module';
 import { Event } from './events/event.entity';
+import { PlayerEventsModule } from './player-events/player-events.module';
+import { PlayerEvent } from './player-events/player-event.entity';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { Campaign } from './campaigns/campaign.entity';
 import { CampaignTarget } from './campaigns/campaign-target.entity';
@@ -44,6 +46,7 @@ import { CampaignTarget } from './campaigns/campaign-target.entity';
         Event,
         Campaign,
         CampaignTarget,
+        PlayerEvent,
       ],
       synchronize: true,
     }),
@@ -59,6 +62,7 @@ import { CampaignTarget } from './campaigns/campaign-target.entity';
     FriendsModule,
     EventsModule,
     CampaignsModule,
+    PlayerEventsModule,
   ],
 })
 export class AppModule {}

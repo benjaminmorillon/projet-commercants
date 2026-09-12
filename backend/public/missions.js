@@ -10,6 +10,9 @@ const walletBanner = document.getElementById('wallet-banner');
 
 const playerId = localStorage.getItem('playerId');
 
+// Ce qui est ouvert au joueur aujourd'hui (déblocage progressif, section 2.9).
+let deblocage = null;
+
 const ARCHETYPE_LABELS = {
   explorateur: 'Explorateur',
   accomplisseur: 'Accomplisseur',
@@ -97,16 +100,46 @@ async function loadMissions() {
   let statusByMission = new Map();
   let solde = 0;
   if (playerId) {
-    const [wallet, requested] = await Promise.all([
+    const [wallet, requested, etat] = await Promise.all([
       apiCall('GET', `/players/${playerId}/wallet`),
       apiCall('GET', `/players/${playerId}/validations/requested`),
+      apiCall('GET', `/players/${playerId}/deblocage`).catch(() => null),
     ]);
     solde = wallet.solde;
     statusByMission = latestStatusByMission(requested);
+    deblocage = etat;
   }
 
   renderWalletBanner(solde);
+  renderQuotaBanner();
   renderMissions(missions, statusByMission);
+}
+
+// Au début, le nombre de missions par jour est volontairement limité : le
+// joueur doit savoir où il en est avant de choisir sa mission.
+function renderQuotaBanner() {
+  const banner = document.getElementById('quota-banner');
+  if (!banner) return;
+  if (!deblocage) {
+    banner.hidden = true;
+    return;
+  }
+  const { limite, utilisees, restantes } = deblocage.missionsDuJour;
+  banner.hidden = false;
+  banner.className = restantes > 0 ? 'hint' : 'verrou';
+  banner.textContent =
+    restantes > 0
+      ? `Il te reste ${restantes} mission${restantes > 1 ? 's' : ''} à lancer aujourd'hui (${utilisees} / ${limite}). La limite augmente d'une mission à chaque niveau.`
+      : `Tu as lancé tes ${limite} missions du jour. Reviens demain — ou monte d'un niveau pour en débloquer une de plus.`;
+}
+
+function donEstOuvert() {
+  const don = deblocage?.fonctionnalites.find((f) => f.id === 'don');
+  return !don || don.ouverte;
+}
+
+function conditionDon() {
+  return deblocage?.fonctionnalites.find((f) => f.id === 'don')?.condition ?? '';
 }
 
 function renderMissions(missions, statusByMission) {
@@ -179,9 +212,10 @@ function renderCompletionArea(mission, status) {
       <p class="hint">Que fais-tu du crédit gagné (une fois validé) ?</p>
       <div class="choix-buttons">
         <button type="button" data-choix="depense">Dépenser</button>
-        <button type="button" data-choix="don">Donner</button>
+        <button type="button" data-choix="don"${donEstOuvert() ? '' : ` disabled title="${escapeHtml(conditionDon())}"`}>Donner${donEstOuvert() ? '' : ' 🔒'}</button>
         <button type="button" data-choix="accumulation">Accumuler</button>
       </div>
+      ${donEstOuvert() ? '' : `<p class="hint">Le don s'ouvrira plus tard : ${escapeHtml(conditionDon())}</p>`}
     </div>
     <p class="complete-error error" hidden></p>
   `;

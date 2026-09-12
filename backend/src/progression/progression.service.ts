@@ -79,6 +79,21 @@ export class ProgressionService {
     await this.syncBadges(playerId);
   }
 
+  /**
+   * XP hors barème d'événement (découverte d'une zone de la carte, par
+   * exemple) : le montant est calculé par l'appelant.
+   */
+  async awardBonusXp(playerId: string, xp: number): Promise<void> {
+    if (xp <= 0) {
+      return;
+    }
+    const progression = await this.getOrCreate(playerId);
+    progression.xpTotal += xp;
+    progression.niveauActuel = niveauPourXp(progression.xpTotal);
+    progression.updatedAt = new Date();
+    await this.progressions.save(progression);
+  }
+
   private async syncBadges(playerId: string): Promise<void> {
     const [stats, dejaObtenus] = await Promise.all([
       this.getStats(playerId),

@@ -6,6 +6,7 @@ import { Business } from '../businesses/business.entity';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
+import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 import { ProposerDuoDto, TerminerDuoDto } from './dto/proposer-duo.dto';
@@ -41,6 +42,7 @@ export class DuosService {
     private readonly balancing: BalancingService,
     private readonly wallet: WalletService,
     private readonly playerEvents: PlayerEventsService,
+    private readonly unlocking: UnlockingService,
   ) {}
 
   private async getProfilOrThrow(playerId: string): Promise<PlayerProfile> {
@@ -86,6 +88,9 @@ export class DuosService {
   }
 
   async proposer(playerId: string, dto: ProposerDuoDto): Promise<GroupMission> {
+    // Les missions à deux ne s'ouvrent qu'une fois le profil vraiment établi
+    // (section 2.9) : questionnaire complété et quelques missions solo.
+    await this.unlocking.assertOuverte(playerId, 'duos');
     const profil = await this.getProfilOrThrow(playerId);
 
     const engages = await this.joueursDejaEngages();

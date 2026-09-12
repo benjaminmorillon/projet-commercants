@@ -5,6 +5,8 @@ import { BalancingService } from '../balancing/balancing.service';
 import { Business } from '../businesses/business.entity';
 import { CheckinsService } from '../checkins/checkins.service';
 import { Mission } from '../missions/mission.entity';
+import { cleZone } from '../unlocking/unlock-rules';
+import { UnlockingService } from '../unlocking/unlocking.service';
 import { MissionValidation } from '../validations/mission-validation.entity';
 import { choisirMissionsTypes } from './missions-types';
 
@@ -21,9 +23,10 @@ export class MapService {
     private readonly validations: Repository<MissionValidation>,
     private readonly balancing: BalancingService,
     private readonly checkins: CheckinsService,
+    private readonly unlocking: UnlockingService,
   ) {}
 
-  async getMap(playerId?: string) {
+  async getMap(playerId?: string, position?: { latitude: number; longitude: number }) {
     const [lieux, missionsDeLieux, catalogue] = await Promise.all([
       this.businesses.find(),
       this.missions.find({ where: { businessId: Not(IsNull()) } }),
@@ -36,6 +39,13 @@ export class MapService {
       this.checkins.getRatingsSummary(ids),
       this.checkins.getVisitsSummary(ids),
     ]);
+
+    // Carte voilée (section 2.9) : sans joueur identifié on montre tout (mode
+    // découverte du prototype) ; sinon on ne révèle que les zones visitées et
+    // celles qui entourent le joueur à cet instant.
+    const zonesVisibles = playerId
+      ? await this.unlocking.zonesVisibles(playerId, position)
+      : null;
 
     // Où en est le joueur sur chaque mission.
     const statutParMission = new Map<string, StatutMissionJoueur>();
@@ -67,11 +77,29 @@ export class MapService {
 
     return {
       lieux: lieux.map((lieu) => {
+        const zone = cleZone(lieu.latitude, lieu.longitude);
+        const decouvert = zonesVisibles === null || zonesVisibles.has(zone);
+
+        // Un lieu encore voilé n'expose que sa position et sa zone : ni nom,
+        // ni missions, ni statistiques. Il faut y aller pour le savoir.
+        if (!decouvert) {
+          return {
+            id: lieu.id,
+            zone,
+            decouvert: false as const,
+            latitude: lieu.latitude,
+            longitude: lieu.longitude,
+            missions: [],
+          };
+        }
+
         const propres = missionsDeLieux.filter((m) => m.businessId === lieu.id);
         const types = choisirMissionsTypes(lieu.id, catalogue);
 
         return {
           id: lieu.id,
+          zone,
+          decouvert: true as const,
           nom: lieu.nom,
           adresse: lieu.adresse,
           typeEtablissement: lieu.typeEtablissement,

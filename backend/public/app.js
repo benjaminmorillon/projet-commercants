@@ -97,6 +97,60 @@ async function loadProgression() {
     .join('');
 }
 
+// Déblocage progressif : où en est le joueur dans son tutoriel, ce qui lui
+// est encore fermé et pourquoi.
+async function loadParcours() {
+  if (!playerId) return;
+
+  const deblocage = await apiGet(`/players/${playerId}/deblocage`).catch(() => null);
+  if (!deblocage) return;
+
+  document.getElementById('parcours-section').hidden = false;
+
+  const restantes = deblocage.tutoriel.etapes.filter((e) => !e.faite).length;
+  document.getElementById('parcours-intro').textContent = deblocage.tutoriel.termine
+    ? 'Tutoriel terminé : le mode libre est ouvert.'
+    : `Encore ${restantes} étape${restantes > 1 ? 's' : ''} avant le mode libre.`;
+
+  document.getElementById('tutoriel-etapes').innerHTML = deblocage.tutoriel.etapes
+    .map(
+      (etape) => `
+        <li class="etape${etape.faite ? ' faite' : ''}">
+          <span class="etape-puce">${etape.faite ? '✓' : '○'}</span>
+          <div>
+            <strong>${escapeHtml(etape.titre)}</strong>
+            <span class="hint">${escapeHtml(etape.consigne)}</span>
+            ${etape.faite ? '' : `<a href="${escapeHtml(etape.lien)}">Y aller</a>`}
+          </div>
+        </li>
+      `,
+    )
+    .join('');
+
+  document.getElementById('fonctionnalites').innerHTML = deblocage.fonctionnalites
+    .map(
+      (f) => `
+        <div class="deblocage${f.ouverte ? ' ouvert' : ''}">
+          <span>${f.ouverte ? '🔓' : '🔒'}</span>
+          <div>
+            <strong>${escapeHtml(f.nom)}</strong>
+            ${f.ouverte ? '' : `<span class="hint">${escapeHtml(f.condition)}</span>`}
+          </div>
+        </div>
+      `,
+    )
+    .join('');
+
+  const jour = deblocage.missionsDuJour;
+  document.getElementById('missions-du-jour').textContent =
+    `Missions aujourd'hui : ${jour.utilisees} / ${jour.limite} lancées, ${jour.restantes} restante${jour.restantes > 1 ? 's' : ''}. La limite monte d'une mission à chaque niveau.`;
+
+  document.getElementById('zones-decouvertes').textContent =
+    deblocage.zonesDecouvertes === 0
+      ? "Carte : aucun quartier levé pour l'instant — un check-in chez un partenaire lève tout son quartier d'un coup."
+      : `Carte : ${deblocage.zonesDecouvertes} quartier${deblocage.zonesDecouvertes > 1 ? 's' : ''} levé${deblocage.zonesDecouvertes > 1 ? 's' : ''}.`;
+}
+
 // Le profil évolue à chaque action : on affiche les scores à jour et ce qui
 // les a récemment déplacés.
 async function loadProfilVivant() {
@@ -191,6 +245,7 @@ questionnaireForm.addEventListener('submit', async (event) => {
     const profile = await apiPost(`/players/${playerId}/questionnaire`, sliders);
     renderScores(profile);
     showStep('result');
+    loadParcours();
     loadProgression();
     loadProfilVivant();
   } catch (error) {
@@ -230,12 +285,14 @@ restartButton.addEventListener('click', () => {
   walletSection.hidden = true;
   document.getElementById('profil-vivant').hidden = true;
   document.getElementById('progression-section').hidden = true;
+  document.getElementById('parcours-section').hidden = true;
   showStep('account');
 });
 
 // Si un joueur a déjà un compte (localStorage), on saute directement au questionnaire.
 if (playerId) {
   showStep('questionnaire');
+  loadParcours();
   loadProgression();
   loadProfilVivant();
   loadWallet();

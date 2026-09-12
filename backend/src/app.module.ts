@@ -34,6 +34,8 @@ import { CampaignsModule } from './campaigns/campaigns.module';
 import { Campaign } from './campaigns/campaign.entity';
 import { CampaignTarget } from './campaigns/campaign-target.entity';
 import { MapModule } from './map/map.module';
+import { UnlockingModule } from './unlocking/unlocking.module';
+import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
 
 @Module({
   imports: [
@@ -60,6 +62,7 @@ import { MapModule } from './map/map.module';
         GroupMission,
         GroupMissionParticipant,
         PairingOutcome,
+        ZoneDecouverte,
       ],
       synchronize: true,
     }),
@@ -79,6 +82,7 @@ import { MapModule } from './map/map.module';
     ProgressionModule,
     DuosModule,
     MapModule,
+    UnlockingModule,
   ],
 })
 export class AppModule {}

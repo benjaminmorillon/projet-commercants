@@ -454,3 +454,23 @@
   color: var(--accent);
   border: 1px solid var(--accent);
 }
+
+/* Un lieu encore voilé : on sait qu'il y a quelque chose, pas quoi. */
+.pin-lieu.voile {
+  background: rgba(31, 36, 48, 0.72);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(31, 36, 48, 0.3);
+}
+
+.pin-lieu.voile::after {
+  background: rgba(31, 36, 48, 0.72);
+}
+
+.pin-lieu.voile .pin-icone {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.pin-lieu.voile .pin-nom {
+  font-weight: 600;
+  opacity: 0.85;
+}

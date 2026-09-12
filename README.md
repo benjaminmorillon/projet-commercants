@@ -17,6 +17,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 11 : progression** — XP gagnée à chaque action, niveaux à paliers croissants, et 8 badges qui se débloquent tout seuls.
 - ✅ **Brique 12 : missions duo et matching** — l'appli trouve un binôme selon l'affinité ou la complémentarité des profils, propose une mission brise-glace dans un lieu sous-fréquenté, garde le partenaire secret jusqu'à l'accord des deux, et chacun valide l'autre à la fin.
 - ✅ **Brique 13 : la carte 3D** — une carte plein écran qu'on parcourt comme un plan Google (on incline, on tourne, on zoome), où les partenaires apparaissent avec leur étiquette et leurs missions en éventail (solo ou duo), et où un clic ouvre la fiche du partenaire avec ses missions, ses avis et le check-in.
+- ✅ **Brique 14 : déblocage progressif** — tutoriel obligatoire en 3 étapes, carte voilée qu'on lève quartier par quartier en allant sur place, nombre de missions limité par jour, et fonctionnalités (profils des autres, duos, don) qui s'ouvrent au fil de la progression.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -216,6 +217,38 @@ Chaque lieu propose ses propres missions (postées par le commerçant, validées
 
 > **Note sur les bâtiments en 3D** : le fond de plan vient d'OpenStreetMap sous forme d'images, qui ne contiennent pas la hauteur des immeubles. Le bouton 🏢 va donc chercher les contours et les hauteurs réelles des bâtiments visibles auprès d'un service public d'OpenStreetMap (Overpass), puis les dresse en volume. C'est volontairement sur demande : la requête peut prendre quelques secondes et ce service est parfois saturé. Si ça échoue, la carte reste utilisable et un message le dit — rien n'est cassé. Une carte avec les bâtiments déjà en 3D d'origine existe (fonds vectoriels type MapTiler) mais demande une clé d'API payante au-delà d'un certain volume : à rediscuter quand le projet passera en production.
 
+### Le déblocage progressif
+
+Les specs demandent que l'appli ne s'ouvre pas d'un coup à l'inscription (section 2.9) : au démarrage le joueur n'a accès qu'au strict nécessaire, et tout le reste s'ouvre en jouant. La section **« Ton parcours »** en haut de la page "Mon profil" montre en permanence où il en est.
+
+**Le tutoriel (3 étapes, obligatoire avant le mode libre)** :
+
+| Étape | Ce qu'elle demande |
+| --- | --- |
+| Dis-nous qui tu es | Répondre aux 4 curseurs du questionnaire |
+| Accomplis ta première mission | Faire une mission et obtenir sa validation |
+| Pousse la porte d'un partenaire | Faire un premier check-in sur place |
+
+**Ce qui s'ouvre ensuite**, avec la condition affichée en clair tant que c'est fermé :
+
+| Fonctionnalité | Condition |
+| --- | --- |
+| Mode libre | Terminer les 3 étapes du tutoriel |
+| Voir le profil des autres joueurs | Accomplir sa première mission |
+| Missions à deux | Questionnaire complété **et** 3 missions solo accomplies |
+| Donner son crédit à une cause | Atteindre le niveau 2 |
+
+Ces verrous sont appliqués **côté serveur**, pas seulement masqués dans la page : une tentative directe sur l'API est refusée avec le message qui explique ce qu'il reste à faire. Côté interface, on prévient avant plutôt que de laisser le joueur buter sur un bouton — la page "Duos" affiche un bandeau 🔒 au lieu des boutons, et le choix "Donner" apparaît grisé avec sa condition.
+
+**Missions limitées par jour** : 3 le premier jour, **une de plus à chaque niveau**, plafonnées à 10. Le compteur est affiché en haut de la page "Missions". Une demande refusée par le validateur ne consomme pas le quota.
+
+**La carte voilée** : le monde est découpé en quartiers d'environ 550 m de côté. Au départ, tous les partenaires apparaissent comme des pastilles sombres **❓ "Zone à découvrir"** — sans nom, sans missions, sans statistiques. Deux façons de lever le voile :
+
+- **le check-in** chez un partenaire lève **tout son quartier définitivement** (les autres partenaires du même quartier apparaissent du même coup) et rapporte de l'XP : 40 XP, **multipliés par le bonus du lieu** — découvrir un quartier sous-fréquenté rapporte donc davantage, exactement comme le demandent les specs ;
+- **le bouton « me localiser » ◎** révèle temporairement le quartier où l'on se trouve et les 8 qui l'entourent : on voit autour de soi, même sans y être encore entré.
+
+> **Note** : si vous ouvrez la carte sans profil joueur (pas encore de compte), tout s'affiche — il n'y a personne dont on puisse connaître les découvertes. Le voile ne s'applique qu'à un joueur identifié.
+
 ### Les amis
 
 L'onglet **"Amis"** permet d'ajouter un joueur en tapant son pseudo exact (recherche par pseudo comme pour la validation — un vrai carnet d'adresses/suggestions viendra plus tard). La personne voit la demande arriver dans "Demandes reçues" et clique Accepter ou Refuser. Une fois amis, chacun peut cliquer "Voir le profil" de l'autre pour voir ses 4 scores d'archétype et ses missions récemment accomplies — **réservé aux amis** : un joueur qui n'est pas ami ne peut pas consulter ce profil (testé côté API, retourne une erreur).
@@ -237,7 +270,7 @@ cd backend
 npm test
 ```
 
-Tout doit passer en vert (`44 passed`).
+Tout doit passer en vert (`58 passed`).
 
 ---
 
@@ -307,10 +340,14 @@ projet-commercants/
     │   │   ├── campaigns.service.ts       ← matching des profils, aperçu du coût, crédit à l'acceptation
     │   │   ├── business-campaigns.controller.ts   ← aperçu, envoi, résultats
     │   │   └── invitations.controller.ts  ← boîte de réception du joueur, accepter / refuser
-    │   └── map/                   Données de la carte
-    │       ├── missions-types.ts / .spec.ts       ← les 3 missions types proposées par chaque lieu
-    │       ├── map.service.ts             ← lieux + missions + bonus + avancement du joueur, en un appel
-    │       └── map.controller.ts          ← GET /map
+    │   ├── map/                   Données de la carte
+    │   │   ├── missions-types.ts / .spec.ts       ← les 3 missions types proposées par chaque lieu
+    │   │   ├── map.service.ts             ← lieux + missions + bonus + avancement du joueur, en un appel
+    │   │   └── map.controller.ts          ← GET /map
+    │   └── unlocking/            Déblocage progressif
+    │       ├── unlock-rules.ts / .spec.ts         ← tutoriel, conditions d'ouverture, quota du jour, quadrillage de la carte
+    │       ├── zone-decouverte.entity.ts          ← les quartiers qu'un joueur a levés
+    │       └── unlocking.service.ts       ← état du joueur, verrous côté serveur, découverte d'un quartier
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── utils.js                       ← échappement du texte affiché (sécurité)
         ├── index.html / app.js            ← profil joueur + portefeuille
@@ -329,5 +366,4 @@ projet-commercants/
 
 Les grandes briques des specs encore ouvertes :
 
-- **Déblocage progressif** (section 2.9) — carte voilée au départ, fonctionnalités et missions qui s'ouvrent avec le niveau.
 - **Titres et objets de collection** (section 2.9) — le reste du système de récompenses.

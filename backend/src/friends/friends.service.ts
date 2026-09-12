@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
+import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
@@ -38,6 +39,7 @@ export class FriendsService {
     @InjectRepository(Mission)
     private readonly missions: Repository<Mission>,
     private readonly playerEvents: PlayerEventsService,
+    private readonly unlocking: UnlockingService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -145,6 +147,9 @@ export class FriendsService {
   }
 
   async getFriendProfile(playerId: string, friendId: string): Promise<FriendProfile> {
+    // Voir le profil des autres ne s'ouvre qu'après une première mission
+    // accomplie (section 2.9).
+    await this.unlocking.assertOuverte(playerId, 'profils_joueurs');
     const friendship = await this.findBetween(playerId, friendId);
     if (!friendship || friendship.statut !== 'acceptee') {
       throw new NotFoundException('Vous devez être amis pour voir ce profil.');

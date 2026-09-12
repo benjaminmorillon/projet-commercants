@@ -81,6 +81,7 @@ let filtreActif = 'tout';
 let marqueursLieux = [];
 let marqueursMissions = [];
 let marqueurPosition = null;
+let maPosition = null;
 let lieuOuvert = null;
 let batimentsCharges = false;
 
@@ -200,7 +201,7 @@ function geojsonZones() {
   return {
     type: 'FeatureCollection',
     features: lieux
-      .filter(lieuVisible)
+      .filter((lieu) => lieu.decouvert && lieuVisible(lieu))
       .map((lieu) => ({
         type: 'Feature',
         properties: { id: lieu.id },
@@ -214,7 +215,7 @@ function geojsonZones() {
 function geojsonBalises() {
   return {
     type: 'FeatureCollection',
-    features: lieux.filter(lieuVisible).map((lieu) => {
+    features: lieux.filter((lieu) => lieu.decouvert && lieuVisible(lieu)).map((lieu) => {
       const bonus = bonusPourcent(lieu);
       return {
         type: 'Feature',
@@ -351,6 +352,9 @@ async function chargerBatiments() {
 // ---------------------------------------------------------------------------
 
 function lieuVisible(lieu) {
+  // Un lieu encore voilé reste sur la carte quel que soit le filtre : c'est
+  // justement ce qui donne envie d'aller voir.
+  if (!lieu.decouvert) return true;
   if (filtreActif === 'bonus') return bonusPourcent(lieu) > 0;
   return true;
 }
@@ -382,9 +386,11 @@ function creerMarqueurLieu(lieu) {
   const nombreMissions = missionsFiltrees(lieu).length;
 
   const el = document.createElement('div');
-  el.className = 'pin-lieu';
-  el.innerHTML = contenuPinLieu(lieu, nombreMissions);
-  if (nombreMissions === 0) {
+  el.className = lieu.decouvert ? 'pin-lieu' : 'pin-lieu voile';
+  el.innerHTML = lieu.decouvert
+    ? contenuPinLieu(lieu, nombreMissions)
+    : '<span class="pin-icone">❓</span><span class="pin-nom">Zone à découvrir</span>';
+  if (lieu.decouvert && nombreMissions === 0) {
     el.classList.add('eteint');
   }
   if (!lieuVisible(lieu)) {
@@ -565,8 +571,38 @@ function blocMission(lieu, mission) {
   `;
 }
 
+function ficheVoilee(lieu) {
+  ficheContenuEl.innerHTML = `
+    <h2>❓ Zone non explorée</h2>
+    <p class="hint">Un partenaire se cache ici, mais la carte reste voilée tant que tu n'y es pas allé.</p>
+    <div class="fiche-stats">
+      <div class="fiche-stat"><strong>?</strong><span>Nom</span></div>
+      <div class="fiche-stat"><strong>?</strong><span>Missions</span></div>
+      <div class="fiche-stat"><strong>+XP</strong><span>À la découverte</span></div>
+    </div>
+    <p>Rends-toi sur place et fais un <strong>check-in</strong> : tout le quartier se révèle d'un coup, et la découverte rapporte de l'XP — davantage si le lieu est encore peu fréquenté.</p>
+    <div class="mission-actions">
+      <button type="button" class="secondary" id="fiche-approcher">Me localiser pour voir autour de moi</button>
+    </div>
+  `;
+  document.getElementById('fiche-approcher').addEventListener('click', () => {
+    fermerFiche();
+    seLocaliser();
+  });
+}
+
 function ouvrirFiche(lieu, missionCiblee) {
   lieuOuvert = lieu.id;
+
+  if (!lieu.decouvert) {
+    ficheVoilee(lieu);
+    ficheEl.hidden = false;
+    ficheFondEl.hidden = false;
+    ficheEl.scrollTop = 0;
+    majSelection();
+    return;
+  }
+
   const bonus = bonusPourcent(lieu);
   const missions = lieu.missions;
   const solos = missions.filter((m) => !m.estDuo);
@@ -773,8 +809,14 @@ function cadrerSurLesLieux() {
 }
 
 async function chargerCarte(options = {}) {
-  const query = playerId ? `?playerId=${encodeURIComponent(playerId)}` : '';
-  const donnees = await apiCall('GET', `/map${query}`);
+  const params = new URLSearchParams();
+  if (playerId) params.set('playerId', playerId);
+  // Le joueur voit ce qui l'entoure immédiatement, même sans y être encore allé.
+  if (maPosition) {
+    params.set('latitude', maPosition.latitude);
+    params.set('longitude', maPosition.longitude);
+  }
+  const donnees = await apiCall('GET', `/map?${params.toString()}`);
   lieux = donnees.lieux.filter(
     (lieu) => typeof lieu.latitude === 'number' && typeof lieu.longitude === 'number',
   );
@@ -830,9 +872,10 @@ document.getElementById('btn-tout-voir').addEventListener('click', () => {
   cadrerSurLesLieux();
 });
 
-document.getElementById('btn-position').addEventListener('click', async () => {
+async function seLocaliser() {
   try {
     const coords = await positionActuelle();
+    maPosition = { latitude: coords.latitude, longitude: coords.longitude };
     if (marqueurPosition) marqueurPosition.remove();
     const el = document.createElement('div');
     el.className = 'pin-moi';
@@ -845,10 +888,16 @@ document.getElementById('btn-position').addEventListener('click', async () => {
       zoom: Math.max(map.getZoom(), 16),
       duration: 900,
     });
+    // Se situer lève le voile sur les zones qui nous entourent.
+    if (playerId) {
+      await chargerCarte({ garderVue: true });
+    }
   } catch (error) {
     afficherMessage(error.message);
   }
-});
+}
+
+document.getElementById('btn-position').addEventListener('click', seLocaliser);
 
 document.getElementById('fiche-fermer').addEventListener('click', fermerFiche);
 ficheFondEl.addEventListener('click', fermerFiche);

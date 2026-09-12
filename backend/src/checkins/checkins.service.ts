@@ -2,7 +2,9 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Business } from '../businesses/business.entity';
+import { BalancingService } from '../balancing/balancing.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
+import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
 import { CreateCheckinDto } from './dto/create-checkin.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -27,6 +29,8 @@ export class CheckinsService {
     @InjectRepository(Review)
     private readonly reviews: Repository<Review>,
     private readonly playerEvents: PlayerEventsService,
+    private readonly balancing: BalancingService,
+    private readonly unlocking: UnlockingService,
   ) {}
 
   private async getBusinessOrThrow(businessId: string): Promise<Business> {
@@ -84,7 +88,18 @@ export class CheckinsService {
       { businessId },
     );
 
-    return checkin;
+    // Se déplacer lève le voile sur le quartier (section 2.9). La découverte
+    // rapporte plus si le lieu est encore peu fréquenté.
+    const multiplicateur = await this.balancing.getMultiplier(businessId);
+    const zone = await this.unlocking.enregistrerDecouverte(
+      dto.playerId,
+      business,
+      multiplicateur,
+    );
+
+    return Object.assign(checkin, {
+      zoneDecouverte: zone ? { cleZone: zone.cleZone, xpGagnee: zone.xpGagnee } : null,
+    });
   }
 
   async createReview(businessId: string, dto: CreateReviewDto): Promise<Review> {

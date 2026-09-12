@@ -6,6 +6,7 @@ import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventType } from '../player-events/event-weights';
 import { PlayerEventsService } from '../player-events/player-events.service';
+import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 import { RequestValidationDto } from './dto/request-validation.dto';
@@ -42,6 +43,7 @@ export class ValidationsService {
     private readonly wallet: WalletService,
     private readonly balancing: BalancingService,
     private readonly playerEvents: PlayerEventsService,
+    private readonly unlocking: UnlockingService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -58,6 +60,13 @@ export class ValidationsService {
     dto: RequestValidationDto,
   ): Promise<MissionValidation> {
     await this.getPlayerOrThrow(playerId);
+
+    // Déblocage progressif (section 2.9) : le nombre de missions par jour est
+    // serré au début, et le don n'est ouvert qu'à partir du niveau 2.
+    await this.unlocking.assertQuotaDisponible(playerId);
+    if (dto.choix === 'don') {
+      await this.unlocking.assertOuverte(playerId, 'don');
+    }
 
     const mission = await this.missions.findOne({ where: { id: missionId } });
     if (!mission) {

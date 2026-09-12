@@ -125,8 +125,22 @@ async function loadDuos() {
   duos.forEach((duo) => duosList.appendChild(renderDuo(duo)));
 }
 
+// Les duos ne s'ouvrent qu'une fois le profil vraiment établi : on le dit
+// avant, plutôt que de laisser le joueur buter sur un bouton qui refuse.
+async function verifierDeblocage() {
+  const deblocage = await apiCall('GET', `/players/${playerId}/deblocage`).catch(() => null);
+  const duos = deblocage?.fonctionnalites.find((f) => f.id === 'duos');
+  if (!duos || duos.ouverte) {
+    proposerSection.hidden = false;
+    return;
+  }
+  const verrou = document.getElementById('duo-verrou');
+  verrou.innerHTML = `🔒 <strong>Missions à deux — pas encore débloqué.</strong> ${escapeHtml(duos.condition)}`;
+  verrou.hidden = false;
+}
+
 if (playerId) {
-  proposerSection.hidden = false;
+  verifierDeblocage();
   loadDuos();
 } else {
   noPlayerWarning.hidden = false;

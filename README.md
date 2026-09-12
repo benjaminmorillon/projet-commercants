@@ -11,6 +11,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 5 : accomplir une mission et portefeuille de crédits** — un joueur marque une mission comme accomplie, gagne du crédit, et choisit de le dépenser, le donner, ou l'accumuler.
 - ✅ **Brique 6 : validation des missions par un tiers** — une mission n'est créditée qu'une fois confirmée par un tiers (le commerçant si la mission est liée à un lieu, avec check-in GPS obligatoire en plus ; sinon un autre joueur désigné), via un onglet "Validation" avec pop-up de confirmation.
 - ✅ **Brique 7 : système d'amis** — ajouter un ami par pseudo, accepter/refuser une demande, et consulter le profil (scores + missions accomplies) d'un ami.
+- ✅ **Brique 8 : espace professionnel** — carte de la concurrence avec filtres, création d'événements en quelques clics, ciblage de joueurs (curseurs de profil, missions réussies, somme allouée par personne), message + image envoyés aux cibles, qui acceptent ou refusent et laissent un retour que le commerçant voit.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -91,6 +92,26 @@ Le validateur retrouve les demandes en attente sur l'onglet **"Validation"** : c
 
 > **Note sur la "pop-up de validation"** : c'est une fenêtre qui s'affiche dans la page dès que vous ouvrez l'onglet "Validation" et cliquez sur une demande — pas une notification push envoyée sur le téléphone en temps réel (ça demanderait une brique technique supplémentaire, à envisager plus tard si besoin).
 
+### L'espace commerçant
+
+L'onglet **"Espace commerçant"** est organisé en trois écrans (conformément aux specs : un tableau de bord utilisable sans formation) :
+
+1. **Mon activité** — créer un événement en trois champs (titre, description, date, plus une affiche optionnelle), poster une mission, et voir ce qui est déjà publié.
+2. **Ciblage** — c'est le cœur du modèle économique. Le commerçant choisit :
+   - le **type d'envoi** : invitation à un de ses événements, ou publicité (message seul) ;
+   - le **message** et une **image** optionnelle ;
+   - **qui il veut toucher** : quatre curseurs (un par archétype, chacun étant un score minimum) et un nombre minimum de missions réussies ;
+   - la **somme allouée par personne** (ex : 0,30 €).
+   
+   Un encart se met à jour en direct : *« 3 joueurs ciblés · 0,90 € au total · 0,24 € reversés à chacun »*, avec quelques pseudos en exemple. Il n'y a plus qu'à envoyer. Les joueurs ciblés reçoivent l'invitation et **acceptent ou refusent**, en laissant une réaction ("Ça m'intéresse", "Trop loin"...) et un commentaire libre. Le commerçant retrouve tout ça dans **"Résultats de tes campagnes"** : combien ont accepté, refusé, et ce que chacun en a pensé.
+   
+   > Le partage de la somme suit la section 3.4 des specs : 80 % de la somme allouée repart en crédit vers le joueur qui accepte (0,24 € sur 0,30 €), le reste étant la marge de la plateforme. Rien n'est prélevé pour une invitation refusée ou sans réponse. Comme pour le reste du prototype, aucun paiement réel n'est branché : ce sont des montants calculés et tracés, pas des transactions bancaires.
+3. **Concurrence** — une carte de tous les établissements partenaires (le sien en violet, les autres en gris), avec des filtres par type, note minimum et nombre de missions proposées. Chaque fiche affiche note, nombre de missions et fréquentation (check-ins), pour se situer par rapport aux autres.
+
+Côté joueur, l'onglet **"Invitations"** liste ce que les établissements proposent, avec l'image, le message et l'événement s'il y en a un. Accepter crédite immédiatement le portefeuille du montant annoncé.
+
+### Les amis
+
 L'onglet **"Amis"** permet d'ajouter un joueur en tapant son pseudo exact (recherche par pseudo comme pour la validation — un vrai carnet d'adresses/suggestions viendra plus tard). La personne voit la demande arriver dans "Demandes reçues" et clique Accepter ou Refuser. Une fois amis, chacun peut cliquer "Voir le profil" de l'autre pour voir ses 4 scores d'archétype et ses missions récemment accomplies — **réservé aux amis** : un joueur qui n'est pas ami ne peut pas consulter ce profil (testé côté API, retourne une erreur).
 
 ### 5. Arrêter le serveur
@@ -150,22 +171,37 @@ projet-commercants/
     │   │   ├── player-validations.controller.ts   ← demander une validation, ses propres demandes
     │   │   ├── business-validations.controller.ts ← demandes à valider (commerçant)
     │   │   └── validations.controller.ts  ← valider / refuser
-    │   └── friends/                Système d'amis
-    │       ├── friendship.entity.ts
-    │       ├── friends.service.ts         ← demande, accepte/refuse, liste, profil d'un ami (réservé aux amis)
-    │       ├── player-friends.controller.ts
-    │       └── friend-requests.controller.ts      ← accepter / refuser
+    │   ├── friends/                Système d'amis
+    │   │   ├── friendship.entity.ts
+    │   │   ├── friends.service.ts         ← demande, accepte/refuse, liste, profil d'un ami (réservé aux amis)
+    │   │   ├── player-friends.controller.ts
+    │   │   └── friend-requests.controller.ts      ← accepter / refuser
+    │   ├── events/                Événements organisés par un commerçant
+    │   │   ├── event.entity.ts
+    │   │   ├── events.service.ts
+    │   │   └── events.controller.ts
+    │   └── campaigns/             Ciblage : campagnes, cibles et retours
+    │       ├── campaign.entity.ts / campaign-target.entity.ts
+    │       ├── campaigns.service.ts       ← matching des profils, aperçu du coût, crédit à l'acceptation
+    │       ├── business-campaigns.controller.ts   ← aperçu, envoi, résultats
+    │       └── invitations.controller.ts  ← boîte de réception du joueur, accepter / refuser
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── utils.js                       ← échappement du texte affiché (sécurité)
         ├── index.html / app.js            ← profil joueur + portefeuille
         ├── missions.html / missions.js    ← consultation des missions, demande de validation
         ├── validation.html / validation.js ← pop-up de validation (joueur et/ou commerçant)
         ├── amis.html / amis.js            ← demandes d'ami, liste, profil d'un ami
-        ├── commercant.html / commercant.js ← espace commerçant
+        ├── invitations.html / invitations.js ← invitations reçues, accepter/refuser + réaction
+        ├── commercant.html / commercant.js ← espace commerçant (activité / ciblage / concurrence)
         ├── lieux.html / lieux.js          ← check-in, avis, carte des lieux
         └── vendor/leaflet/                ← bibliothèque de carte (embarquée, pas de CDN)
 ```
 
 ## Et après ?
 
-La prochaine brique, décidée avec l'utilisateur : l'**espace professionnel étendu** — création d'événements, ciblage de particuliers, envoi de publicité au-delà des simples missions. Ça rejoint le "système de paiement et de ciblage" prévu section 7 des specs.
+Les grandes briques des specs encore ouvertes :
+
+- **Multiplicateur de rééquilibrage** (section 4) — ajuster automatiquement récompenses et tarif de ciblage pour pousser vers les lieux qualitatifs mais sous-fréquentés. Les données nécessaires existent déjà (note moyenne, fréquentation via les check-ins, capacité estimée).
+- **Missions duo/groupe et IA de matching** (sections 2.2 et 2.7) — la brique la plus avancée, qui permettrait aussi la validation de mission entre partenaires de duo.
+- **Progression du joueur** (section 2.9) — XP, niveaux, badges, déblocage progressif de la carte.
+- **Évolution continue du profil** (section 2.1) — recalculer les 4 scores à chaque action du joueur via un moteur d'événements, au lieu du seul questionnaire initial.

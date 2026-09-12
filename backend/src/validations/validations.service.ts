@@ -147,6 +147,7 @@ export class ValidationsService {
           record.missionId,
           mission.recompenseBase,
           record.choix,
+          `Mission : ${mission.titre}`,
         );
       }
     }

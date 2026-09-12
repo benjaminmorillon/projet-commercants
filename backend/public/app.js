@@ -67,12 +67,6 @@ async function loadWallet() {
   walletSoldeEl.textContent = `Solde actuel : ${wallet.solde} crédit${wallet.solde > 1 ? 's' : ''}`;
   walletHistoryEmpty.hidden = wallet.transactions.length > 0;
 
-  const missionIds = [...new Set(wallet.transactions.map((t) => t.reference))];
-  const missions = await Promise.all(
-    missionIds.map((id) => apiGet(`/missions/${id}`).catch(() => null)),
-  );
-  const missionTitles = new Map(missionIds.map((id, i) => [id, missions[i]?.titre ?? 'Mission']));
-
   walletHistoryEl.innerHTML = wallet.transactions
     .map((t) => {
       const label = TRANSACTION_LABELS[t.type] || t.type;
@@ -80,7 +74,7 @@ async function loadWallet() {
       const date = new Date(t.createdAt).toLocaleDateString('fr-FR');
       return `
         <div class="transaction-row">
-          <span>${escapeHtml(label)} — ${escapeHtml(missionTitles.get(t.reference))} <span class="hint">(${date})</span></span>
+          <span>${escapeHtml(label)} — ${escapeHtml(t.libelle || 'Mission')} <span class="hint">(${date})</span></span>
           <span class="${t.montant > 0 ? 'positive' : 'negative'}">${sign}${t.montant} crédit${Math.abs(t.montant) > 1 ? 's' : ''}</span>
         </div>
       `;

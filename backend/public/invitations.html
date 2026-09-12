@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Invitations</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <nav class="top-nav">
+      <a href="index.html">Mon profil</a>
+      <a href="missions.html">Missions</a>
+      <a href="lieux.html">Lieux</a>
+      <a href="invitations.html" class="active">Invitations</a>
+      <a href="validation.html">Validation</a>
+      <a href="amis.html">Amis</a>
+      <a href="commercant.html">Espace commerçant</a>
+    </nav>
+
+    <header>
+      <h1>Invitations</h1>
+      <p class="subtitle">Ce que les établissements du coin te proposent.</p>
+    </header>
+
+    <section id="no-player-warning" class="card" hidden>
+      <p>Tu n'as pas encore de profil joueur. <a href="index.html">Crée ton compte</a> pour recevoir des invitations.</p>
+    </section>
+
+    <div id="invitations-list"></div>
+    <p id="invitations-empty" class="hint" hidden>Aucune invitation pour l'instant. Complète ton questionnaire de profil pour être repéré par les établissements.</p>
+  </main>
+
+  <script src="utils.js"></script>
+  <script src="invitations.js"></script>
+</body>
+</html>

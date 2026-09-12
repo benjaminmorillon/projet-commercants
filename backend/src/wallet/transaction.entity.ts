@@ -21,9 +21,13 @@ export class Transaction {
   @Column({ type: 'float' })
   montant: number;
 
-  // Identifiant de la mission à l'origine du gain.
+  // Identifiant de ce qui est à l'origine du mouvement (mission, campagne...).
   @Column()
   reference: string;
+
+  // Libellé lisible affiché dans l'historique du joueur.
+  @Column({ type: 'varchar', nullable: true })
+  libelle: string | null;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

@@ -19,6 +19,11 @@ import { ValidationsModule } from './validations/validations.module';
 import { MissionValidation } from './validations/mission-validation.entity';
 import { FriendsModule } from './friends/friends.module';
 import { Friendship } from './friends/friendship.entity';
+import { EventsModule } from './events/events.module';
+import { Event } from './events/event.entity';
+import { CampaignsModule } from './campaigns/campaigns.module';
+import { Campaign } from './campaigns/campaign.entity';
+import { CampaignTarget } from './campaigns/campaign-target.entity';
 
 @Module({
   imports: [
@@ -36,6 +41,9 @@ import { Friendship } from './friends/friendship.entity';
         Transaction,
         MissionValidation,
         Friendship,
+        Event,
+        Campaign,
+        CampaignTarget,
       ],
       synchronize: true,
     }),
@@ -49,6 +57,8 @@ import { Friendship } from './friends/friendship.entity';
     WalletModule,
     ValidationsModule,
     FriendsModule,
+    EventsModule,
+    CampaignsModule,
   ],
 })
 export class AppModule {}

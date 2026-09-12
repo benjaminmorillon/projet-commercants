@@ -124,4 +124,22 @@ export class CheckinsService {
     });
     return summary;
   }
+
+  // Fréquentation : nombre de check-ins par lieu, utilisé pour comparer les
+  // établissements sur la carte concurrence.
+  async getVisitsSummary(businessIds: string[]): Promise<Map<string, number>> {
+    if (businessIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this.checkIns
+      .createQueryBuilder('c')
+      .select('c.businessId', 'businessId')
+      .addSelect('COUNT(c.id)', 'total')
+      .where('c.businessId IN (:...businessIds)', { businessIds })
+      .groupBy('c.businessId')
+      .getRawMany<{ businessId: string; total: string }>();
+
+    return new Map(rows.map((row) => [row.businessId, Number(row.total)]));
+  }
 }

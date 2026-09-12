@@ -13,6 +13,11 @@
   box-sizing: border-box;
 }
 
+/* Un élément masqué le reste, même si sa classe impose un display. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -28,17 +33,26 @@ body {
 
 .top-nav {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.top-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .top-nav a {
   text-decoration: none;
   color: var(--muted);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   padding: 6px 12px;
   border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .top-nav a.active {
@@ -347,6 +361,122 @@ button#restart {
   border: 1px solid var(--accent);
   padding: 8px 6px;
   font-size: 0.85rem;
+}
+
+/* Onglets de l'espace commerçant */
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-top: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 5px;
+}
+
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 9px 4px;
+  border-radius: 9px;
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+.image-preview {
+  width: 100%;
+  border-radius: 12px;
+  margin: 10px 0;
+  display: block;
+}
+
+.preview-box {
+  background: #f1e9ff;
+  color: var(--accent);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+}
+
+.preview-box .hint {
+  display: block;
+  margin: 4px 0 0;
+}
+
+.retour-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 8px;
+  font-size: 0.88rem;
+}
+
+.retour-row .positive {
+  color: #16a34a;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.retour-row .negative {
+  color: var(--error);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mission-card h4 {
+  margin: 14px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.mission-card.mine {
+  border-color: var(--accent);
+}
+
+/* Invitations côté joueur */
+.invitation-card {
+  margin-top: 16px;
+}
+
+.event-line {
+  margin: 0 0 6px;
+}
+
+.reaction-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.reaction-btn {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  font-size: 0.8rem;
+  padding: 7px 12px;
+}
+
+.reaction-btn.selected {
+  background: var(--accent);
+  color: white;
+}
+
+.popup-cancel {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.popup-confirm {
+  background: #16a34a;
 }
 
 .validation-row {

@@ -102,4 +102,21 @@ export class MissionsService implements OnModuleInit {
       order: { createdAt: 'DESC' },
     });
   }
+
+  // Nombre de missions proposées par chaque lieu, pour comparer les
+  // établissements entre eux (carte concurrence côté commerçant).
+  async countByBusiness(businessIds: string[]): Promise<Map<string, number>> {
+    if (businessIds.length === 0) {
+      return new Map();
+    }
+    const rows = await this.missions
+      .createQueryBuilder('m')
+      .select('m.businessId', 'businessId')
+      .addSelect('COUNT(m.id)', 'total')
+      .where('m.businessId IN (:...businessIds)', { businessIds })
+      .groupBy('m.businessId')
+      .getRawMany<{ businessId: string; total: string }>();
+
+    return new Map(rows.map((row) => [row.businessId, Number(row.total)]));
+  }
 }

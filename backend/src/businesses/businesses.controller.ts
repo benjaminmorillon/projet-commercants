@@ -21,12 +21,20 @@ export class BusinessesController {
   @Get()
   async findAll() {
     const businesses = await this.businesses.findAll();
-    const ratings = await this.checkins.getRatingsSummary(businesses.map((b) => b.id));
+    const ids = businesses.map((b) => b.id);
+
+    const [ratings, missionCounts, visitCounts] = await Promise.all([
+      this.checkins.getRatingsSummary(ids),
+      this.missions.countByBusiness(ids),
+      this.checkins.getVisitsSummary(ids),
+    ]);
 
     return businesses.map((business) => ({
       ...business,
       noteMoyenne: ratings.get(business.id)?.noteMoyenne ?? null,
       nombreAvis: ratings.get(business.id)?.nombreAvis ?? 0,
+      nombreMissions: missionCounts.get(business.id) ?? 0,
+      nombreCheckins: visitCounts.get(business.id) ?? 0,
     }));
   }
 

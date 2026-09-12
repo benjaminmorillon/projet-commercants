@@ -44,6 +44,7 @@ export class WalletService {
     missionId: string,
     montant: number,
     choix: 'depense' | 'don' | 'accumulation',
+    libelle: string,
   ): Promise<Transaction[]> {
     const wallet = await this.getOrCreateWallet(playerId);
     const created: Transaction[] = [];
@@ -56,6 +57,7 @@ export class WalletService {
           type: 'gagne',
           montant,
           reference: missionId,
+          libelle,
         }),
       ),
     );
@@ -70,6 +72,7 @@ export class WalletService {
             type,
             montant: -montant,
             reference: missionId,
+            libelle,
           }),
         ),
       );
@@ -79,6 +82,30 @@ export class WalletService {
     await this.wallets.save(wallet);
 
     return created;
+  }
+
+  // Crédit hors mission : par exemple la part reversée au joueur quand il
+  // accepte une invitation d'un commerçant (section 3.4 des specs).
+  async applyCredit(
+    playerId: string,
+    montant: number,
+    reference: string,
+    libelle: string,
+  ): Promise<Transaction> {
+    const wallet = await this.getOrCreateWallet(playerId);
+    wallet.solde += montant;
+    wallet.updatedAt = new Date();
+    await this.wallets.save(wallet);
+
+    return this.transactions.save(
+      this.transactions.create({
+        playerId,
+        type: 'gagne',
+        montant,
+        reference,
+        libelle,
+      }),
+    );
   }
 
   async getWallet(playerId: string): Promise<WalletSummary> {

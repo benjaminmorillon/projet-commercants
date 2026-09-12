@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { BalancingService } from '../balancing/balancing.service';
 import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
 import { User, UserType } from '../users/user.entity';
@@ -26,6 +27,7 @@ export class ValidationsService {
     @InjectRepository(CheckIn)
     private readonly checkIns: Repository<CheckIn>,
     private readonly wallet: WalletService,
+    private readonly balancing: BalancingService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -142,10 +144,15 @@ export class ValidationsService {
     if (statut === 'validee') {
       const mission = await this.missions.findOne({ where: { id: record.missionId } });
       if (mission) {
+        // Récompense finale = récompense de base × multiplicateur du lieu
+        // (section 4 : on booste les lieux qualitatifs sous-fréquentés).
+        const multiplicateur = await this.balancing.getMultiplier(mission.businessId);
+        const recompenseFinale = Math.round(mission.recompenseBase * multiplicateur * 100) / 100;
+
         await this.wallet.applyMissionReward(
           record.playerId,
           record.missionId,
-          mission.recompenseBase,
+          recompenseFinale,
           record.choix,
           `Mission : ${mission.titre}`,
         );

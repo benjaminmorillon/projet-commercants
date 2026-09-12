@@ -551,6 +551,11 @@ button#restart {
   background: var(--card-bg);
 }
 
+.badge.bonus {
+  background: #dcfce7;
+  color: #15803d;
+}
+
 .place-card {
   margin-top: 16px;
 }

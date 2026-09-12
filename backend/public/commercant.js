@@ -276,10 +276,19 @@ async function refreshPreview() {
   try {
     const result = await apiCall('POST', `/businesses/${businessId}/campaigns/preview`, criteria);
     const exemples = result.apercu.map((a) => escapeHtml(a.pseudo)).join(', ');
+    const remise = Math.round((1 - 1 / result.multiplicateur) * 100);
+    const ligneTarif =
+      remise > 0
+        ? `<span class="hint">Tarif réduit de ${remise}% : ton lieu est bien noté mais encore peu fréquenté.</span>`
+        : remise < 0
+          ? `<span class="hint">Tarif majoré de ${-remise}% : ton lieu est déjà très fréquenté au regard de sa note.</span>`
+          : '';
+
     campaignPreview.innerHTML = result.nombreCibles
       ? `<strong>${result.nombreCibles} joueur${result.nombreCibles > 1 ? 's' : ''} ciblé${result.nombreCibles > 1 ? 's' : ''}</strong>
-         · ${result.coutTotal.toFixed(2)} € au total
-         · ${result.creditParJoueur.toFixed(2)} € reversés à chacun
+         · ${result.coutTotal.toFixed(2)} € au total (${result.coutParCible.toFixed(2)} € par personne)
+         · ${result.creditParJoueur.toFixed(2)} € versés à chacun dès l'envoi
+         ${ligneTarif}
          ${exemples ? `<span class="hint">Ex : ${exemples}</span>` : ''}`
       : `<strong>Aucun joueur ne correspond</strong> <span class="hint">Baisse les curseurs pour élargir ta cible.</span>`;
   } catch (error) {

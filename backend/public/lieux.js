@@ -37,8 +37,17 @@ function ratingLabel(place) {
   if (!place.nombreAvis) {
     return "Pas encore d'avis";
   }
-  const plural = place.nombreAvis > 1 ? 's' : '';
-  return `★ ${place.noteMoyenne}/5 (${place.nombreAvis} avis${plural})`;
+  return `★ ${place.noteMoyenne}/5 (${place.nombreAvis} avis)`;
+}
+
+// Les lieux de qualité encore peu fréquentés rapportent davantage
+// (section 4 des specs) : on le montre clairement au joueur.
+function bonusBadge(place) {
+  const bonus = Math.round(((place.multiplicateur ?? 1) - 1) * 100);
+  if (bonus <= 0) {
+    return '';
+  }
+  return `<span class="badge bonus">+${bonus}% ici</span>`;
 }
 
 function renderPlace(place) {
@@ -46,7 +55,7 @@ function renderPlace(place) {
   card.className = 'card place-card';
   card.innerHTML = `
     <div class="mission-card-header">
-      <h3>${escapeHtml(place.nom)}</h3>
+      <h3>${escapeHtml(place.nom)} ${bonusBadge(place)}</h3>
       <span class="reward">${ratingLabel(place)}</span>
     </div>
     <p class="hint">${escapeHtml(place.typeEtablissement)} — ${escapeHtml(place.adresse)}</p>
@@ -184,7 +193,7 @@ function renderMap(places) {
 
     const marker = L.marker([place.latitude, place.longitude]).addTo(map);
     marker.bindPopup(
-      `<strong>${escapeHtml(place.nom)}</strong><br>${escapeHtml(place.adresse)}<br>${ratingLabel(place)}`,
+      `<strong>${escapeHtml(place.nom)}</strong><br>${escapeHtml(place.adresse)}<br>${ratingLabel(place)}<br>${bonusBadge(place) || ''}`,
     );
     return marker;
   });

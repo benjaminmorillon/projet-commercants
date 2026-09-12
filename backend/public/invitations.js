@@ -31,8 +31,8 @@ function openResponsePopup(invitation, accepte) {
   overlay.className = 'popup-overlay';
   overlay.innerHTML = `
     <div class="popup-card">
-      <h3>${accepte ? 'Tu acceptes' : 'Tu refuses'}</h3>
-      <p class="hint">Dis à ${escapeHtml(invitation.lieuNom)} ce que tu en penses — ça les aide à mieux cibler la prochaine fois.</p>
+      <h3>${accepte ? 'Ça t’intéresse' : 'Pas intéressé'}</h3>
+      <p class="hint">Dis à ${escapeHtml(invitation.lieuNom)} ce que tu en penses — ça les aide à mieux cibler la prochaine fois. Tes ${invitation.creditVerse} € restent acquis quoi qu'il arrive.</p>
       <div class="reaction-buttons">
         ${reactions.map((r) => `<button type="button" class="reaction-btn" data-reaction="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join('')}
       </div>
@@ -43,7 +43,7 @@ function openResponsePopup(invitation, accepte) {
       <p class="popup-error error" hidden></p>
       <div class="popup-actions">
         <button type="button" class="popup-cancel">Annuler</button>
-        <button type="button" class="popup-confirm">${accepte ? `✓ Accepter (+${invitation.creditPropose} €)` : 'Confirmer le refus'}</button>
+        <button type="button" class="popup-confirm">${accepte ? '✓ Confirmer' : 'Confirmer'}</button>
       </div>
     </div>
   `;
@@ -85,14 +85,18 @@ function renderInvitation(invitation) {
        <p>${escapeHtml(invitation.evenement.description)}</p>`
     : '';
 
+  // Le crédit est versé dès le ciblage : répondre ne change rien au montant,
+  // ça dit juste au lieu si ça t'intéresse.
+  const credit = `<p class="mission-done">+${invitation.creditVerse} € déjà crédités</p>`;
+
   const actions =
     invitation.statut === 'envoyee'
       ? `<div class="choix-buttons">
-           <button type="button" class="refuse-invit-btn">Refuser</button>
-           <button type="button" class="accept-invit-btn">Accepter (+${invitation.creditPropose} €)</button>
+           <button type="button" class="refuse-invit-btn">Pas intéressé</button>
+           <button type="button" class="accept-invit-btn">Ça m'intéresse</button>
          </div>`
-      : `<p class="${invitation.statut === 'acceptee' ? 'mission-done' : 'hint'}">
-           ${invitation.statut === 'acceptee' ? `✓ Acceptée — ${invitation.creditVerse} € crédités` : '✗ Refusée'}
+      : `<p class="hint">
+           ${invitation.statut === 'acceptee' ? '✓ Tu as dit que ça t’intéressait' : '✗ Tu as décliné'}
            ${invitation.reaction ? ` · « ${escapeHtml(invitation.reaction)} »` : ''}
          </p>`;
 
@@ -105,6 +109,7 @@ function renderInvitation(invitation) {
     ${invitation.imageDataUrl ? `<img class="image-preview" src="${invitation.imageDataUrl}" alt="" />` : ''}
     ${evenement}
     <p>${escapeHtml(invitation.message)}</p>
+    ${credit}
     ${actions}
   `;
 

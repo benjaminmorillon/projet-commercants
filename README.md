@@ -12,6 +12,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 6 : validation des missions par un tiers** — une mission n'est créditée qu'une fois confirmée par un tiers (le commerçant si la mission est liée à un lieu, avec check-in GPS obligatoire en plus ; sinon un autre joueur désigné), via un onglet "Validation" avec pop-up de confirmation.
 - ✅ **Brique 7 : système d'amis** — ajouter un ami par pseudo, accepter/refuser une demande, et consulter le profil (scores + missions accomplies) d'un ami.
 - ✅ **Brique 8 : espace professionnel** — carte de la concurrence avec filtres, création d'événements en quelques clics, ciblage de joueurs (curseurs de profil, missions réussies, somme allouée par personne), message + image envoyés aux cibles, qui acceptent ou refusent et laissent un retour que le commerçant voit.
+- ✅ **Brique 9 : rééquilibrage dynamique de la fréquentation** — les lieux de qualité encore peu fréquentés font gagner plus au joueur et paient moins cher leur ciblage ; les lieux saturés au regard de leur note, l'inverse.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -105,10 +106,31 @@ L'onglet **"Espace commerçant"** est organisé en trois écrans (conformément 
    
    Un encart se met à jour en direct : *« 3 joueurs ciblés · 0,90 € au total · 0,24 € reversés à chacun »*, avec quelques pseudos en exemple. Il n'y a plus qu'à envoyer. Les joueurs ciblés reçoivent l'invitation et **acceptent ou refusent**, en laissant une réaction ("Ça m'intéresse", "Trop loin"...) et un commentaire libre. Le commerçant retrouve tout ça dans **"Résultats de tes campagnes"** : combien ont accepté, refusé, et ce que chacun en a pensé.
    
-   > Le partage de la somme suit la section 3.4 des specs : 80 % de la somme allouée repart en crédit vers le joueur qui accepte (0,24 € sur 0,30 €), le reste étant la marge de la plateforme. Rien n'est prélevé pour une invitation refusée ou sans réponse. Comme pour le reste du prototype, aucun paiement réel n'est branché : ce sont des montants calculés et tracés, pas des transactions bancaires.
+   > **Le crédit part dès l'envoi** : être ciblé suffit pour toucher sa part, que le joueur accepte, refuse ou ne réponde jamais. Répondre ne sert qu'à dire au commerçant si ça intéresse. Le partage suit la section 3.4 des specs : 80 % de la somme allouée va au joueur (0,24 € sur 0,30 €), le reste étant la marge de la plateforme. Comme pour le reste du prototype, aucun paiement réel n'est branché : ce sont des montants calculés et tracés, pas des transactions bancaires.
 3. **Concurrence** — une carte de tous les établissements partenaires (le sien en violet, les autres en gris), avec des filtres par type, note minimum et nombre de missions proposées. Chaque fiche affiche note, nombre de missions et fréquentation (check-ins), pour se situer par rapport aux autres.
 
-Côté joueur, l'onglet **"Invitations"** liste ce que les établissements proposent, avec l'image, le message et l'événement s'il y en a un. Accepter crédite immédiatement le portefeuille du montant annoncé.
+Côté joueur, l'onglet **"Invitations"** liste ce que les établissements proposent, avec l'image, le message et l'événement s'il y en a un. Le crédit est déjà versé à la réception ; les boutons "Ça m'intéresse" / "Pas intéressé" servent uniquement à renvoyer l'information au commerçant.
+
+### Le rééquilibrage de la fréquentation
+
+C'est le principe central des specs (section 4) : pousser les joueurs vers les lieux **qualitatifs mais sous-fréquentés**, sans jamais avantager un lieu simplement parce qu'il est vide. Chaque établissement reçoit un **multiplicateur**, recalculé à la volée :
+
+- **taux d'occupation** = check-ins des 14 derniers jours ÷ capacité estimée ;
+- **score qualité** = note moyenne des avis internes (à défaut, la note Google), normalisée sur la plage utile 2,5–5 — en dessous de 2,5/5, un lieu n'est pas poussé même s'il est vide ;
+- **multiplicateur** = 100 % + (qualité − occupation) × 60 %, borné entre 70 % et 110 %.
+
+Ce qu'il change concrètement, mesuré sur deux lieux de test :
+
+| | La Pépite (5★, 3 visites, capacité 100) | Le Saturé (3★, 12 visites, capacité 10) |
+|---|---|---|
+| Multiplicateur | **110 %** | **70 %** |
+| Mission à 2 crédits de base | le joueur touche **2,20** | le joueur touche **1,40** |
+| Ciblage à 0,30 € alloués | le lieu paie **0,27 €** | le lieu paie **0,43 €** |
+| Crédit reçu par la cible | 0,24 € | 0,24 € |
+
+Le joueur voit un badge vert **"+10 % ici"** sur la carte et les fiches des lieux boostés. Le commerçant voit son tarif ajusté expliqué en clair dans l'aperçu de ciblage ("Tarif réduit de 9 % : ton lieu est bien noté mais encore peu fréquenté").
+
+> **Choix à valider** : les specs disent que le tarif de ciblage est ajusté "par le même multiplicateur", tout en précisant qu'un commerçant sous-fréquenté doit payer *moins* cher. Pour que les deux soient vrais, le tarif est **divisé** par le multiplicateur (là où les récompenses sont multipliées). La marge de la plateforme reste positive sur toute la plage (0,03 € au minimum, à 110 %).
 
 ### Les amis
 
@@ -124,14 +146,14 @@ Dans le terminal où il tourne, faites `Ctrl+C`.
 
 ## Comment vérifier que tout fonctionne correctement (tests automatiques)
 
-Le calcul des scores d'archétypes et la formule de distance GPS sont couverts par des tests automatiques. Pour les lancer :
+Le calcul des scores d'archétypes, la formule de distance GPS et le multiplicateur de rééquilibrage sont couverts par des tests automatiques. Pour les lancer :
 
 ```bash
 cd backend
 npm test
 ```
 
-Tout doit passer en vert (`6 passed`).
+Tout doit passer en vert (`13 passed`).
 
 ---
 
@@ -180,6 +202,9 @@ projet-commercants/
     │   │   ├── event.entity.ts
     │   │   ├── events.service.ts
     │   │   └── events.controller.ts
+    │   ├── balancing/            Rééquilibrage de la fréquentation
+    │   │   ├── place-multiplier.ts / .spec.ts     ← la formule et ses tests
+    │   │   └── balancing.service.ts       ← visites 14 jours, note, multiplicateur par lieu
     │   └── campaigns/             Ciblage : campagnes, cibles et retours
     │       ├── campaign.entity.ts / campaign-target.entity.ts
     │       ├── campaigns.service.ts       ← matching des profils, aperçu du coût, crédit à l'acceptation
@@ -201,7 +226,6 @@ projet-commercants/
 
 Les grandes briques des specs encore ouvertes :
 
-- **Multiplicateur de rééquilibrage** (section 4) — ajuster automatiquement récompenses et tarif de ciblage pour pousser vers les lieux qualitatifs mais sous-fréquentés. Les données nécessaires existent déjà (note moyenne, fréquentation via les check-ins, capacité estimée).
 - **Missions duo/groupe et IA de matching** (sections 2.2 et 2.7) — la brique la plus avancée, qui permettrait aussi la validation de mission entre partenaires de duo.
 - **Progression du joueur** (section 2.9) — XP, niveaux, badges, déblocage progressif de la carte.
 - **Évolution continue du profil** (section 2.1) — recalculer les 4 scores à chaque action du joueur via un moteur d'événements, au lieu du seul questionnaire initial.

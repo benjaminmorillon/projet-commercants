@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, MoreThanOrEqual, Repository } from 'typeorm';
+import { BalancingService } from '../balancing/balancing.service';
 import { Business } from '../businesses/business.entity';
 import { Event } from '../events/event.entity';
 import { PlayerProfile } from '../players/player-profile.entity';
@@ -16,8 +17,18 @@ import { TargetingCriteriaDto } from './dto/targeting-criteria.dto';
 export interface TargetingPreview {
   nombreCibles: number;
   coutTotal: number;
+  coutParCible: number;
+  multiplicateur: number;
   creditParJoueur: number;
   apercu: { pseudo: string; scores: Record<string, number>; missionsReussies: number }[];
+}
+
+// Tarif réellement facturé au commerçant pour une cible : la somme qu'il
+// alloue, divisée par le multiplicateur de son lieu. Un lieu qualitatif
+// mais sous-fréquenté (multiplicateur > 1) paie donc moins cher que le
+// montant alloué, un lieu déjà saturé paie plus (section 3.4 des specs).
+function coutFacture(montantParCible: number, multiplicateur: number): number {
+  return Math.round((montantParCible / multiplicateur) * 100) / 100;
 }
 
 @Injectable()
@@ -38,6 +49,7 @@ export class CampaignsService {
     @InjectRepository(MissionValidation)
     private readonly validations: Repository<MissionValidation>,
     private readonly wallet: WalletService,
+    private readonly balancing: BalancingService,
   ) {}
 
   private async getBusinessOrThrow(businessId: string): Promise<Business> {
@@ -96,6 +108,8 @@ export class CampaignsService {
 
     const { profiles, missionsParJoueur } = await this.findMatchingProfiles(criteria);
     const montant = criteria.montantParCible ?? 0;
+    const multiplicateur = await this.balancing.getMultiplier(businessId);
+    const coutParCible = coutFacture(montant, multiplicateur);
 
     const echantillon = profiles.slice(0, 5);
     const users = echantillon.length
@@ -105,7 +119,9 @@ export class CampaignsService {
 
     return {
       nombreCibles: profiles.length,
-      coutTotal: Math.round(profiles.length * montant * 100) / 100,
+      coutTotal: Math.round(profiles.length * coutParCible * 100) / 100,
+      coutParCible,
+      multiplicateur,
       creditParJoueur: Math.round(montant * PART_JOUEUR * 100) / 100,
       apercu: echantillon.map((p) => ({
         pseudo: pseudoById.get(p.userId) ?? 'Joueur',
@@ -140,6 +156,9 @@ export class CampaignsService {
       );
     }
 
+    const multiplicateur = await this.balancing.getMultiplier(businessId);
+    const coutParCible = coutFacture(dto.montantParCible, multiplicateur);
+
     const campaign = await this.campaigns.save(
       this.campaigns.create({
         businessId,
@@ -154,13 +173,33 @@ export class CampaignsService {
         minSocialisateur: dto.minSocialisateur ?? 0,
         minMissionsReussies: dto.minMissionsReussies ?? 0,
         nombreCibles: profiles.length,
-        coutTotal: Math.round(profiles.length * dto.montantParCible * 100) / 100,
+        coutTotal: Math.round(profiles.length * coutParCible * 100) / 100,
       }),
     );
 
+    // Le crédit part dès l'envoi : être ciblé suffit, la cible n'a pas
+    // besoin d'accepter pour toucher sa part (section 3.4 des specs).
+    const creditJoueur = Math.round(dto.montantParCible * PART_JOUEUR * 100) / 100;
+    const business = await this.businesses.findOne({ where: { id: businessId } });
+
     await this.targets.save(
       profiles.map((profile) =>
-        this.targets.create({ campaignId: campaign.id, playerId: profile.userId }),
+        this.targets.create({
+          campaignId: campaign.id,
+          playerId: profile.userId,
+          creditVerse: creditJoueur,
+        }),
+      ),
+    );
+
+    await Promise.all(
+      profiles.map((profile) =>
+        this.wallet.applyCredit(
+          profile.userId,
+          creditJoueur,
+          campaign.id,
+          `Ciblage : ${business?.nom ?? 'un établissement'}`,
+        ),
       ),
     );
 
@@ -281,27 +320,12 @@ export class CampaignsService {
       throw new BadRequestException('Tu as déjà répondu à cette invitation.');
     }
 
-    const campaign = await this.campaigns.findOne({ where: { id: target.campaignId } });
-    if (!campaign) {
-      throw new NotFoundException('Campagne introuvable.');
-    }
-
+    // Le crédit a déjà été versé à l'envoi : répondre ne sert qu'à dire au
+    // commerçant si ça intéresse, et pourquoi.
     target.statut = statut;
     target.reaction = dto.reaction ?? null;
     target.commentaire = dto.commentaire ?? null;
     target.respondedAt = new Date();
-
-    if (statut === 'acceptee') {
-      const business = await this.businesses.findOne({ where: { id: campaign.businessId } });
-      const credit = Math.round(campaign.montantParCible * PART_JOUEUR * 100) / 100;
-      target.creditVerse = credit;
-      await this.wallet.applyCredit(
-        target.playerId,
-        credit,
-        campaign.id,
-        `Invitation acceptée : ${business?.nom ?? 'un établissement'}`,
-      );
-    }
 
     return this.targets.save(target);
   }

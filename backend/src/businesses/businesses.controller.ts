@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { BalancingService } from '../balancing/balancing.service';
 import { CheckinsService } from '../checkins/checkins.service';
 import { CreateMissionDto } from '../missions/dto/create-mission.dto';
 import { MissionsService } from '../missions/missions.service';
@@ -11,6 +12,7 @@ export class BusinessesController {
     private readonly businesses: BusinessesService,
     private readonly missions: MissionsService,
     private readonly checkins: CheckinsService,
+    private readonly balancing: BalancingService,
   ) {}
 
   @Post()
@@ -23,10 +25,11 @@ export class BusinessesController {
     const businesses = await this.businesses.findAll();
     const ids = businesses.map((b) => b.id);
 
-    const [ratings, missionCounts, visitCounts] = await Promise.all([
+    const [ratings, missionCounts, visitCounts, balancing] = await Promise.all([
       this.checkins.getRatingsSummary(ids),
       this.missions.countByBusiness(ids),
       this.checkins.getVisitsSummary(ids),
+      this.balancing.getForBusinesses(ids),
     ]);
 
     return businesses.map((business) => ({
@@ -35,6 +38,8 @@ export class BusinessesController {
       nombreAvis: ratings.get(business.id)?.nombreAvis ?? 0,
       nombreMissions: missionCounts.get(business.id) ?? 0,
       nombreCheckins: visitCounts.get(business.id) ?? 0,
+      multiplicateur: balancing.get(business.id)?.multiplicateur ?? 1,
+      tauxOccupation: balancing.get(business.id)?.tauxOccupation ?? 0,
     }));
   }
 

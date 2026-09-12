@@ -1,0 +1,456 @@
+/* Page carte : plein écran, l'interface flotte au-dessus du plan. */
+.carte-body {
+  margin: 0;
+  overflow: hidden;
+  height: 100vh;
+}
+
+#carte {
+  position: fixed;
+  inset: 0;
+  background: #e8e5df;
+}
+
+/* ---------- Interface flottante du haut ---------- */
+
+.carte-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  padding: 10px 10px 0;
+  pointer-events: none;
+}
+
+.carte-overlay > * {
+  pointer-events: auto;
+}
+
+.carte-nav {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border-radius: 999px;
+  padding: 5px 6px;
+  margin-bottom: 8px;
+  box-shadow: 0 6px 20px rgba(31, 36, 48, 0.14);
+}
+
+.carte-filtres {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.carte-filtres::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 14px rgba(31, 36, 48, 0.13);
+  cursor: pointer;
+  width: auto;
+  margin: 0;
+}
+
+.chip.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---------- Boutons outils (colonne de droite) ---------- */
+
+.carte-outils {
+  position: fixed;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.outil {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 5px 18px rgba(31, 36, 48, 0.18);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.outil.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.carte-message {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  margin: 0;
+  max-width: calc(100% - 32px);
+  background: rgba(31, 36, 48, 0.9);
+  color: #fff;
+  font-size: 0.84rem;
+  padding: 10px 16px;
+  border-radius: 999px;
+  text-align: center;
+}
+
+/* ---------- Marqueur d'un lieu partenaire ---------- */
+
+/* Attention : MapLibre pose lui-même `position` et `transform` sur l'élément
+   du marqueur. On ne touche donc ni à l'un ni à l'autre ici, sinon le pin se
+   décolle de son point sur la carte. */
+.pin-lieu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border-radius: 999px;
+  padding: 5px 10px 5px 6px;
+  box-shadow: 0 6px 16px rgba(31, 36, 48, 0.28);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: box-shadow 0.15s ease;
+}
+
+.pin-lieu:hover {
+  box-shadow: 0 8px 22px rgba(124, 58, 237, 0.45);
+}
+
+.pin-lieu::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: 2px 2px 5px rgba(31, 36, 48, 0.18);
+}
+
+.pin-lieu.eteint {
+  opacity: 0.45;
+}
+
+.pin-lieu.compact .pin-nom {
+  display: none;
+}
+
+.pin-lieu.selectionne {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pin-icone {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f1e9ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.pin-nom {
+  font-size: 0.8rem;
+  font-weight: 700;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pin-compteur {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+}
+
+.pin-bonus {
+  background: #065f46;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+}
+
+/* ---------- Marqueur d'une mission ---------- */
+
+/* La goutte est portée par un élément INTERNE : l'élément racine du marqueur
+   appartient à MapLibre (il y écrit sa propre transformation). */
+.pin-mission {
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+}
+
+.pin-corps {
+  width: 34px;
+  height: 34px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  background: #fff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 4px 12px rgba(31, 36, 48, 0.26);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+}
+
+.pin-mission:hover .pin-corps {
+  transform: rotate(-45deg) scale(1.12);
+}
+
+.pin-corps span {
+  transform: rotate(45deg);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.pin-mission.duo .pin-corps {
+  border-color: #0e7490;
+  background: #ecfeff;
+}
+
+.pin-mission.accomplie .pin-corps {
+  border-color: #16a34a;
+  background: #dcfce7;
+}
+
+.pin-mission.en_attente .pin-corps {
+  border-color: #d97706;
+  background: #fef3c7;
+}
+
+/* ---------- Fiche partenaire (panneau bas) ---------- */
+
+.fiche-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  background: rgba(31, 36, 48, 0.35);
+}
+
+.fiche {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9;
+  max-height: 82vh;
+  overflow-y: auto;
+  background: var(--card-bg);
+  border-radius: 22px 22px 0 0;
+  padding: 10px 20px 32px;
+  box-shadow: 0 -10px 40px rgba(31, 36, 48, 0.3);
+  animation: fiche-monte 0.25s ease;
+}
+
+@media (min-width: 560px) {
+  .fiche {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 520px;
+    border-radius: 22px 22px 0 0;
+  }
+}
+
+@keyframes fiche-monte {
+  from {
+    opacity: 0.4;
+    transform: translateY(40px);
+  }
+}
+
+@media (min-width: 560px) {
+  @keyframes fiche-monte {
+    from {
+      opacity: 0.4;
+      transform: translateX(-50%) translateY(40px);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+.fiche-poignee {
+  width: 44px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  margin: 0 auto 14px;
+}
+
+.fiche-fermer {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fiche h2 {
+  margin: 0 0 2px;
+  font-size: 1.25rem;
+  padding-right: 34px;
+}
+
+.fiche-stats {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0;
+  flex-wrap: wrap;
+}
+
+.fiche-stat {
+  flex: 1 1 72px;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.fiche-stat strong {
+  display: block;
+  font-size: 0.98rem;
+}
+
+.fiche-stat span {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.fiche-section-titre {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+  margin: 22px 0 10px;
+}
+
+.mission-bloc {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.mission-bloc.duo {
+  border-color: #a5f3fc;
+  background: #f7fdff;
+}
+
+.mission-bloc h4 {
+  margin: 0 0 4px;
+  font-size: 0.96rem;
+}
+
+.mission-bloc p {
+  margin: 0 0 8px;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.badge.duo-badge {
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+.badge.valideur {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.mission-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.mission-actions button {
+  width: auto;
+  margin: 0;
+  flex: 1 1 auto;
+  font-size: 0.85rem;
+  padding: 9px 14px;
+}
+
+.fiche .recompense-finale {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.maplibregl-ctrl-bottom-right {
+  z-index: 4;
+}
+
+.mission-bloc.selectionne {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px #f1e9ff;
+}
+
+/* Ma position */
+.pin-moi {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.22), 0 3px 10px rgba(31, 36, 48, 0.3);
+}
+
+/* Action secondaire : même taille, mais en retrait du bouton principal. */
+.fiche button.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}

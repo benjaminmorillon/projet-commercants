@@ -33,6 +33,7 @@ import { PlayerBadge } from './progression/player-badge.entity';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { Campaign } from './campaigns/campaign.entity';
 import { CampaignTarget } from './campaigns/campaign-target.entity';
+import { MapModule } from './map/map.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { CampaignTarget } from './campaigns/campaign-target.entity';
     PlayerEventsModule,
     ProgressionModule,
     DuosModule,
+    MapModule,
   ],
 })
 export class AppModule {}

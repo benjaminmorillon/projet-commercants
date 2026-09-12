@@ -16,6 +16,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 10 : profil vivant** — le profil n'est plus figé après le questionnaire : chaque action (découverte d'un lieu, mission accomplie, ami ajouté, invitation acceptée) le déplace en moyenne mobile, et le joueur voit ce qui l'a fait bouger.
 - ✅ **Brique 11 : progression** — XP gagnée à chaque action, niveaux à paliers croissants, et 8 badges qui se débloquent tout seuls.
 - ✅ **Brique 12 : missions duo et matching** — l'appli trouve un binôme selon l'affinité ou la complémentarité des profils, propose une mission brise-glace dans un lieu sous-fréquenté, garde le partenaire secret jusqu'à l'accord des deux, et chacun valide l'autre à la fin.
+- ✅ **Brique 13 : la carte 3D** — une carte plein écran qu'on parcourt comme un plan Google (on incline, on tourne, on zoome), où les partenaires apparaissent avec leur étiquette et leurs missions en éventail (solo ou duo), et où un clic ouvre la fiche du partenaire avec ses missions, ses avis et le check-in.
 - ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
 
 ---
@@ -178,6 +179,43 @@ Le joueur voit un badge vert **"+10 % ici"** sur la carte et les fiches des lieu
 
 > **Choix à valider** : les specs disent que le tarif de ciblage est ajusté "par le même multiplicateur", tout en précisant qu'un commerçant sous-fréquenté doit payer *moins* cher. Pour que les deux soient vrais, le tarif est **divisé** par le multiplicateur (là où les récompenses sont multipliées). La marge de la plateforme reste positive sur toute la plage (0,03 € au minimum, à 110 %).
 
+### La carte
+
+L'onglet **"Carte"** ouvre un plan en plein écran qu'on manipule comme Google Maps :
+
+| Geste | Effet |
+| --- | --- |
+| Glisser | se déplacer sur le plan |
+| Molette / pincer à deux doigts | zoomer |
+| Clic droit + glisser (ou deux doigts qui pivotent) | tourner et incliner la vue |
+| Bouton **3D / 2D** | basculer entre la vue inclinée et la vue à plat |
+| Bouton **⌃** | remettre le nord en haut |
+| Bouton **◎** | se centrer sur sa position (le navigateur demande l'accès au GPS) |
+| Bouton **🏢** | afficher les bâtiments du quartier en volume (voir la note plus bas) |
+| Bouton **⤢** | recadrer sur tous les partenaires |
+
+Sur le plan, chaque partenaire apparaît sous forme d'**étiquette** : une icône selon le type d'établissement (☕ café, 🍽️ restaurant, 🍺 bar, 📚 librairie, 🛏️ hôtel…), son nom, le nombre de missions disponibles chez lui, et le badge vert **"+10 %"** s'il fait partie des lieux boostés par le rééquilibrage. Une **colonne verticale verte** plantée sur le lieu donne la même information en volume : plus elle est haute, plus le lieu rapporte. Le grand cercle violet autour du lieu est la **zone de 150 m** dans laquelle le check-in est accepté.
+
+Dès qu'on se rapproche suffisamment, les **missions du lieu apparaissent en éventail** juste en dessous de son étiquette, une goutte par mission :
+
+- **contour violet** = mission solo, **contour cyan** = mission duo ;
+- l'icône dit quel archétype la mission met en avant (🧭 explorateur, 🏆 accomplisseur, ⚔️ compétiteur, 💬 socialisateur) ;
+- **⏳ orange** = vous avez déjà demandé la validation, **✓ vert** = mission accomplie.
+
+Les pastilles en haut de l'écran filtrent ce qui est affiché : **Solo**, **Duo**, **À faire** (ce qu'il vous reste à accomplir) ou **Bonus** (uniquement les lieux qui rapportent plus).
+
+Un clic sur une étiquette de lieu — ou directement sur une mission — ouvre la **fiche du partenaire**, un panneau qui remonte depuis le bas de l'écran. On y trouve :
+
+- l'adresse et le type d'établissement ;
+- quatre chiffres clés : note moyenne, nombre de visites, taux de fréquentation, bonus en cours ;
+- les boutons **Check-in ici** (même vérification GPS que sur la page "Lieux") et **Voir les avis** ;
+- la liste des **missions solo** puis des **missions duo** proposées là, avec pour chacune la récompense déjà multipliée par le bonus du lieu, et qui la validera ;
+- pour chaque mission, le bouton **"J'ai terminé"** (qui lance la même demande de validation que sur la page Missions) et, pour une mission duo, **"Chercher un binôme"** qui crée le duo **sur cette mission précise, dans ce lieu précis** — on le retrouve ensuite dans l'onglet "Duos".
+
+Chaque lieu propose ses propres missions (postées par le commerçant, validées par lui, check-in obligatoire) **et trois "missions types" piochées dans le catalogue commun** (validées par un autre joueur dont on tape le pseudo). Le tirage est stable : un même lieu propose toujours les mêmes missions types, sans qu'on ait besoin de les stocker en base.
+
+> **Note sur les bâtiments en 3D** : le fond de plan vient d'OpenStreetMap sous forme d'images, qui ne contiennent pas la hauteur des immeubles. Le bouton 🏢 va donc chercher les contours et les hauteurs réelles des bâtiments visibles auprès d'un service public d'OpenStreetMap (Overpass), puis les dresse en volume. C'est volontairement sur demande : la requête peut prendre quelques secondes et ce service est parfois saturé. Si ça échoue, la carte reste utilisable et un message le dit — rien n'est cassé. Une carte avec les bâtiments déjà en 3D d'origine existe (fonds vectoriels type MapTiler) mais demande une clé d'API payante au-delà d'un certain volume : à rediscuter quand le projet passera en production.
+
 ### Les amis
 
 L'onglet **"Amis"** permet d'ajouter un joueur en tapant son pseudo exact (recherche par pseudo comme pour la validation — un vrai carnet d'adresses/suggestions viendra plus tard). La personne voit la demande arriver dans "Demandes reçues" et clique Accepter ou Refuser. Une fois amis, chacun peut cliquer "Voir le profil" de l'autre pour voir ses 4 scores d'archétype et ses missions récemment accomplies — **réservé aux amis** : un joueur qui n'est pas ami ne peut pas consulter ce profil (testé côté API, retourne une erreur).
@@ -199,7 +237,7 @@ cd backend
 npm test
 ```
 
-Tout doit passer en vert (`39 passed`).
+Tout doit passer en vert (`44 passed`).
 
 ---
 
@@ -264,11 +302,15 @@ projet-commercants/
     │   ├── balancing/            Rééquilibrage de la fréquentation
     │   │   ├── place-multiplier.ts / .spec.ts     ← la formule et ses tests
     │   │   └── balancing.service.ts       ← visites 14 jours, note, multiplicateur par lieu
-    │   └── campaigns/             Ciblage : campagnes, cibles et retours
-    │       ├── campaign.entity.ts / campaign-target.entity.ts
-    │       ├── campaigns.service.ts       ← matching des profils, aperçu du coût, crédit à l'acceptation
-    │       ├── business-campaigns.controller.ts   ← aperçu, envoi, résultats
-    │       └── invitations.controller.ts  ← boîte de réception du joueur, accepter / refuser
+    │   ├── campaigns/             Ciblage : campagnes, cibles et retours
+    │   │   ├── campaign.entity.ts / campaign-target.entity.ts
+    │   │   ├── campaigns.service.ts       ← matching des profils, aperçu du coût, crédit à l'acceptation
+    │   │   ├── business-campaigns.controller.ts   ← aperçu, envoi, résultats
+    │   │   └── invitations.controller.ts  ← boîte de réception du joueur, accepter / refuser
+    │   └── map/                   Données de la carte
+    │       ├── missions-types.ts / .spec.ts       ← les 3 missions types proposées par chaque lieu
+    │       ├── map.service.ts             ← lieux + missions + bonus + avancement du joueur, en un appel
+    │       └── map.controller.ts          ← GET /map
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── utils.js                       ← échappement du texte affiché (sécurité)
         ├── index.html / app.js            ← profil joueur + portefeuille
@@ -277,8 +319,10 @@ projet-commercants/
         ├── amis.html / amis.js            ← demandes d'ami, liste, profil d'un ami
         ├── invitations.html / invitations.js ← invitations reçues, accepter/refuser + réaction
         ├── commercant.html / commercant.js ← espace commerçant (activité / ciblage / concurrence)
-        ├── lieux.html / lieux.js          ← check-in, avis, carte des lieux
-        └── vendor/leaflet/                ← bibliothèque de carte (embarquée, pas de CDN)
+        ├── lieux.html / lieux.js          ← check-in, avis, mini carte des lieux
+        ├── carte.html / carte.js / carte.css ← la carte 3D plein écran et la fiche partenaire
+        ├── vendor/leaflet/                ← mini carte de la page Lieux (embarquée, pas de CDN)
+        └── vendor/maplibre/               ← carte 3D (embarquée, pas de CDN)
 ```
 
 ## Et après ?

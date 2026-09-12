@@ -123,12 +123,16 @@ export class DuosService {
 
     const meilleur = classement[0];
 
-    const mission = await this.choisirMission(dto.typeMatching);
+    const mission = dto.missionId
+      ? await this.missionAPlusieurs(dto.missionId)
+      : await this.choisirMission(dto.typeMatching);
     if (!mission) {
       throw new BadRequestException('Aucune mission à plusieurs disponible dans le catalogue.');
     }
 
-    const lieu = await this.choisirLieu();
+    const lieu = dto.businessId
+      ? await this.businesses.findOne({ where: { id: dto.businessId } })
+      : await this.choisirLieu();
 
     // Rendez-vous ce soir : l'IA propose un créneau commun aux deux joueurs.
     const creneau = new Date();
@@ -159,6 +163,19 @@ export class DuosService {
 
   // On privilégie une mission brise-glace : on ne demande pas un gros effort
   // à deux inconnus dès le premier contact (section 2.7 des specs).
+  // Mission choisie explicitement par le joueur (depuis la carte) : on vérifie
+  // juste qu'elle se joue bien à plusieurs.
+  private async missionAPlusieurs(missionId: string): Promise<Mission> {
+    const mission = await this.missions.findOne({ where: { id: missionId } });
+    if (!mission) {
+      throw new NotFoundException('Mission introuvable.');
+    }
+    if (mission.modeInteraction === 'solo') {
+      throw new BadRequestException('Cette mission se joue en solo, pas en duo.');
+    }
+    return mission;
+  }
+
   private async choisirMission(typeMatching: TypeMatching): Promise<Mission | null> {
     const modeRecherche =
       typeMatching === 'affinite_naturelle'

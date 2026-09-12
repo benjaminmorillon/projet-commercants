@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Projet Commerçant — Carte</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css" />
+  <link rel="stylesheet" href="carte.css" />
+</head>
+<body class="carte-body">
+  <!-- La carte occupe tout l'écran ; l'interface flotte par-dessus. -->
+  <div id="carte"></div>
+
+  <div class="carte-overlay">
+    <nav class="top-nav carte-nav">
+      <a href="index.html">Mon profil</a>
+      <a href="missions.html">Missions</a>
+      <a href="carte.html" class="active">Carte</a>
+      <a href="duos.html">Duos</a>
+      <a href="lieux.html">Lieux</a>
+      <a href="invitations.html">Invitations</a>
+      <a href="validation.html">Validation</a>
+      <a href="amis.html">Amis</a>
+      <a href="commercant.html">Espace commerçant</a>
+    </nav>
+
+    <div class="carte-filtres" id="carte-filtres">
+      <button type="button" class="chip active" data-filtre="tout">Tout</button>
+      <button type="button" class="chip" data-filtre="solo">Solo</button>
+      <button type="button" class="chip" data-filtre="duo">Duo</button>
+      <button type="button" class="chip" data-filtre="disponible">À faire</button>
+      <button type="button" class="chip" data-filtre="bonus">Bonus</button>
+    </div>
+  </div>
+
+  <div class="carte-outils">
+    <button type="button" id="btn-3d" class="outil" title="Basculer 2D / 3D">3D</button>
+    <button type="button" id="btn-nord" class="outil" title="Remettre le nord en haut">⌃</button>
+    <button type="button" id="btn-position" class="outil" title="Me localiser">◎</button>
+    <button type="button" id="btn-batiments" class="outil" title="Afficher les bâtiments en 3D">🏢</button>
+    <button type="button" id="btn-tout-voir" class="outil" title="Voir tous les partenaires">⤢</button>
+  </div>
+
+  <p id="carte-message" class="carte-message" hidden></p>
+
+  <!-- Fiche partenaire : panneau qui remonte depuis le bas de l'écran. -->
+  <section id="fiche" class="fiche" hidden aria-live="polite">
+    <button type="button" class="fiche-fermer" id="fiche-fermer" aria-label="Fermer">×</button>
+    <div class="fiche-poignee"></div>
+    <div id="fiche-contenu"></div>
+  </section>
+
+  <div id="fiche-fond" class="fiche-fond" hidden></div>
+
+  <script src="vendor/maplibre/maplibre-gl.js"></script>
+  <script src="utils.js"></script>
+  <script src="carte.js"></script>
+</body>
+</html>

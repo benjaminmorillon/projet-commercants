@@ -35,7 +35,9 @@ async function apiCall(method, path, body) {
 
 function ratingLabel(place) {
   if (!place.nombreAvis) {
-    return "Pas encore d'avis";
+    // Une absence d'avis est une information neutre : elle ne doit pas
+    // s'afficher avec le même poids qu'une note.
+    return '<span class="hint">Pas encore d\'avis</span>';
   }
   return `★ ${place.noteMoyenne}/5 (${place.nombreAvis} avis)`;
 }
@@ -186,7 +188,7 @@ function renderMap(places) {
     // Cercle illustrant la zone dans laquelle le check-in est accepté (150m).
     L.circle([place.latitude, place.longitude], {
       radius: 150,
-      color: '#7c3aed',
+      color: '#1f5f50',
       weight: 1,
       fillOpacity: 0.08,
     }).addTo(map);

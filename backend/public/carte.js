@@ -173,7 +173,7 @@ const STYLE_PLAN = {
     },
   },
   layers: [
-    { id: 'fond-couleur', type: 'background', paint: { 'background-color': '#e8e5df' } },
+    { id: 'fond-couleur', type: 'background', paint: { 'background-color': '#e9e7e2' } },
     { id: 'osm', type: 'raster', source: 'osm' },
   ],
 };
@@ -189,8 +189,12 @@ const map = new maplibregl.Map({
   attributionControl: { compact: true },
 });
 
-map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
-map.addControl(new maplibregl.ScaleControl({ maxWidth: 90, unit: 'metric' }), 'bottom-left');
+// Zoom à gauche, nos propres outils à droite : les deux ne se marchent pas
+// dessus. La boussole et l'inclinaison ont déjà leur bouton dans la colonne.
+map.addControl(
+  new maplibregl.NavigationControl({ showCompass: false, showZoom: true }),
+  'bottom-left',
+);
 map.touchZoomRotate.enableRotation();
 
 // ---------------------------------------------------------------------------
@@ -222,7 +226,7 @@ function geojsonBalises() {
         properties: {
           id: lieu.id,
           hauteur: 22 + bonus * 1.6,
-          couleur: bonus > 0 ? '#10b981' : '#7c3aed',
+          couleur: bonus > 0 ? '#1f5f50' : '#3b3d44',
         },
         geometry: carrePolygone(lieu.latitude, lieu.longitude, 6),
       };
@@ -236,13 +240,13 @@ function installerCouches() {
     id: 'zones-checkin-fond',
     type: 'fill',
     source: 'zones-checkin',
-    paint: { 'fill-color': '#7c3aed', 'fill-opacity': 0.08 },
+    paint: { 'fill-color': '#1f5f50', 'fill-opacity': 0.07 },
   });
   map.addLayer({
     id: 'zones-checkin-trait',
     type: 'line',
     source: 'zones-checkin',
-    paint: { 'line-color': '#7c3aed', 'line-width': 1.2, 'line-opacity': 0.45 },
+    paint: { 'line-color': '#1f5f50', 'line-width': 1, 'line-opacity': 0.4 },
   });
 
   map.addSource('batiments', {
@@ -254,7 +258,7 @@ function installerCouches() {
     type: 'fill-extrusion',
     source: 'batiments',
     paint: {
-      'fill-extrusion-color': '#cfc9c0',
+      'fill-extrusion-color': '#d2cec6',
       'fill-extrusion-height': ['get', 'hauteur'],
       'fill-extrusion-base': 0,
       'fill-extrusion-opacity': 0.88,
@@ -615,7 +619,7 @@ function ouvrirFiche(lieu, missionCiblee) {
     <div class="fiche-stats">
       <div class="fiche-stat"><strong>${noteTexte(lieu)}</strong><span>${lieu.nombreAvis} avis</span></div>
       <div class="fiche-stat"><strong>${lieu.nombreCheckins}</strong><span>Visites</span></div>
-      <div class="fiche-stat"><strong>${Math.round((lieu.tauxOccupation ?? 0) * 100)}%</strong><span>Fréquentation</span></div>
+      <div class="fiche-stat"><strong>${Math.round((lieu.tauxOccupation ?? 0) * 100)}%</strong><span>Affluence</span></div>
       <div class="fiche-stat"><strong>${bonus > 0 ? `+${bonus}%` : '—'}</strong><span>Bonus</span></div>
     </div>
 

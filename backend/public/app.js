@@ -129,7 +129,7 @@ async function loadCollection() {
       if (!titre.obtenu) {
         return `
           <div class="titre verrouille">
-            <strong>🔒 ${escapeHtml(titre.libelle)}</strong>
+            <strong>${escapeHtml(titre.libelle)}</strong>
             <span class="hint">${escapeHtml(titre.condition)}</span>
           </div>
         `;
@@ -210,11 +210,17 @@ async function loadParcours() {
     )
     .join('');
 
+  // Un cadenas dessiné plutôt qu'un emoji : l'interface reste sobre.
+  const CADENAS_FERME =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></svg>';
+  const CADENAS_OUVERT =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7.8a4 4 0 0 1 7.6-1.7"/></svg>';
+
   document.getElementById('fonctionnalites').innerHTML = deblocage.fonctionnalites
     .map(
       (f) => `
         <div class="deblocage${f.ouverte ? ' ouvert' : ''}">
-          <span>${f.ouverte ? '🔓' : '🔒'}</span>
+          ${f.ouverte ? CADENAS_OUVERT : CADENAS_FERME}
           <div>
             <strong>${escapeHtml(f.nom)}</strong>
             ${f.ouverte ? '' : `<span class="hint">${escapeHtml(f.condition)}</span>`}

@@ -438,8 +438,9 @@ function renderConcurrenceMap(places) {
     const estMoi = place.id === businessId;
     const marker = L.circleMarker([place.latitude, place.longitude], {
       radius: 9,
-      color: estMoi ? '#7c3aed' : '#6b7280',
-      fillColor: estMoi ? '#7c3aed' : '#9ca3af',
+      // Mon établissement se repère à sa couleur ; la concurrence reste grise.
+      color: estMoi ? '#1f5f50' : '#9ca0a7',
+      fillColor: estMoi ? '#1f5f50' : '#c3c6ca',
       fillOpacity: 0.85,
       weight: 2,
     });

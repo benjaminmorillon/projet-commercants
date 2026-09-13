@@ -13,17 +13,6 @@
   <div id="carte"></div>
 
   <div class="carte-overlay">
-    <nav class="top-nav carte-nav">
-      <a href="index.html">Mon profil</a>
-      <a href="missions.html">Missions</a>
-      <a href="carte.html" class="active">Carte</a>
-      <a href="duos.html">Duos</a>
-      <a href="lieux.html">Lieux</a>
-      <a href="invitations.html">Invitations</a>
-      <a href="validation.html">Validation</a>
-      <a href="amis.html">Amis</a>
-      <a href="commercant.html">Espace commerçant</a>
-    </nav>
 
     <div class="carte-filtres" id="carte-filtres">
       <button type="button" class="chip active" data-filtre="tout">Tout</button>
@@ -35,11 +24,19 @@
   </div>
 
   <div class="carte-outils">
-    <button type="button" id="btn-3d" class="outil" title="Basculer 2D / 3D">3D</button>
-    <button type="button" id="btn-nord" class="outil" title="Remettre le nord en haut">⌃</button>
-    <button type="button" id="btn-position" class="outil" title="Me localiser">◎</button>
-    <button type="button" id="btn-batiments" class="outil" title="Afficher les bâtiments en 3D">🏢</button>
-    <button type="button" id="btn-tout-voir" class="outil" title="Voir tous les partenaires">⤢</button>
+    <button type="button" id="btn-3d" class="outil outil-texte" title="Basculer 2D / 3D">3D</button>
+    <button type="button" id="btn-nord" class="outil" title="Remettre le nord en haut" aria-label="Remettre le nord en haut">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 16.4 20 12 16.6 7.6 20Z"/></svg>
+    </button>
+    <button type="button" id="btn-position" class="outil" title="Me localiser" aria-label="Me localiser">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2"/></svg>
+    </button>
+    <button type="button" id="btn-batiments" class="outil" title="Afficher les bâtiments en 3D" aria-label="Afficher les bâtiments en 3D">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20.5V8.2l6-3.4v15.7M10 20.5h10V11l-10-2.8"/><path d="M13.4 13.4h.01M16.8 13.4h.01M13.4 16.6h.01M16.8 16.6h.01M6.6 11h.01M6.6 14.4h.01"/></svg>
+    </button>
+    <button type="button" id="btn-tout-voir" class="outil" title="Voir tous les partenaires" aria-label="Voir tous les partenaires">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3.5H3.5V9M15 3.5h5.5V9M9 20.5H3.5V15M15 20.5h5.5V15"/></svg>
+    </button>
   </div>
 
   <p id="carte-message" class="carte-message" hidden></p>
@@ -54,6 +51,7 @@
   <div id="fiche-fond" class="fiche-fond" hidden></div>
 
   <script src="vendor/maplibre/maplibre-gl.js"></script>
+  <script src="nav.js"></script>
   <script src="utils.js"></script>
   <script src="carte.js"></script>
 </body>

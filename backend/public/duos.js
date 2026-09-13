@@ -135,7 +135,7 @@ async function verifierDeblocage() {
     return;
   }
   const verrou = document.getElementById('duo-verrou');
-  verrou.innerHTML = `🔒 <strong>Missions à deux — pas encore débloqué.</strong> ${escapeHtml(duos.condition)}`;
+  verrou.innerHTML = `<strong>Missions à deux — pas encore débloqué.</strong> ${escapeHtml(duos.condition)}`;
   verrou.hidden = false;
 }
 

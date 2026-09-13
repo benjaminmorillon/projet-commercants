@@ -1,4 +1,8 @@
-/* Page carte : plein écran, l'interface flotte au-dessus du plan. */
+/* ===========================================================================
+   Page carte : le plan occupe tout l'écran, l'interface flotte par-dessus.
+   Mêmes jetons de design que le reste de l'application.
+   =========================================================================== */
+
 .carte-body {
   margin: 0;
   overflow: hidden;
@@ -8,32 +12,23 @@
 #carte {
   position: fixed;
   inset: 0;
-  background: #e8e5df;
+  background: #e9e7e2;
 }
 
 /* ---------- Interface flottante du haut ---------- */
 
 .carte-overlay {
   position: fixed;
-  top: 0;
+  top: calc(var(--appbar-h) + 10px);
   left: 0;
   right: 0;
   z-index: 5;
-  padding: 10px 10px 0;
+  padding: 0 14px;
   pointer-events: none;
 }
 
 .carte-overlay > * {
   pointer-events: auto;
-}
-
-.carte-nav {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  border-radius: 999px;
-  padding: 5px 6px;
-  margin-bottom: 8px;
-  box-shadow: 0 6px 20px rgba(31, 36, 48, 0.14);
 }
 
 .carte-filtres {
@@ -50,114 +45,149 @@
 
 .chip {
   flex-shrink: 0;
-  border: none;
-  border-radius: 999px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
   padding: 7px 14px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  color: var(--ink-muted);
   background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 4px 14px rgba(31, 36, 48, 0.13);
+  backdrop-filter: saturate(180%) blur(12px);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   width: auto;
   margin: 0;
 }
 
-.chip.active {
-  background: var(--accent);
-  color: #fff;
+.chip:hover:not(.active) {
+  color: var(--ink);
+  background: #fff;
+  border-color: var(--line);
 }
 
-/* ---------- Boutons outils (colonne de droite) ---------- */
+.chip.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ink-invert);
+}
+
+/* ---------- Colonne d'outils ---------- */
 
 .carte-outils {
   position: fixed;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 14px;
+  bottom: calc(var(--tabbar-h) + 24px + env(safe-area-inset-bottom, 0px));
   z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
 .outil {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   padding: 0;
   margin: 0;
   border: none;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 5px 18px rgba(31, 36, 48, 0.18);
-  color: var(--text);
-  font-size: 1rem;
-  font-weight: 700;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: saturate(180%) blur(12px);
+  color: var(--ink);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.outil svg {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.outil-texte {
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.outil:hover:not(:disabled) {
+  background: #fff;
+  color: var(--accent);
+  border: none;
+}
+
 .outil.active {
-  background: var(--accent);
-  color: #fff;
+  background: var(--ink);
+  border: none;
+  color: var(--ink-invert);
 }
 
 .carte-message {
   position: fixed;
-  bottom: 16px;
+  bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 6;
   margin: 0;
-  max-width: calc(100% - 32px);
-  background: rgba(31, 36, 48, 0.9);
+  max-width: calc(100% - 120px);
+  background: rgba(21, 22, 26, 0.92);
+  backdrop-filter: blur(8px);
   color: #fff;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
   padding: 10px 16px;
-  border-radius: 999px;
+  border-radius: var(--r-md);
   text-align: center;
+  box-shadow: var(--shadow-md);
 }
 
 /* ---------- Marqueur d'un lieu partenaire ---------- */
 
 /* Attention : MapLibre pose lui-même `position` et `transform` sur l'élément
-   du marqueur. On ne touche donc ni à l'un ni à l'autre ici, sinon le pin se
-   décolle de son point sur la carte. */
+   du marqueur. On n'y touche donc pas ici, sinon le pin se décolle de son
+   point sur la carte. */
 .pin-lieu {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   background: #fff;
-  border-radius: 999px;
-  padding: 5px 10px 5px 6px;
-  box-shadow: 0 6px 16px rgba(31, 36, 48, 0.28);
+  border-radius: var(--r-full);
+  padding: 4px 11px 4px 5px;
+  box-shadow: 0 2px 10px rgba(21, 22, 26, 0.18), 0 0 0 1px rgba(21, 22, 26, 0.06);
   cursor: pointer;
   white-space: nowrap;
   transition: box-shadow 0.15s ease;
 }
 
 .pin-lieu:hover {
-  box-shadow: 0 8px 22px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 6px 18px rgba(21, 22, 26, 0.26), 0 0 0 1px var(--ink);
 }
 
 .pin-lieu::after {
   content: '';
   position: absolute;
-  bottom: -5px;
+  bottom: -4px;
   left: 50%;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   background: #fff;
   transform: translateX(-50%) rotate(45deg);
-  box-shadow: 2px 2px 5px rgba(31, 36, 48, 0.18);
+  box-shadow: 2px 2px 5px rgba(21, 22, 26, 0.1);
 }
 
 .pin-lieu.eteint {
-  opacity: 0.45;
+  opacity: 0.42;
 }
 
 .pin-lieu.compact .pin-nom {
@@ -165,46 +195,73 @@
 }
 
 .pin-lieu.selectionne {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  box-shadow: 0 6px 18px rgba(21, 22, 26, 0.26), 0 0 0 2px var(--ink);
 }
 
 .pin-icone {
-  width: 26px;
-  height: 26px;
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
-  background: #f1e9ff;
+  background: var(--raised);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   flex-shrink: 0;
 }
 
 .pin-nom {
-  font-size: 0.8rem;
-  font-weight: 700;
-  max-width: 110px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  max-width: 112px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .pin-compteur {
-  background: var(--accent);
-  color: #fff;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 7px;
+  background: var(--ink);
+  color: var(--ink-invert);
+  border-radius: var(--r-full);
+  font-size: 0.68rem;
+  font-weight: 650;
+  min-width: 18px;
+  text-align: center;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
 }
 
 .pin-bonus {
-  background: #065f46;
+  background: var(--accent);
   color: #fff;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 2px 6px;
+  border-radius: var(--r-full);
+  font-size: 0.66rem;
+  font-weight: 650;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Un lieu encore voilé : on sait qu'il y a quelque chose, pas quoi. */
+.pin-lieu.voile {
+  background: rgba(21, 22, 26, 0.78);
+  backdrop-filter: blur(2px);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(21, 22, 26, 0.24);
+}
+
+.pin-lieu.voile::after {
+  background: rgba(21, 22, 26, 0.78);
+  box-shadow: none;
+}
+
+.pin-lieu.voile .pin-icone {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.pin-lieu.voile .pin-nom {
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 550;
 }
 
 /* ---------- Marqueur d'une mission ---------- */
@@ -212,19 +269,19 @@
 /* La goutte est portée par un élément INTERNE : l'élément racine du marqueur
    appartient à MapLibre (il y écrit sa propre transformation). */
 .pin-mission {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
 }
 
 .pin-corps {
-  width: 34px;
-  height: 34px;
-  border-radius: 50% 50% 50% 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 3px;
   transform: rotate(-45deg);
   background: #fff;
-  border: 2px solid var(--accent);
-  box-shadow: 0 4px 12px rgba(31, 36, 48, 0.26);
+  border: 1.5px solid var(--ink);
+  box-shadow: 0 3px 10px rgba(21, 22, 26, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -237,23 +294,33 @@
 
 .pin-corps span {
   transform: rotate(45deg);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1;
 }
 
 .pin-mission.duo .pin-corps {
-  border-color: #0e7490;
-  background: #ecfeff;
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .pin-mission.accomplie .pin-corps {
-  border-color: #16a34a;
-  background: #dcfce7;
+  border-color: var(--positive);
+  background: #e9f5ef;
 }
 
 .pin-mission.en_attente .pin-corps {
-  border-color: #d97706;
-  background: #fef3c7;
+  border-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+/* Ma position */
+.pin-moi {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 5px rgba(21, 22, 26, 0.14), 0 2px 8px rgba(21, 22, 26, 0.28);
 }
 
 /* ---------- Fiche partenaire (panneau bas) ---------- */
@@ -261,8 +328,9 @@
 .fiche-fond {
   position: fixed;
   inset: 0;
-  z-index: 8;
-  background: rgba(31, 36, 48, 0.35);
+  z-index: 45;
+  background: rgba(21, 22, 26, 0.3);
+  backdrop-filter: blur(2px);
 }
 
 .fiche {
@@ -270,24 +338,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9;
-  max-height: 82vh;
+  z-index: 46;
+  max-height: 84vh;
   overflow-y: auto;
-  background: var(--card-bg);
-  border-radius: 22px 22px 0 0;
-  padding: 10px 20px 32px;
-  box-shadow: 0 -10px 40px rgba(31, 36, 48, 0.3);
-  animation: fiche-monte 0.25s ease;
-}
-
-@media (min-width: 560px) {
-  .fiche {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: 520px;
-    border-radius: 22px 22px 0 0;
-  }
+  background: var(--card);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  padding: 10px 22px calc(32px + var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+  box-shadow: var(--shadow-lg);
+  animation: fiche-monte 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes fiche-monte {
@@ -298,6 +356,13 @@
 }
 
 @media (min-width: 560px) {
+  .fiche {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 540px;
+  }
+
   @keyframes fiche-monte {
     from {
       opacity: 0.4;
@@ -310,167 +375,146 @@
 }
 
 .fiche-poignee {
-  width: 44px;
+  width: 38px;
   height: 4px;
-  border-radius: 999px;
-  background: var(--border);
-  margin: 0 auto 14px;
+  border-radius: var(--r-full);
+  background: var(--line-strong);
+  margin: 4px auto 18px;
 }
 
 .fiche-fermer {
   position: absolute;
-  top: 12px;
-  right: 14px;
+  top: 14px;
+  right: 16px;
   width: 30px;
   height: 30px;
   padding: 0;
   margin: 0;
   border: none;
   border-radius: 50%;
-  background: var(--bg);
-  color: var(--muted);
-  font-size: 1.3rem;
+  background: var(--raised);
+  color: var(--ink-muted);
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
 }
 
+.fiche-fermer:hover {
+  background: var(--line);
+  border: none;
+  color: var(--ink);
+}
+
 .fiche h2 {
   margin: 0 0 2px;
-  font-size: 1.25rem;
-  padding-right: 34px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  padding-right: 36px;
+}
+
+.fiche > #fiche-contenu > .hint {
+  margin: 0;
 }
 
 .fiche-stats {
   display: flex;
-  gap: 8px;
-  margin: 14px 0;
-  flex-wrap: wrap;
+  gap: 6px;
+  margin: 18px 0;
 }
 
 .fiche-stat {
-  flex: 1 1 72px;
-  background: var(--bg);
-  border-radius: 12px;
-  padding: 8px 10px;
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 10px 6px;
   text-align: center;
 }
 
 .fiche-stat strong {
   display: block;
-  font-size: 0.98rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 .fiche-stat span {
-  font-size: 0.68rem;
-  color: var(--muted);
+  display: block;
+  font-size: 0.58rem;
+  line-height: 1.25;
+  color: var(--ink-faint);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.045em;
+  font-weight: 600;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
 }
 
 .fiche-section-titre {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  font-weight: 700;
-  margin: 22px 0 10px;
+  letter-spacing: 0.09em;
+  color: var(--ink-faint);
+  font-weight: 600;
+  margin: 26px 0 12px;
 }
 
 .mission-bloc {
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 10px;
+  border-top: 1px solid var(--line);
+  padding: 16px 0;
 }
 
-.mission-bloc.duo {
-  border-color: #a5f3fc;
-  background: #f7fdff;
+.mission-bloc:first-of-type {
+  border-top: none;
+  padding-top: 2px;
+}
+
+.mission-bloc.selectionne {
+  border-left: 2px solid var(--ink);
+  border-top-color: transparent;
+  padding-left: 14px;
 }
 
 .mission-bloc h4 {
   margin: 0 0 4px;
-  font-size: 0.96rem;
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
 .mission-bloc p {
-  margin: 0 0 8px;
-  font-size: 0.86rem;
-  color: var(--muted);
-}
-
-.badge.duo-badge {
-  background: #ecfeff;
-  color: #0e7490;
-}
-
-.badge.valideur {
-  background: #fff7ed;
-  color: #c2410c;
-}
-
-.mission-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.mission-actions button {
-  width: auto;
   margin: 0;
-  flex: 1 1 auto;
-  font-size: 0.85rem;
-  padding: 9px 14px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.fiche .mission-actions button {
+  min-width: 120px;
 }
 
 .fiche .recompense-finale {
   font-size: 0.78rem;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
-.maplibregl-ctrl-bottom-right {
+/* Les contrôles natifs de MapLibre, alignés sur le reste. */
+.maplibregl-ctrl-bottom-right,
+.maplibregl-ctrl-bottom-left {
   z-index: 4;
+  margin-bottom: calc(var(--tabbar-h) - 8px + env(safe-area-inset-bottom, 0px));
 }
 
-.mission-bloc.selectionne {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px #f1e9ff;
+.maplibregl-ctrl-group {
+  border-radius: var(--r-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--line);
 }
 
-/* Ma position */
-.pin-moi {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #2563eb;
-  border: 3px solid #fff;
-  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.22), 0 3px 10px rgba(31, 36, 48, 0.3);
-}
-
-/* Action secondaire : même taille, mais en retrait du bouton principal. */
-.fiche button.secondary {
-  background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-}
-
-/* Un lieu encore voilé : on sait qu'il y a quelque chose, pas quoi. */
-.pin-lieu.voile {
-  background: rgba(31, 36, 48, 0.72);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(31, 36, 48, 0.3);
-}
-
-.pin-lieu.voile::after {
-  background: rgba(31, 36, 48, 0.72);
-}
-
-.pin-lieu.voile .pin-icone {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.pin-lieu.voile .pin-nom {
-  font-weight: 600;
-  opacity: 0.85;
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+  border-radius: var(--r-full) 0 0 0 !important;
 }

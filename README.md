@@ -19,7 +19,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 13 : la carte 3D** — une carte plein écran qu'on parcourt comme un plan Google (on incline, on tourne, on zoome), où les partenaires apparaissent avec leur étiquette et leurs missions en éventail (solo ou duo), et où un clic ouvre la fiche du partenaire avec ses missions, ses avis et le check-in.
 - ✅ **Brique 14 : déblocage progressif** — tutoriel obligatoire en 3 étapes, carte voilée qu'on lève quartier par quartier en allant sur place, nombre de missions limité par jour, et fonctionnalités (profils des autres, duos, don) qui s'ouvrent au fil de la progression.
 - ✅ **Brique 15 : titres et objets de collection** — une étiquette gagnée par le comportement, que le joueur choisit d'afficher sur son profil, et deux séries d'objets souvenirs à compléter (un par type de lieu poussé, un par thème de mission mené jusqu'au bout).
-- ⚠️ Le visuel des pages est volontairement basique pour l'instant (fonctionnel avant tout) — à retravailler plus tard.
+- ✅ **Brique 16 : l'habillage visuel** — un système de design minimaliste appliqué à toutes les pages : une seule couleur d'accent, beaucoup de blanc, la typographie Inter embarquée, et une vraie coquille d'application (barre du haut, barre d'onglets en bas).
 
 ---
 
@@ -218,6 +218,21 @@ Chaque lieu propose ses propres missions (postées par le commerçant, validées
 
 > **Note sur les bâtiments en 3D** : le fond de plan vient d'OpenStreetMap sous forme d'images, qui ne contiennent pas la hauteur des immeubles. Le bouton 🏢 va donc chercher les contours et les hauteurs réelles des bâtiments visibles auprès d'un service public d'OpenStreetMap (Overpass), puis les dresse en volume. C'est volontairement sur demande : la requête peut prendre quelques secondes et ce service est parfois saturé. Si ça échoue, la carte reste utilisable et un message le dit — rien n'est cassé. Une carte avec les bâtiments déjà en 3D d'origine existe (fonds vectoriels type MapTiler) mais demande une clé d'API payante au-delà d'un certain volume : à rediscuter quand le projet passera en production.
 
+### L'habillage visuel
+
+L'interface a été reprise entièrement pour ressembler à un produit fini plutôt qu'à un prototype. Le parti pris : **peu de couleur, beaucoup de blanc, une typographie qui porte la hiérarchie**. La couleur vient du contenu — la carte, les objets de collection, les icônes des lieux — pas de l'habillage.
+
+Concrètement :
+
+- **Une seule couleur d'accent** dans toute l'application (un vert profond), réservée aux liens, aux états actifs, aux barres de progression et au bonus des lieux. Les boutons principaux sont noir encre, les secondaires en contour fin. Le rouge et l'orange ne servent qu'à ce qui l'exige vraiment (erreur, verrou, attente).
+- **La typographie Inter**, embarquée avec le projet comme les bibliothèques de carte — aucune requête vers un service extérieur au chargement. Les titres sont resserrés (interlettrage négatif), le corps de texte aéré.
+- **Une coquille d'application** : une barre fine en haut avec le nom du produit et l'accès à l'espace commerçant, et une **barre d'onglets en bas** — Profil, Missions, Carte, Duos, et un bouton « Plus » qui ouvre une feuille avec le reste (Lieux, Validation, Invitations, Amis). C'est ce qui donne la sensation d'une vraie appli plutôt que d'un site. Elle est écrite une seule fois dans `nav.js` et injectée sur chaque page, au lieu d'être recopiée dans les 9 fichiers HTML.
+- **Des icônes dessinées** (traits fins, cohérents) pour la navigation, les outils de la carte et les cadenas du déblocage — les emoji ne servent plus que là où ils sont du contenu : le type d'un établissement, un badge, un objet de collection.
+- **Des cartes blanches à filet fin**, sans ombres marquées, et des listes séparées par un simple trait plutôt que par des blocs empilés.
+- **La carte 3D** a été réalignée sur la même palette : étiquettes blanches à ombre douce, colonnes de bonus dans le vert d'accent, outils regroupés en une seule colonne au lieu de boutons flottants.
+
+Tout tient dans deux fichiers, `public/style.css` (le système commun) et `public/carte.css` (ce qui est propre à la carte) : changer la couleur d'accent ou l'arrondi des cartes se fait en une ligne, en haut de `style.css`.
+
 ### Le déblocage progressif
 
 Les specs demandent que l'appli ne s'ouvre pas d'un coup à l'inscription (section 2.9) : au démarrage le joueur n'a accès qu'au strict nécessaire, et tout le reste s'ouvre en jouant. La section **« Ton parcours »** en haut de la page "Mon profil" montre en permanence où il en est.
@@ -379,6 +394,8 @@ projet-commercants/
     │       ├── collection-rules.ts / .spec.ts     ← catalogue des titres et des deux séries d'objets
     │       └── collection.service.ts      ← recalcule tout depuis les actions du joueur, équipe un titre
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
+        ├── style.css                      ← le système de design (couleurs, typographie, composants)
+        ├── nav.js                         ← la coquille : barre du haut et barre d'onglets
         ├── utils.js                       ← échappement du texte affiché (sécurité)
         ├── index.html / app.js            ← profil joueur + portefeuille
         ├── missions.html / missions.js    ← consultation des missions, demande de validation
@@ -388,6 +405,7 @@ projet-commercants/
         ├── commercant.html / commercant.js ← espace commerçant (activité / ciblage / concurrence)
         ├── lieux.html / lieux.js          ← check-in, avis, mini carte des lieux
         ├── carte.html / carte.js / carte.css ← la carte 3D plein écran et la fiche partenaire
+        ├── vendor/inter/                  ← la police Inter (embarquée, pas de CDN)
         ├── vendor/leaflet/                ← mini carte de la page Lieux (embarquée, pas de CDN)
         └── vendor/maplibre/               ← carte 3D (embarquée, pas de CDN)
 ```
@@ -396,7 +414,6 @@ projet-commercants/
 
 Les grandes briques fonctionnelles des specs sont désormais toutes implémentées. Ce qui reste, c'est le passage du prototype à un vrai produit :
 
-- **Le visuel** — l'interface est fonctionnelle mais volontairement brute (sauf la carte). C'est le prochain gros chantier.
 - **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
 - **Les comptes et la sécurité** — il n'y a pas encore de mot de passe ni de session : chaque page se souvient simplement de l'identifiant du joueur dans le navigateur. Indispensable avant toute mise en ligne.
 - **Les vraies transactions** — "dépenser" et "donner" sont pour l'instant symboliques, tracés comme un comportement, sans paiement réel.

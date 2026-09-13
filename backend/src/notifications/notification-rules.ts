@@ -33,10 +33,10 @@ export interface NotificationRendue {
   lien: string;
 }
 
-// « 3 crédits » plutôt que « 3 crédit ».
-function credits(montant: number | undefined): string {
+// « 3 jetons » plutôt que « 3 jeton ».
+function jetons(montant: number | undefined): string {
   const valeur = montant ?? 0;
-  return `${valeur} crédit${valeur > 1 ? 's' : ''}`;
+  return `${valeur} jeton${valeur > 1 ? 's' : ''}`;
 }
 
 function qui(donnees: DonneesNotification): string {
@@ -55,7 +55,7 @@ const RENDUS: Record<TypeNotification, (d: DonneesNotification) => NotificationR
   }),
   mission_validee: (d) => ({
     titre: 'Mission validée',
-    corps: `${qui(d)} a confirmé « ${quelleMission(d)} » : ${credits(d.credits)} pour toi.`,
+    corps: `${qui(d)} a confirmé « ${quelleMission(d)} » : ${jetons(d.credits)} pour toi.`,
     lien: 'index.html',
   }),
   mission_refusee: (d) => ({
@@ -90,7 +90,7 @@ const RENDUS: Record<TypeNotification, (d: DonneesNotification) => NotificationR
   }),
   invitation_recue: (d) => ({
     titre: 'Une invitation pour toi',
-    corps: `${d.lieu ?? 'Un établissement'} te propose quelque chose${d.credits ? ` — ${credits(d.credits)} déjà versés` : ''}.`,
+    corps: `${d.lieu ?? 'Un établissement'} te propose quelque chose${d.credits ? ` — ${jetons(d.credits)} déjà versés` : ''}.`,
     lien: 'invitations.html',
   }),
   invitation_repondue: (d) => ({

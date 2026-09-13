@@ -89,7 +89,7 @@ export const FONCTIONNALITES: Fonctionnalite[] = [
   },
   {
     id: 'don',
-    nom: 'Donner son crédit à une cause',
+    nom: 'Donner ses jetons à une cause',
     condition: 'Atteins le niveau 2.',
     estOuverte: (etat) => etat.niveau >= 2,
   },

@@ -79,6 +79,21 @@ npm run start:dev
 
 Vous devriez voir s'afficher `Serveur démarré sur http://localhost:3000`.
 
+### 3 bis. (Recommandé) Remplir le site avec un quartier de démonstration
+
+Pour juger le produit, mieux vaut ne pas partir d'une page vide. Une commande crée un quartier complet — cinq établissements du Marais et d'Oberkampf, huit joueurs, leurs visites, leurs avis, leurs missions accomplies, des amitiés, un duo, deux événements, trois campagnes de ciblage et des jetons qui circulent :
+
+```bash
+cd backend
+npm run demo
+```
+
+Elle affiche à la fin **la liste des comptes et de leurs mots de passe**, pour que vous puissiez vous connecter en tant que n'importe qui — un joueur, ou un commerçant.
+
+> **Ce qui rend cette simulation honnête** : tout passe par les mêmes services que l'application réelle. Les mêmes règles s'appliquent — limite de missions par jour, fonctionnalités verrouillées, check-in à moins de 150 m, solde de jetons suffisant. Si une action est refusée, la commande le dit et continue. Rien n'est écrit « en douce » dans la base.
+
+> **Pour repartir de zéro** : supprimez `backend/data/app.sqlite` avant de relancer la commande.
+
 ### 4. Ouvrir la page dans votre navigateur
 
 Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur. Vous devriez voir la page "Ton profil de joueur" avec le formulaire de création de compte : pseudo, email, mot de passe. Créez votre compte, répondez au questionnaire, et vérifiez que vos 4 scores s'affichent bien à la fin. Vous restez connecté pendant 30 jours ; le bouton "Se déconnecter" se trouve en bas de la page "Mon profil".
@@ -531,6 +546,9 @@ projet-commercants/
     │       ├── jetons.service.ts          ← recharger, payer chez un partenaire, donner
     │       ├── prestataire-paiement.ts    ← le contrat qu'un vrai prestataire devra remplir
     │       └── prestataire-simule.ts      ← l'implémentation de démonstration
+    ├── demo/                      Le quartier de démonstration
+    │   ├── donnees-demo.ts            ← les lieux, missions, joueurs et avis
+    │   └── seed-demo.ts               ← la simulation, qui passe par les vrais services
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── style.css                      ← le système de design (couleurs, typographie, composants)
         ├── nav.js                         ← la coquille : barre du haut, onglets et cloche

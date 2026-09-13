@@ -25,9 +25,9 @@ describe('rendu des notifications', () => {
     expect(rendu.corps).not.toContain('undefined');
   });
 
-  it('accorde le pluriel des crédits', () => {
-    expect(rendreNotification('mission_validee', { credits: 1 }).corps).toContain('1 crédit ');
-    expect(rendreNotification('mission_validee', { credits: 3 }).corps).toContain('3 crédits');
+  it('accorde le pluriel des jetons', () => {
+    expect(rendreNotification('mission_validee', { credits: 1 }).corps).toContain('1 jeton ');
+    expect(rendreNotification('mission_validee', { credits: 3 }).corps).toContain('3 jetons');
   });
 
   it('distingue une invitation acceptée d’une refusée', () => {

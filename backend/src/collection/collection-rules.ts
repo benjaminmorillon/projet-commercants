@@ -88,7 +88,7 @@ export const TITRES: Titre[] = [
   {
     id: 'main_tendue',
     libelle: 'Main tendue',
-    condition: 'Donne 3 fois ton crédit à une cause.',
+    condition: 'Donne 3 fois tes jetons à une cause.',
     estObtenu: (stats) => stats.dons >= 3,
   },
   {

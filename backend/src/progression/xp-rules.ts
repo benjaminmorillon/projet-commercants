@@ -1,7 +1,7 @@
 import { PlayerEventType } from '../player-events/event-weights';
 
 // Progression du joueur (section 2.9 des specs) : XP, niveaux et badges,
-// par-dessus le crédit monétaire.
+// par-dessus les jetons.
 
 // XP gagnée par type d'action. Les actions qui demandent de se déplacer ou
 // d'aller vers les autres rapportent davantage.
@@ -129,7 +129,7 @@ export const BADGES: BadgeDefinition[] = [
   {
     id: 'genereux',
     nom: 'Généreux',
-    description: 'Donner son crédit à une cause',
+    description: 'Donner ses jetons à une cause',
     icone: '💚',
     estObtenu: (s) => s.dons >= 1,
   },

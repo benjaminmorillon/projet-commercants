@@ -15,19 +15,28 @@
     </header>
 
     <section id="step-account" class="card">
-      <h2>1. Crée ton compte</h2>
+      <div class="tab-bar" id="auth-tabs">
+        <button type="button" class="tab-btn active" data-mode="inscription">Créer un compte</button>
+        <button type="button" class="tab-btn" data-mode="connexion">Se connecter</button>
+      </div>
+
       <form id="account-form">
-        <label>
+        <label id="champ-pseudo">
           Pseudo
-          <input type="text" id="pseudo" required minlength="2" maxlength="40" placeholder="Ex : Alex" />
+          <input type="text" id="pseudo" minlength="2" maxlength="40" placeholder="Ex : Alex" />
         </label>
         <label>
           Email
-          <input type="email" id="email" required placeholder="toi@exemple.fr" />
+          <input type="email" id="email" required placeholder="toi@exemple.fr" autocomplete="email" />
         </label>
-        <button type="submit">Continuer</button>
+        <label>
+          Mot de passe
+          <input type="password" id="mot-de-passe" required minlength="8" placeholder="8 caractères minimum" autocomplete="current-password" />
+        </label>
+        <button type="submit" id="account-submit">Créer mon compte</button>
       </form>
       <p id="account-error" class="error" hidden></p>
+      <p class="hint" id="auth-aide">Ton mot de passe n'est jamais enregistré tel quel : le serveur n'en garde qu'une empreinte impossible à remonter.</p>
     </section>
 
     <section id="step-questionnaire" class="card" hidden>
@@ -126,6 +135,12 @@
       <h3>Ce qui l'a fait bouger</h3>
       <div id="profil-events" class="events-list"></div>
       <p id="profil-events-empty" class="hint" hidden>Rien encore. Fais une mission ou un check-in pour voir ton profil évoluer.</p>
+    </section>
+
+    <section id="compte-section" class="card" hidden>
+      <h2>Ton compte</h2>
+      <p class="hint" id="compte-identite"></p>
+      <button type="button" class="secondary" id="btn-deconnexion">Se déconnecter</button>
     </section>
 
     <section id="wallet-section" class="card" hidden>

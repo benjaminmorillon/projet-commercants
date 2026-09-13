@@ -79,23 +79,70 @@ function wireImagePicker(inputId, previewId, onChange) {
 
 /* ---------- Compte ---------- */
 
+let modeAuth = 'inscription';
+
+function appliquerModeAuth() {
+  const inscription = modeAuth === 'inscription';
+  document.querySelectorAll('.champ-etablissement').forEach((champ) => {
+    champ.hidden = !inscription;
+    champ.querySelectorAll('input, select').forEach((entree) => {
+      // Un champ masqué ne doit pas bloquer l'envoi du formulaire.
+      entree.required = inscription && entree.id !== 'capaciteEstimee';
+    });
+  });
+  document.getElementById('account-submit').textContent = inscription
+    ? 'Créer mon espace'
+    : 'Se connecter';
+  accountError.hidden = true;
+}
+
+document.getElementById('auth-tabs').addEventListener('click', (event) => {
+  const btn = event.target.closest('.tab-btn');
+  if (!btn) return;
+  document.querySelectorAll('#auth-tabs .tab-btn').forEach((b) => b.classList.remove('active'));
+  btn.classList.add('active');
+  modeAuth = btn.dataset.mode;
+  appliquerModeAuth();
+});
+
 accountForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   accountError.hidden = true;
 
-  const capacite = document.getElementById('capaciteEstimee').value;
+  const email = document.getElementById('email').value.trim();
+  const motDePasse = document.getElementById('mot-de-passe').value;
 
   try {
+    if (modeAuth === 'connexion') {
+      const utilisateur = await apiCall('POST', '/auth/connexion', { email, motDePasse });
+      if (utilisateur.type !== 'commercant') {
+        throw new Error("Ce compte est un compte joueur : connecte-toi depuis l'onglet Profil.");
+      }
+      await retrouverMonEtablissement();
+      return;
+    }
+
+    // Deux étapes enchaînées : le compte commerçant, puis son établissement.
+    // La position du navigateur sert de coordonnées du lieu.
+    const nom = document.getElementById('nom').value.trim();
+    await apiCall('POST', '/auth/inscription', {
+      email,
+      motDePasse,
+      pseudo: nom,
+      type: 'commercant',
+    });
+
+    const capacite = document.getElementById('capaciteEstimee').value;
     const coords = await getCurrentPosition();
     const business = await apiCall('POST', '/businesses', {
-      nom: document.getElementById('nom').value.trim(),
-      email: document.getElementById('email').value.trim(),
+      nom,
       adresse: document.getElementById('adresse').value.trim(),
       latitude: coords.latitude,
       longitude: coords.longitude,
       typeEtablissement: document.getElementById('typeEtablissement').value,
       ...(capacite ? { capaciteEstimee: Number(capacite) } : {}),
     });
+
     businessId = business.id;
     localStorage.setItem('businessId', businessId);
     showDashboard();
@@ -105,11 +152,26 @@ accountForm.addEventListener('submit', async (event) => {
   }
 });
 
+// Après une connexion, on retrouve l'établissement rattaché au compte.
+async function retrouverMonEtablissement() {
+  const utilisateur = await apiCall('GET', '/auth/moi');
+  const tous = await apiCall('GET', '/businesses');
+  const mien = tous.find((b) => b.userId === utilisateur.id);
+  if (!mien) {
+    throw new Error("Ce compte n'a pas encore d'établissement enregistré.");
+  }
+  businessId = mien.id;
+  localStorage.setItem('businessId', businessId);
+  showDashboard();
+}
+
 /* ---------- Onglets ---------- */
 
-document.querySelectorAll('.tab-btn').forEach((btn) => {
+document.querySelectorAll('#dashboard-tabs .tab-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+    document
+      .querySelectorAll('#dashboard-tabs .tab-btn')
+      .forEach((b) => b.classList.toggle('active', b === btn));
     document.querySelectorAll('.tab-panel').forEach((panel) => {
       panel.hidden = panel.dataset.panel !== btn.dataset.tab;
     });
@@ -493,6 +555,21 @@ function showDashboard() {
   refreshPreview();
 }
 
-if (businessId) {
-  showDashboard();
+async function initialiser() {
+  appliquerModeAuth();
+
+  const utilisateur = await apiCall('GET', '/auth/moi').catch(() => null);
+  if (!utilisateur || utilisateur.type !== 'commercant') {
+    localStorage.removeItem('businessId');
+    businessId = null;
+    return;
+  }
+
+  await retrouverMonEtablissement().catch(() => {
+    // Compte commerçant sans établissement : on laisse le formulaire ouvert.
+    localStorage.removeItem('businessId');
+    businessId = null;
+  });
 }
+
+initialiser();

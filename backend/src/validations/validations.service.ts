@@ -1,7 +1,13 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { BalancingService } from '../balancing/balancing.service';
+import { Business } from '../businesses/business.entity';
 import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventType } from '../player-events/event-weights';
@@ -40,6 +46,8 @@ export class ValidationsService {
     private readonly users: Repository<User>,
     @InjectRepository(CheckIn)
     private readonly checkIns: Repository<CheckIn>,
+    @InjectRepository(Business)
+    private readonly businesses: Repository<Business>,
     private readonly wallet: WalletService,
     private readonly balancing: BalancingService,
     private readonly playerEvents: PlayerEventsService,
@@ -106,7 +114,7 @@ export class ValidationsService {
         );
       }
       const validator = await this.users.findOne({
-        where: { pseudo: dto.validatorPseudo, type: UserType.PARTICULIER },
+        where: { pseudo: ILike(dto.validatorPseudo.trim()), type: UserType.PARTICULIER },
       });
       if (!validator) {
         throw new NotFoundException('Aucun joueur ne correspond à ce pseudo.');
@@ -151,13 +159,34 @@ export class ValidationsService {
     return this.enrich(rows);
   }
 
-  async resolve(validationId: string, statut: ValidationStatut): Promise<MissionValidation> {
+  /**
+   * `parUtilisateurId` est le compte connecté : seule la personne (ou le
+   * commerçant) désignée à la création de la demande peut la trancher.
+   * Sans ce contrôle, n'importe qui pourrait valider ses propres missions en
+   * appelant l'API directement.
+   */
+  async resolve(
+    validationId: string,
+    statut: ValidationStatut,
+    parUtilisateurId: string,
+  ): Promise<MissionValidation> {
     const record = await this.validations.findOne({ where: { id: validationId } });
     if (!record) {
       throw new NotFoundException('Demande de validation introuvable.');
     }
     if (record.statut !== 'en_attente') {
       throw new BadRequestException('Cette demande a déjà été traitée.');
+    }
+
+    const autorise =
+      record.validatorType === 'joueur'
+        ? record.validatorPlayerId === parUtilisateurId
+        : await this.businesses.exist({
+            where: { id: record.validatorBusinessId as string, userId: parUtilisateurId },
+          });
+
+    if (!autorise) {
+      throw new ForbiddenException("Cette demande ne t'est pas adressée.");
     }
 
     record.statut = statut;

@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, MoreThanOrEqual, Repository } from 'typeorm';
 import { BalancingService } from '../balancing/balancing.service';
@@ -313,10 +318,15 @@ export class CampaignsService {
     targetId: string,
     statut: Exclude<TargetStatut, 'envoyee'>,
     dto: RespondInvitationDto,
+    parUtilisateurId: string,
   ): Promise<CampaignTarget> {
     const target = await this.targets.findOne({ where: { id: targetId } });
     if (!target) {
       throw new NotFoundException('Invitation introuvable.');
+    }
+    // On ne répond qu'aux invitations qui nous sont adressées.
+    if (target.playerId !== parUtilisateurId) {
+      throw new ForbiddenException("Cette invitation ne t'est pas adressée.");
     }
     if (target.statut !== 'envoyee') {
       throw new BadRequestException('Tu as déjà répondu à cette invitation.');

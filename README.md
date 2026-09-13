@@ -19,6 +19,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 13 : la carte 3D** — une carte plein écran qu'on parcourt comme un plan Google (on incline, on tourne, on zoome), où les partenaires apparaissent avec leur étiquette et leurs missions en éventail (solo ou duo), et où un clic ouvre la fiche du partenaire avec ses missions, ses avis et le check-in.
 - ✅ **Brique 14 : déblocage progressif** — tutoriel obligatoire en 3 étapes, carte voilée qu'on lève quartier par quartier en allant sur place, nombre de missions limité par jour, et fonctionnalités (profils des autres, duos, don) qui s'ouvrent au fil de la progression.
 - ✅ **Brique 15 : titres et objets de collection** — une étiquette gagnée par le comportement, que le joueur choisit d'afficher sur son profil, et deux séries d'objets souvenirs à compléter (un par type de lieu poussé, un par thème de mission mené jusqu'au bout).
+- ✅ **Brique 17 : comptes, mots de passe et sessions** — une vraie connexion, et surtout un serveur qui vérifie à chaque requête que vous n'agissez que pour votre propre compte.
 - ✅ **Brique 16 : l'habillage visuel** — un système de design minimaliste appliqué à toutes les pages : une seule couleur d'accent, beaucoup de blanc, la typographie Inter embarquée, et une vraie coquille d'application (barre du haut, barre d'onglets en bas).
 
 ---
@@ -77,11 +78,13 @@ Vous devriez voir s'afficher `Serveur démarré sur http://localhost:3000`.
 
 ### 4. Ouvrir la page dans votre navigateur
 
-Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur. Vous devriez voir la page "Ton profil de joueur". Créez un compte, répondez au questionnaire, et vérifiez que vos 4 scores s'affichent bien à la fin.
+Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur. Vous devriez voir la page "Ton profil de joueur" avec le formulaire de création de compte : pseudo, email, mot de passe. Créez votre compte, répondez au questionnaire, et vérifiez que vos 4 scores s'affichent bien à la fin. Vous restez connecté pendant 30 jours ; le bouton "Se déconnecter" se trouve en bas de la page "Mon profil".
 
-Un lien "Missions" en haut de la page mène au catalogue de missions (35 missions importées automatiquement depuis `docs/missions-catalogue.json` au premier démarrage), avec des filtres par archétype, durée, thème et mode d'interaction.
+La navigation se fait par la **barre d'onglets en bas de l'écran** — Profil, Missions, Carte, Duos — le bouton "Plus" ouvrant le reste (Lieux, Validation, Invitations, Amis) et l'espace commerçant étant accessible en haut à droite.
 
-Un lien "Espace commerçant" permet à un établissement de créer son compte, de poster ses propres missions (elles apparaissent alors aussi dans le catalogue consulté par les joueurs), et de voir la liste de ce qu'il a publié.
+L'onglet "Missions" mène au catalogue de missions (35 missions importées automatiquement depuis `docs/missions-catalogue.json` au premier démarrage), avec des filtres par archétype, durée, thème et mode d'interaction.
+
+L'espace commerçant permet à un établissement de créer son compte (email + mot de passe, puis les informations du lieu dans le même formulaire), de poster ses propres missions (elles apparaissent alors aussi dans le catalogue consulté par les joueurs), et de voir la liste de ce qu'il a publié.
 
 Un lien "Lieux" liste les établissements partenaires sur une petite carte (avec un cercle indiquant la zone de 150m où le check-in est accepté) et en dessous sous forme de fiches. Un joueur peut s'y "check-in" (le navigateur demande l'accès à la position GPS) : le check-in n'est validé que si vous êtes à moins de 150m des coordonnées enregistrées par le commerçant. Une fois check-iné, un formulaire d'avis (note + commentaire) apparaît.
 
@@ -218,6 +221,39 @@ Chaque lieu propose ses propres missions (postées par le commerçant, validées
 
 > **Note sur les bâtiments en 3D** : le fond de plan vient d'OpenStreetMap sous forme d'images, qui ne contiennent pas la hauteur des immeubles. Le bouton 🏢 va donc chercher les contours et les hauteurs réelles des bâtiments visibles auprès d'un service public d'OpenStreetMap (Overpass), puis les dresse en volume. C'est volontairement sur demande : la requête peut prendre quelques secondes et ce service est parfois saturé. Si ça échoue, la carte reste utilisable et un message le dit — rien n'est cassé. Une carte avec les bâtiments déjà en 3D d'origine existe (fonds vectoriels type MapTiler) mais demande une clé d'API payante au-delà d'un certain volume : à rediscuter quand le projet passera en production.
 
+### Les comptes et la sécurité
+
+Jusqu'ici il n'y avait ni mot de passe ni session : la page retenait un identifiant de joueur, et **n'importe qui pouvait agir au nom de n'importe qui** en changeant cet identifiant dans l'URL. C'était le blocage n°1 avant toute mise en ligne.
+
+**Créer un compte et se connecter.** L'écran d'accueil propose maintenant « Créer un compte » ou « Se connecter » : pseudo, email, mot de passe (8 caractères minimum). Même chose côté commerçant, où la création du compte et celle de l'établissement s'enchaînent en un seul formulaire.
+
+**Le mot de passe n'est jamais stocké.** Le serveur n'en garde qu'une empreinte calculée avec **scrypt**, une fonction volontairement lente (~100 ms) conçue pour rendre les attaques par force brute coûteuses. Chaque mot de passe reçoit un « sel » tiré au hasard : deux personnes ayant choisi le même mot de passe n'ont pas la même empreinte, et on ne peut pas le repérer en comparant. La vérification se fait en temps constant, pour que la durée de la réponse ne laisse rien deviner. C'est la fonction fournie par Node lui-même — aucune bibliothèque supplémentaire à faire confiance.
+
+**La connexion tient dans un cookie que la page ne peut pas lire.** Le navigateur reçoit un jeton de 256 bits tiré au hasard, dans un cookie `httpOnly` : même un script malveillant injecté dans la page ne pourrait pas le voler. C'est le serveur qui sait à qui ce jeton correspond ; se déconnecter supprime la ligne, donc la session est coupée immédiatement — ce qu'un jeton auto-porté (type JWT) ne permet pas.
+
+**Deux vérifications appliquées à toutes les routes d'un coup**, plutôt qu'une par une :
+
+1. **être connecté** — sauf pour ce qui est volontairement public : le catalogue de missions, la liste des lieux partenaires et leurs avis ;
+2. **n'agir que pour soi** — dès qu'une requête porte un identifiant de joueur, il doit être celui de la personne connectée. C'est ce qui ferme définitivement le trou décrit plus haut.
+
+Ce garde est branché **globalement** : une route qu'on ajouterait demain en oubliant d'y penser est protégée par défaut, jamais l'inverse.
+
+**Et les cas qu'une règle générale ne couvre pas** ont chacun leur vérification explicite :
+
+| Situation | Ce qui est vérifié |
+| --- | --- |
+| Poster une mission, lancer une campagne, lire ses demandes de validation | L'établissement visé appartient bien au compte connecté |
+| Valider ou refuser une mission | La demande vous est réellement adressée — **on ne peut plus valider ses propres missions** |
+| Accepter une demande d'ami | La demande vous est adressée (l'expéditeur ne peut pas s'auto-accepter) |
+| Répondre à une invitation commerçant | L'invitation vous est adressée |
+| Ouvrir la carte | Le joueur est celui de la session : impossible de voir les découvertes de quelqu'un d'autre |
+
+**Deux détails qui comptent** : l'email est normalisé (majuscules et espaces ignorés), et un échec de connexion renvoie **le même message et le même temps de réponse** que l'email existe ou non — on ne révèle pas à un inconnu quelles adresses ont un compte. Enfin, le **pseudo est désormais unique** (à la casse près) : c'est lui qui sert à désigner quelqu'un comme validateur ou à envoyer une demande d'ami, il ne pouvait pas rester ambigu.
+
+> **Si vous aviez déjà lancé le projet** : les comptes créés avant cette brique n'ont pas de mot de passe et ne peuvent donc pas se connecter. Supprimez `backend/data/app.sqlite` et relancez le serveur pour repartir d'une base propre.
+
+> **Ce qui reste à faire avant une vraie mise en ligne** : le « mot de passe oublié » (il faut un service d'envoi d'emails), la limitation du nombre de tentatives de connexion, et le passage en HTTPS — le cookie est déjà configuré pour ne voyager qu'en HTTPS dès que le serveur tourne en production.
+
 ### L'habillage visuel
 
 L'interface a été reprise entièrement pour ressembler à un produit fini plutôt qu'à un prototype. Le parti pris : **peu de couleur, beaucoup de blanc, une typographie qui porte la hiérarchie**. La couleur vient du contenu — la carte, les objets de collection, les icônes des lieux — pas de l'habillage.
@@ -312,7 +348,7 @@ cd backend
 npm test
 ```
 
-Tout doit passer en vert (`69 passed`).
+Tout doit passer en vert (`82 passed`).
 
 ---
 
@@ -390,9 +426,16 @@ projet-commercants/
     │   │   ├── unlock-rules.ts / .spec.ts         ← tutoriel, conditions d'ouverture, quota du jour, quadrillage de la carte
     │   │   ├── zone-decouverte.entity.ts          ← les quartiers qu'un joueur a levés
     │   │   └── unlocking.service.ts       ← état du joueur, verrous côté serveur, découverte d'un quartier
-    │   └── collection/           Titres et objets de collection
-    │       ├── collection-rules.ts / .spec.ts     ← catalogue des titres et des deux séries d'objets
-    │       └── collection.service.ts      ← recalcule tout depuis les actions du joueur, équipe un titre
+    │   ├── collection/           Titres et objets de collection
+    │   │   ├── collection-rules.ts / .spec.ts     ← catalogue des titres et des deux séries d'objets
+    │   │   └── collection.service.ts      ← recalcule tout depuis les actions du joueur, équipe un titre
+    │   └── auth/                 Comptes, mots de passe et sessions
+    │       ├── password.ts / .spec.ts             ← empreinte scrypt et jetons de session
+    │       ├── cookies.ts / .spec.ts              ← lecture du cookie de session
+    │       ├── session.entity.ts                  ← les connexions ouvertes
+    │       ├── auth.service.ts            ← inscription, connexion, déconnexion
+    │       ├── auth.guard.ts              ← être connecté, et n'agir que pour soi
+    │       └── business-owner.guard.ts    ← l'établissement visé est bien le sien
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── style.css                      ← le système de design (couleurs, typographie, composants)
         ├── nav.js                         ← la coquille : barre du haut et barre d'onglets
@@ -415,6 +458,5 @@ projet-commercants/
 Les grandes briques fonctionnelles des specs sont désormais toutes implémentées. Ce qui reste, c'est le passage du prototype à un vrai produit :
 
 - **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
-- **Les comptes et la sécurité** — il n'y a pas encore de mot de passe ni de session : chaque page se souvient simplement de l'identifiant du joueur dans le navigateur. Indispensable avant toute mise en ligne.
 - **Les vraies transactions** — "dépenser" et "donner" sont pour l'instant symboliques, tracés comme un comportement, sans paiement réel.
 - **Les notifications push** — les validations et invitations s'affichent quand on ouvre l'onglet, pas en temps réel sur le téléphone.

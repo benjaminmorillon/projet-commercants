@@ -813,9 +813,9 @@ function cadrerSurLesLieux() {
 }
 
 async function chargerCarte(options = {}) {
+  // Le joueur, c'est celui de la session : on n'envoie que la position, qui
+  // sert à lever le voile sur ce qui l'entoure immédiatement.
   const params = new URLSearchParams();
-  if (playerId) params.set('playerId', playerId);
-  // Le joueur voit ce qui l'entoure immédiatement, même sans y être encore allé.
   if (maPosition) {
     params.set('latitude', maPosition.latitude);
     params.set('longitude', maPosition.longitude);

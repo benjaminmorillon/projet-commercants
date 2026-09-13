@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { BusinessOwnerGuard } from '../auth/business-owner.guard';
 import { CampaignsService } from './campaigns.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { PreviewCampaignDto } from './dto/preview-campaign.dto';
 
+@UseGuards(BusinessOwnerGuard)
 @Controller('businesses')
 export class BusinessCampaignsController {
   constructor(private readonly campaigns: CampaignsService) {}

@@ -34,6 +34,10 @@ import { CampaignsModule } from './campaigns/campaigns.module';
 import { Campaign } from './campaigns/campaign.entity';
 import { CampaignTarget } from './campaigns/campaign-target.entity';
 import { MapModule } from './map/map.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/auth.guard';
+import { AuthModule } from './auth/auth.module';
+import { Session } from './auth/session.entity';
 import { CollectionModule } from './collection/collection.module';
 import { UnlockingModule } from './unlocking/unlocking.module';
 import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
@@ -64,6 +68,7 @@ import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
         GroupMissionParticipant,
         PairingOutcome,
         ZoneDecouverte,
+        Session,
       ],
       synchronize: true,
     }),
@@ -85,6 +90,10 @@ import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
     MapModule,
     UnlockingModule,
     CollectionModule,
+    AuthModule,
   ],
+  // Le garde s'applique à TOUTES les routes : une route oubliée est protégée
+  // par défaut, plutôt que l'inverse.
+  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule {}

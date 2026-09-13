@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
@@ -69,7 +69,7 @@ export class FriendsService {
     await this.getPlayerOrThrow(playerId);
 
     const target = await this.users.findOne({
-      where: { pseudo: dto.pseudo, type: UserType.PARTICULIER },
+      where: { pseudo: ILike(dto.pseudo.trim()), type: UserType.PARTICULIER },
     });
     if (!target) {
       throw new NotFoundException('Aucun joueur ne correspond à ce pseudo.');
@@ -112,10 +112,19 @@ export class FriendsService {
     return this.enrichWithOtherPseudo(rows, (r) => r.receiverId);
   }
 
-  async resolve(requestId: string, statut: FriendshipStatut): Promise<Friendship> {
+  async resolve(
+    requestId: string,
+    statut: FriendshipStatut,
+    parUtilisateurId: string,
+  ): Promise<Friendship> {
     const record = await this.friendships.findOne({ where: { id: requestId } });
     if (!record) {
       throw new NotFoundException('Demande introuvable.');
+    }
+    // Seul le destinataire accepte ou refuse : celui qui a envoyé la demande
+    // ne peut pas se déclarer ami tout seul.
+    if (record.receiverId !== parUtilisateurId) {
+      throw new ForbiddenException("Cette demande ne t'est pas adressée.");
     }
     if (record.statut !== 'en_attente') {
       throw new BadRequestException('Cette demande a déjà été traitée.');

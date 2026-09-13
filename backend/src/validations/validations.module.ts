@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { OwnershipModule } from '../auth/ownership.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BalancingModule } from '../balancing/balancing.module';
+import { Business } from '../businesses/business.entity';
 import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventsModule } from '../player-events/player-events.module';
@@ -15,7 +17,8 @@ import { ValidationsService } from './validations.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MissionValidation, Mission, User, CheckIn]),
+    OwnershipModule,
+    TypeOrmModule.forFeature([MissionValidation, Mission, User, CheckIn, Business]),
     WalletModule,
     BalancingModule,
     PlayerEventsModule,

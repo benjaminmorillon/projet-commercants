@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { BusinessOwnerGuard } from '../auth/business-owner.guard';
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsService } from './events.service';
 
+@UseGuards(BusinessOwnerGuard)
 @Controller('businesses')
 export class EventsController {
   constructor(private readonly events: EventsService) {}

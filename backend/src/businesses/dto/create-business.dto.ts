@@ -1,5 +1,4 @@
 import {
-  IsEmail,
   IsInt,
   IsLatitude,
   IsLongitude,
@@ -9,9 +8,6 @@ import {
 } from 'class-validator';
 
 export class CreateBusinessDto {
-  @IsEmail()
-  email: string;
-
   @Length(2, 100)
   nom: string;
 

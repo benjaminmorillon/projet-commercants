@@ -1628,3 +1628,17 @@ form button[type='submit'] {
   font-size: 0.86rem;
   line-height: 1.5;
 }
+
+/* Un champ n'est signalé en rouge qu'après une vraie tentative de saisie,
+   jamais au simple affichage du formulaire. */
+input:invalid,
+select:invalid,
+textarea:invalid {
+  border-color: var(--line-strong);
+}
+
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+  border-color: var(--negative);
+}

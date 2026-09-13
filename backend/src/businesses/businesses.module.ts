@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { OwnershipModule } from '../auth/ownership.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BalancingModule } from '../balancing/balancing.module';
 import { CheckinsModule } from '../checkins/checkins.module';
@@ -10,6 +11,7 @@ import { BusinessesService } from './businesses.service';
 
 @Module({
   imports: [
+    OwnershipModule,
     TypeOrmModule.forFeature([User, Business]),
     MissionsModule,
     CheckinsModule,

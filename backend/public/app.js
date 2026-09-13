@@ -300,23 +300,75 @@ async function loadWallet() {
     .join('');
 }
 
+// --- Créer un compte ou se connecter -------------------------------------
+
+let modeAuth = 'inscription';
+
+function appliquerModeAuth() {
+  const inscription = modeAuth === 'inscription';
+  document.getElementById('champ-pseudo').hidden = !inscription;
+  document.getElementById('pseudo').required = inscription;
+  document.getElementById('account-submit').textContent = inscription
+    ? 'Créer mon compte'
+    : 'Se connecter';
+  document.getElementById('mot-de-passe').setAttribute(
+    'autocomplete',
+    inscription ? 'new-password' : 'current-password',
+  );
+  document.getElementById('auth-aide').hidden = !inscription;
+  accountError.hidden = true;
+}
+
+document.getElementById('auth-tabs').addEventListener('click', (event) => {
+  const btn = event.target.closest('.tab-btn');
+  if (!btn) return;
+  document.querySelectorAll('#auth-tabs .tab-btn').forEach((b) => b.classList.remove('active'));
+  btn.classList.add('active');
+  modeAuth = btn.dataset.mode;
+  appliquerModeAuth();
+});
+
 accountForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   accountError.hidden = true;
 
-  const pseudo = document.getElementById('pseudo').value.trim();
   const email = document.getElementById('email').value.trim();
+  const motDePasse = document.getElementById('mot-de-passe').value;
 
   try {
-    const player = await apiPost('/players', { pseudo, email });
-    playerId = player.id;
+    // Le serveur pose un cookie de session ; la page ne garde que
+    // l'identifiant, pour savoir de qui elle parle.
+    const utilisateur =
+      modeAuth === 'inscription'
+        ? await apiPost('/auth/inscription', {
+            pseudo: document.getElementById('pseudo').value.trim(),
+            email,
+            motDePasse,
+          })
+        : await apiPost('/auth/connexion', { email, motDePasse });
+
+    playerId = utilisateur.id;
     localStorage.setItem('playerId', playerId);
-    showStep('questionnaire');
-    loadWallet();
+    accountForm.reset();
+
+    if (utilisateur.type === 'commercant') {
+      window.location.href = 'commercant.html';
+      return;
+    }
+
+    // On repasse par le même chemin qu'au chargement : une seule façon
+    // d'afficher un joueur connecté, donc rien qui puisse diverger.
+    await initialiser();
   } catch (error) {
     accountError.textContent = error.message;
     accountError.hidden = false;
   }
+});
+
+document.getElementById('btn-deconnexion').addEventListener('click', async () => {
+  await apiPost('/auth/deconnexion', {}).catch(() => null);
+  localStorage.removeItem('playerId');
+  window.location.reload();
 });
 
 questionnaireForm.addEventListener('submit', async (event) => {
@@ -366,9 +418,14 @@ function renderScores(profile) {
   renderScoresInto(scoresEl, profile);
 }
 
+// « Recommencer » ne supprime que les réponses au questionnaire : le compte,
+// lui, reste — c'est le bouton « Se déconnecter » qui le quitte.
 restartButton.addEventListener('click', () => {
-  localStorage.removeItem('playerId');
-  playerId = null;
+  questionnaireForm.reset();
+  showStep('questionnaire');
+});
+
+function reinitialiserAffichage() {
   accountForm.reset();
   questionnaireForm.reset();
   walletSection.hidden = true;
@@ -376,17 +433,40 @@ restartButton.addEventListener('click', () => {
   document.getElementById('progression-section').hidden = true;
   document.getElementById('parcours-section').hidden = true;
   document.getElementById('collection-section').hidden = true;
+  document.getElementById('compte-section').hidden = true;
   showStep('account');
-});
+}
 
-// Si un joueur a déjà un compte (localStorage), on saute directement au questionnaire.
-if (playerId) {
-  showStep('questionnaire');
+function demarrer() {
   loadParcours();
   loadProgression();
   loadCollection();
   loadProfilVivant();
   loadWallet();
-} else {
-  showStep('account');
 }
+
+// C'est le serveur qui dit qui est connecté : le cookie de session fait foi,
+// pas ce que la page a en mémoire.
+async function initialiser() {
+  appliquerModeAuth();
+
+  const utilisateur = await apiGet('/auth/moi').catch(() => null);
+  if (!utilisateur) {
+    localStorage.removeItem('playerId');
+    playerId = null;
+    reinitialiserAffichage();
+    return;
+  }
+
+  playerId = utilisateur.id;
+  localStorage.setItem('playerId', playerId);
+
+  document.getElementById('compte-section').hidden = false;
+  document.getElementById('compte-identite').textContent =
+    `Connecté en tant que ${utilisateur.pseudo} (${utilisateur.email}).`;
+
+  showStep('questionnaire');
+  demarrer();
+}
+
+initialiser();

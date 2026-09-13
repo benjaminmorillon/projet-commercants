@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { OwnershipModule } from '../auth/ownership.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BalancingModule } from '../balancing/balancing.module';
 import { Business } from '../businesses/business.entity';
@@ -16,6 +17,7 @@ import { InvitationsController } from './invitations.controller';
 
 @Module({
   imports: [
+    OwnershipModule,
     TypeOrmModule.forFeature([
       Campaign,
       CampaignTarget,

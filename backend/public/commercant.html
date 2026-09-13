@@ -18,20 +18,29 @@
     <section id="step-account" class="card">
       <h2>Crée ton compte établissement</h2>
       <p class="hint">Ton navigateur va te demander l'accès à ta position : sois sur place, ça sert à vérifier plus tard que les joueurs qui laissent un avis sont vraiment venus chez toi.</p>
+      <div class="tab-bar" id="auth-tabs">
+        <button type="button" class="tab-btn active" data-mode="inscription">Créer mon espace</button>
+        <button type="button" class="tab-btn" data-mode="connexion">Se connecter</button>
+      </div>
+
       <form id="account-form">
         <label>
+          Email
+          <input type="email" id="email" required placeholder="contact@exemple.fr" autocomplete="email" />
+        </label>
+        <label>
+          Mot de passe
+          <input type="password" id="mot-de-passe" required minlength="8" placeholder="8 caractères minimum" autocomplete="current-password" />
+        </label>
+        <label class="champ-etablissement">
           Nom de l'établissement
           <input type="text" id="nom" required minlength="2" maxlength="100" placeholder="Ex : Le Comptoir" />
         </label>
-        <label>
-          Email
-          <input type="email" id="email" required placeholder="contact@exemple.fr" />
-        </label>
-        <label>
+        <label class="champ-etablissement">
           Adresse
           <input type="text" id="adresse" required minlength="5" maxlength="200" placeholder="12 rue de la Paix, Paris" />
         </label>
-        <label>
+        <label class="champ-etablissement">
           Type d'établissement
           <select id="typeEtablissement" required>
             <option value="bar">Bar</option>
@@ -40,17 +49,17 @@
             <option value="autre">Autre</option>
           </select>
         </label>
-        <label>
+        <label class="champ-etablissement">
           Capacité estimée (optionnel)
           <input type="number" id="capaciteEstimee" min="1" placeholder="Ex : 60" />
         </label>
-        <button type="submit">Continuer</button>
+        <button type="submit" id="account-submit">Continuer</button>
       </form>
       <p id="account-error" class="error" hidden></p>
     </section>
 
     <section id="dashboard" hidden>
-      <div class="tab-bar">
+      <div class="tab-bar" id="dashboard-tabs">
         <button type="button" class="tab-btn active" data-tab="activite">Mon activité</button>
         <button type="button" class="tab-btn" data-tab="ciblage">Ciblage</button>
         <button type="button" class="tab-btn" data-tab="concurrence">Concurrence</button>

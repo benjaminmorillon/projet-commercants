@@ -1,4 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { UtilisateurConnecte } from '../auth/auth.service';
+import { BusinessOwnerGuard } from '../auth/business-owner.guard';
+import { Public } from '../auth/public.decorator';
+import { Utilisateur } from '../auth/utilisateur.decorator';
 import { BalancingService } from '../balancing/balancing.service';
 import { CheckinsService } from '../checkins/checkins.service';
 import { CreateMissionDto } from '../missions/dto/create-mission.dto';
@@ -16,10 +20,13 @@ export class BusinessesController {
   ) {}
 
   @Post()
-  create(@Body() dto: CreateBusinessDto) {
-    return this.businesses.createBusiness(dto);
+  create(@Utilisateur() utilisateur: UtilisateurConnecte, @Body() dto: CreateBusinessDto) {
+    return this.businesses.createBusiness(utilisateur.id, dto);
   }
 
+  // La liste des lieux partenaires et leurs missions sont publiques : c'est
+  // la vitrine du service, on peut la regarder sans compte.
+  @Public()
   @Get()
   async findAll() {
     const businesses = await this.businesses.findAll();
@@ -43,17 +50,20 @@ export class BusinessesController {
     }));
   }
 
+  @Public()
   @Get(':id')
   getOne(@Param('id') id: string) {
     return this.businesses.getBusiness(id);
   }
 
+  @UseGuards(BusinessOwnerGuard)
   @Post(':id/missions')
   async postMission(@Param('id') id: string, @Body() dto: CreateMissionDto) {
     await this.businesses.getBusiness(id);
     return this.missions.createForBusiness(id, dto);
   }
 
+  @Public()
   @Get(':id/missions')
   async listMissions(@Param('id') id: string) {
     await this.businesses.getBusiness(id);

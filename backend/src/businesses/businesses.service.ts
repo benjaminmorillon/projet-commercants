@@ -18,23 +18,29 @@ export class BusinessesService {
     private readonly businesses: Repository<Business>,
   ) {}
 
-  async createBusiness(dto: CreateBusinessDto): Promise<Business> {
-    const existing = await this.users.findOne({ where: { email: dto.email } });
-    if (existing) {
-      throw new ConflictException('Un compte existe déjà avec cet email.');
+  /**
+   * L'établissement est rattaché au compte connecté : c'est lui, et lui seul,
+   * qui pourra ensuite poster des missions ou lancer une campagne.
+   */
+  async createBusiness(userId: string, dto: CreateBusinessDto): Promise<Business> {
+    const user = await this.users.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('Compte introuvable.');
+    }
+    if (user.type !== UserType.COMMERCANT) {
+      throw new ConflictException(
+        "Ce compte est un compte joueur : crée un compte commerçant pour enregistrer un établissement.",
+      );
     }
 
-    const user = await this.users.save(
-      this.users.create({
-        email: dto.email,
-        pseudo: dto.nom,
-        type: UserType.COMMERCANT,
-      }),
-    );
+    const deja = await this.businesses.findOne({ where: { userId } });
+    if (deja) {
+      throw new ConflictException('Ce compte a déjà un établissement enregistré.');
+    }
 
     return this.businesses.save(
       this.businesses.create({
-        userId: user.id,
+        userId,
         nom: dto.nom,
         adresse: dto.adresse,
         latitude: dto.latitude,

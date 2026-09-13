@@ -20,6 +20,11 @@ export class User {
   @Column({ type: 'varchar', default: UserType.PARTICULIER })
   type: UserType;
 
+  // Empreinte scrypt du mot de passe — jamais le mot de passe lui-même.
+  // Nullable pour les comptes créés avant l'arrivée des mots de passe.
+  @Column({ type: 'varchar', nullable: true, select: false })
+  motDePasseHache: string | null;
+
   @OneToOne(() => PlayerProfile, (profile) => profile.user)
   profile: PlayerProfile;
 

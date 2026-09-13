@@ -1,6 +1,8 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { BusinessOwnerGuard } from '../auth/business-owner.guard';
 import { ValidationsService } from './validations.service';
 
+@UseGuards(BusinessOwnerGuard)
 @Controller('businesses')
 export class BusinessValidationsController {
   constructor(private readonly validations: ValidationsService) {}

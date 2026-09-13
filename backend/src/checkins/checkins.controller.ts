@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Public } from '../auth/public.decorator';
 import { CheckinsService } from './checkins.service';
 import { CreateCheckinDto } from './dto/create-checkin.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -17,6 +18,7 @@ export class CheckinsController {
     return this.checkins.createReview(id, dto);
   }
 
+  @Public()
   @Get(':id/reviews')
   listReviews(@Param('id') id: string) {
     return this.checkins.findReviewsForBusiness(id);

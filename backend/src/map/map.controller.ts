@@ -1,16 +1,20 @@
 import { Controller, Get, Query } from '@nestjs/common';
+import { UtilisateurConnecte } from '../auth/auth.service';
+import { Utilisateur } from '../auth/utilisateur.decorator';
 import { MapService } from './map.service';
 
 @Controller('map')
 export class MapController {
   constructor(private readonly map: MapService) {}
 
-  // Tout ce dont la carte a besoin en un seul appel : les lieux partenaires,
-  // leurs missions (propres + missions types du catalogue) et, si on passe un
-  // playerId, l'avancement du joueur sur chacune d'elles.
+  /**
+   * Tout ce dont la carte a besoin en un seul appel. Le joueur est celui de
+   * la session : on ne peut pas demander la carte de quelqu'un d'autre en
+   * changeant un paramètre dans l'URL.
+   */
   @Get()
   get(
-    @Query('playerId') playerId?: string,
+    @Utilisateur() utilisateur: UtilisateurConnecte,
     @Query('latitude') latitude?: string,
     @Query('longitude') longitude?: string,
   ) {
@@ -23,6 +27,6 @@ export class MapController {
         ? { latitude: lat, longitude: lng }
         : undefined;
 
-    return this.map.getMap(playerId || undefined, position);
+    return this.map.getMap(utilisateur.id, position);
   }
 }

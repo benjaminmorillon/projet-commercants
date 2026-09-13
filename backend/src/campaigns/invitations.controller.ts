@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CampaignsService } from './campaigns.service';
+import { UtilisateurConnecte } from '../auth/auth.service';
+import { Utilisateur } from '../auth/utilisateur.decorator';
 import { RespondInvitationDto } from './dto/respond-invitation.dto';
 
 @Controller()
@@ -12,12 +14,20 @@ export class InvitationsController {
   }
 
   @Post('invitations/:targetId/accepter')
-  accepter(@Param('targetId') targetId: string, @Body() dto: RespondInvitationDto) {
-    return this.campaigns.respond(targetId, 'acceptee', dto);
+  accepter(
+    @Param('targetId') targetId: string,
+    @Body() dto: RespondInvitationDto,
+    @Utilisateur() utilisateur: UtilisateurConnecte,
+  ) {
+    return this.campaigns.respond(targetId, 'acceptee', dto, utilisateur.id);
   }
 
   @Post('invitations/:targetId/refuser')
-  refuser(@Param('targetId') targetId: string, @Body() dto: RespondInvitationDto) {
-    return this.campaigns.respond(targetId, 'refusee', dto);
+  refuser(
+    @Param('targetId') targetId: string,
+    @Body() dto: RespondInvitationDto,
+    @Utilisateur() utilisateur: UtilisateurConnecte,
+  ) {
+    return this.campaigns.respond(targetId, 'refusee', dto, utilisateur.id);
   }
 }

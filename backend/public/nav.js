@@ -122,6 +122,30 @@ function ouvrirMenu(courante) {
   document.body.appendChild(sheet);
 }
 
+// ---------------------------------------------------------------------------
+// Session expirée : on renvoie vers l'écran de connexion plutôt que de
+// laisser la page se remplir d'erreurs.
+// ---------------------------------------------------------------------------
+
+const fetchOriginal = window.fetch.bind(window);
+
+window.fetch = async function fetchAvecSession(ressource, options) {
+  const reponse = await fetchOriginal(ressource, options);
+
+  // `/auth/moi` sert justement à SAVOIR si on est connecté : un 401 y est une
+  // réponse normale, pas une session perdue.
+  const url = typeof ressource === 'string' ? ressource : ressource?.url ?? '';
+  const sondeAuth = url.includes('/auth/');
+
+  if (reponse.status === 401 && !sondeAuth && pageCourante() !== 'index.html') {
+    localStorage.removeItem('playerId');
+    localStorage.removeItem('businessId');
+    window.location.href = 'index.html';
+  }
+
+  return reponse;
+};
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', construireCoquille);
 } else {

@@ -1,17 +1,13 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { PlayersService } from './players.service';
-import { CreatePlayerDto } from './dto/create-player.dto';
 import { SubmitQuestionnaireDto } from './dto/submit-questionnaire.dto';
 
 @Controller('players')
 export class PlayersController {
   constructor(private readonly players: PlayersService) {}
 
-  @Post()
-  async create(@Body() dto: CreatePlayerDto) {
-    const user = await this.players.createPlayer(dto);
-    return { id: user.id, pseudo: user.pseudo, email: user.email };
-  }
+  // La création de compte passe désormais par POST /auth/inscription :
+  // impossible de créer un compte sans mot de passe.
 
   @Get('search')
   search(@Query('pseudo') pseudo: string) {

@@ -17,6 +17,7 @@ import { InscriptionDto } from './dto/inscription.dto';
 import { EXPEDITEUR_EMAIL, ExpediteurEmail } from './expediteur-email';
 import {
   enregistrerEchec,
+  ReglesBlocage,
   EtatTentatives,
   etatVide,
   reinitialiser as reinitialiserTentatives,
@@ -29,6 +30,7 @@ import {
   verifierMotDePasse,
 } from './password';
 import { Session } from './session.entity';
+import { ReglagesService } from '../admin/reglages.service';
 
 // Une session dure 30 jours, puis il faut se reconnecter.
 const DUREE_SESSION_JOURS = 30;
@@ -41,6 +43,7 @@ export interface UtilisateurConnecte {
   pseudo: string;
   email: string;
   type: UserType;
+  administrateur: boolean;
 }
 
 @Injectable()
@@ -56,7 +59,16 @@ export class AuthService {
     private readonly demandes: Repository<DemandeReinitialisation>,
     @Inject(EXPEDITEUR_EMAIL)
     private readonly expediteur: ExpediteurEmail,
+    private readonly reglages: ReglagesService,
   ) {}
+
+  /** Les règles de blocage telles qu'elles sont réglées en ce moment. */
+  private reglesBlocage(): ReglesBlocage {
+    return {
+      maxEchecs: this.reglages.entier('securite.essaisAvantBlocage'),
+      dureeMs: this.reglages.entier('securite.dureeBlocageMinutes') * 60 * 1000,
+    };
+  }
 
   private readonly logger = new Logger(AuthService.name);
 
@@ -66,7 +78,15 @@ export class AuthService {
   private readonly tentatives = new Map<string, EtatTentatives>();
 
   private enUtilisateurConnecte(user: User): UtilisateurConnecte {
-    return { id: user.id, pseudo: user.pseudo, email: user.email, type: user.type };
+    return {
+      id: user.id,
+      pseudo: user.pseudo,
+      email: user.email,
+      type: user.type,
+      // Toujours ramené à un vrai booléen : SQLite stocke 0/1, et un compte
+      // créé avant cette colonne remonte `null`.
+      administrateur: Boolean(user.administrateur),
+    };
   }
 
   async inscrire(dto: InscriptionDto): Promise<{ utilisateur: UtilisateurConnecte; jeton: string }> {
@@ -144,7 +164,7 @@ export class AuthService {
     const correct = verifierMotDePasse(dto.motDePasse, empreinte);
 
     if (!user || !correct) {
-      this.tentatives.set(email, enregistrerEchec(etat, maintenant));
+      this.tentatives.set(email, enregistrerEchec(etat, maintenant, this.reglesBlocage()));
       throw new UnauthorizedException('Email ou mot de passe incorrect.');
     }
 

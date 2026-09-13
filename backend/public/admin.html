@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Projet Commerçant — Administration</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="admin">
+
+  <!-- Écran de connexion. C'est la même connexion que partout ailleurs :
+       il n'y a pas de mot de passe « administrateur » à part, seulement un
+       compte ordinaire à qui on a donné le droit d'administrer. -->
+  <div class="admin-connexion" id="ecran-connexion" hidden>
+    <div class="boite">
+      <h1>Administration</h1>
+      <p>Réservé aux comptes administrateurs. Connecte-toi avec ton adresse habituelle.</p>
+      <form id="form-connexion">
+        <label>
+          Email
+          <input type="email" id="email" required autocomplete="email" />
+        </label>
+        <label>
+          Mot de passe
+          <input type="password" id="mot-de-passe" required autocomplete="current-password" />
+        </label>
+        <button type="submit">Se connecter</button>
+      </form>
+      <p id="erreur-connexion" class="error" hidden></p>
+    </div>
+  </div>
+
+  <!-- Le back-office lui-même. -->
+  <div class="admin-shell" id="shell" hidden>
+    <nav class="admin-rail" aria-label="Sections d'administration">
+      <span class="admin-marque">Administration</span>
+      <a href="#tableau-de-bord" data-section="tableau-de-bord">Tableau de bord</a>
+      <a href="#reglages" data-section="reglages">Réglages du jeu</a>
+      <a href="#journal" data-section="journal">Journal des modifications</a>
+      <div class="pied">
+        <span id="identite"></span>
+        <button type="button" id="btn-deconnexion">Se déconnecter</button>
+      </div>
+    </nav>
+
+    <main class="admin-contenu">
+
+      <section id="section-tableau-de-bord" hidden>
+        <h1>Tableau de bord</h1>
+        <p class="chapeau">L'état du site en un coup d'œil.</p>
+        <div class="admin-compteurs" id="compteurs"></div>
+        <h2 style="font-size:16px;margin:0 0 12px">Dernières modifications</h2>
+        <div id="journal-court"></div>
+      </section>
+
+      <section id="section-reglages" hidden>
+        <h1>Réglages du jeu</h1>
+        <p class="chapeau">
+          Les valeurs qui pilotent le jeu. Une modification s'applique immédiatement,
+          sans redémarrer le site, et reste dans le journal. Tout ce qui n'a pas été
+          touché garde sa valeur d'origine.
+        </p>
+        <div id="reglages"></div>
+      </section>
+
+      <section id="section-journal" hidden>
+        <h1>Journal des modifications</h1>
+        <p class="chapeau">
+          Chaque changement fait depuis cet espace y laisse une trace : qui, quoi,
+          quand, et la valeur d'avant. Rien n'est effaçable depuis l'interface.
+        </p>
+        <div id="journal-complet"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="utils.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

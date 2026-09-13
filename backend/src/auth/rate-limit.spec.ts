@@ -64,3 +64,37 @@ describe('limitation des tentatives', () => {
     expect(essaisRestants(reinitialiser(), T0)).toBe(MAX_ECHECS);
   });
 });
+
+// --- Ce que le back-office peut changer ------------------------------------
+
+describe('réglages appliqués au blocage des connexions', () => {
+  it('bloque après le nombre d’essais réglé, pas après 5', () => {
+    const regles = { maxEchecs: 2, dureeMs: 60_000 };
+    const maintenant = 1_000_000;
+
+    let etat = etatVide();
+    etat = enregistrerEchec(etat, maintenant, regles);
+    expect(verifier(etat, maintenant).bloque).toBe(false);
+
+    etat = enregistrerEchec(etat, maintenant, regles);
+    expect(verifier(etat, maintenant).bloque).toBe(true);
+  });
+
+  it('bloque pour la durée réglée', () => {
+    const regles = { maxEchecs: 1, dureeMs: 60_000 };
+    const maintenant = 1_000_000;
+
+    const etat = enregistrerEchec(etatVide(), maintenant, regles);
+    expect(verifier(etat, maintenant).secondesRestantes).toBe(60);
+    expect(verifier(etat, maintenant + 61_000).bloque).toBe(false);
+  });
+
+  it('décompte les essais restants selon le réglage', () => {
+    const regles = { maxEchecs: 3, dureeMs: 60_000 };
+    const maintenant = 1_000_000;
+
+    expect(essaisRestants(etatVide(), maintenant, regles)).toBe(3);
+    const etat = enregistrerEchec(etatVide(), maintenant, regles);
+    expect(essaisRestants(etat, maintenant, regles)).toBe(2);
+  });
+});

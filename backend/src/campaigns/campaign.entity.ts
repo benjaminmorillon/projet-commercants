@@ -5,6 +5,9 @@ export type CampaignType = 'invitation' | 'publicite';
 // Part du montant payé par le commerçant qui repart vers le joueur ciblé
 // sous forme de crédit (section 3.4 des specs : ~0,25 € reversés sur
 // ~0,30 € payés). Le reste est la marge de la plateforme.
+//
+// Valeur de repli : modifiable depuis le back-office
+// (réglage « campagnes.partJoueur »).
 export const PART_JOUEUR = 0.8;
 
 @Entity()

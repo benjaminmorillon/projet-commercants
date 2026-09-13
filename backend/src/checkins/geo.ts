@@ -1,6 +1,10 @@
 // Distance maximale entre le joueur et le lieu pour qu'un check-in soit
 // validé (section 2.4 des specs : "avoir physiquement check-iné sur place").
 // Volontairement généreuse pour absorber l'imprécision du GPS en intérieur.
+//
+// Cette valeur est désormais modifiable depuis le back-office
+// (réglage « checkin.rayonMetres »). Elle reste écrite ici comme valeur de
+// repli : c'est ce qui s'applique tant que personne n'y a touché.
 export const CHECKIN_RADIUS_METERS = 150;
 
 const EARTH_RADIUS_METERS = 6371000;

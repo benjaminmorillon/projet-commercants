@@ -108,11 +108,19 @@ export function conditionDe(id: FonctionnaliteId): string {
 // Nombre de missions par jour : volontairement serré au début.
 // ---------------------------------------------------------------------------
 
+// Valeurs de repli : ce qui s'applique tant que le back-office n'a rien
+// changé (réglages « missions.parJourDepart » et « missions.parJourMax »).
 export const MISSIONS_JOUR_DEPART = 3;
 export const MISSIONS_JOUR_MAX = 10;
 
-export function limiteMissionsParJour(niveau: number): number {
-  return Math.min(MISSIONS_JOUR_DEPART + Math.max(niveau - 1, 0), MISSIONS_JOUR_MAX);
+// Le service passe les valeurs réglées ; la fonction reste pure et testable
+// telle quelle.
+export function limiteMissionsParJour(
+  niveau: number,
+  depart = MISSIONS_JOUR_DEPART,
+  maximum = MISSIONS_JOUR_MAX,
+): number {
+  return Math.min(depart + Math.max(niveau - 1, 0), maximum);
 }
 
 // ---------------------------------------------------------------------------
@@ -123,17 +131,25 @@ export function limiteMissionsParJour(niveau: number): number {
 // la taille d'un quartier qu'on traverse à pied.
 export const TAILLE_ZONE_DEGRES = 0.005;
 
-export function cleZone(latitude: number, longitude: number): string {
-  const ligne = Math.floor(latitude / TAILLE_ZONE_DEGRES);
-  const colonne = Math.floor(longitude / TAILLE_ZONE_DEGRES);
+export function cleZone(
+  latitude: number,
+  longitude: number,
+  taille = TAILLE_ZONE_DEGRES,
+): string {
+  const ligne = Math.floor(latitude / taille);
+  const colonne = Math.floor(longitude / taille);
   return `${ligne}:${colonne}`;
 }
 
 // Les zones qui touchent un point : la sienne et les 8 voisines. Un joueur
 // voit donc ce qui l'entoure immédiatement, même sans y être encore allé.
-export function zonesVoisines(latitude: number, longitude: number): string[] {
-  const ligne = Math.floor(latitude / TAILLE_ZONE_DEGRES);
-  const colonne = Math.floor(longitude / TAILLE_ZONE_DEGRES);
+export function zonesVoisines(
+  latitude: number,
+  longitude: number,
+  taille = TAILLE_ZONE_DEGRES,
+): string[] {
+  const ligne = Math.floor(latitude / taille);
+  const colonne = Math.floor(longitude / taille);
   const cles: string[] = [];
   for (let dl = -1; dl <= 1; dl += 1) {
     for (let dc = -1; dc <= 1; dc += 1) {
@@ -147,6 +163,9 @@ export function zonesVoisines(latitude: number, longitude: number): string[] {
 // révélée est sous-fréquenté (même multiplicateur qu'à la section 4).
 export const XP_DECOUVERTE_ZONE = 40;
 
-export function xpDecouverteZone(multiplicateurLieu: number): number {
-  return Math.round(XP_DECOUVERTE_ZONE * multiplicateurLieu);
+export function xpDecouverteZone(
+  multiplicateurLieu: number,
+  base = XP_DECOUVERTE_ZONE,
+): number {
+  return Math.round(base * multiplicateurLieu);
 }

@@ -1,0 +1,437 @@
+/* ===========================================================================
+   Le back-office.
+
+   Volontairement différent de l'application joueur : pas de barre d'onglets
+   en bas, pas d'arrondis généreux, pas d'animation. C'est un outil de
+   travail qu'on utilise sur un écran d'ordinateur, où la densité et la
+   lisibilité comptent plus que le charme.
+
+   On reprend les jetons de couleur de style.css (importé avant celui-ci) et
+   on y ajoute ce qui est propre à l'administration.
+   =========================================================================== */
+
+:root {
+  --admin-rail: 248px;
+  --admin-bar: 56px;
+}
+
+body.admin {
+  background: var(--paper);
+}
+
+/* --- Connexion ---------------------------------------------------------- */
+
+.admin-connexion {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.admin-connexion .boite {
+  width: 100%;
+  max-width: 380px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 28px;
+  box-shadow: var(--shadow-md);
+}
+
+.admin-connexion h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+
+.admin-connexion p {
+  margin: 0 0 20px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* --- Coquille ----------------------------------------------------------- */
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: var(--admin-rail) 1fr;
+  min-height: 100vh;
+}
+
+.admin-rail {
+  background: var(--card);
+  border-right: 1px solid var(--line);
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.admin-marque {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0 10px 16px;
+}
+
+.admin-rail a {
+  display: block;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.admin-rail a:hover {
+  background: var(--raised);
+}
+
+.admin-rail a[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.admin-rail .pied {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.admin-rail .pied button {
+  margin-top: 10px;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  border-radius: var(--r-sm);
+  padding: 7px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.admin-rail .pied button:hover {
+  background: var(--raised);
+}
+
+.admin-contenu {
+  padding: 32px 36px 80px;
+  max-width: 940px;
+  min-width: 0;
+}
+
+.admin-contenu > h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+.admin-contenu > .chapeau {
+  margin: 0 0 32px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+/* --- Compteurs de la page d'accueil ------------------------------------- */
+
+.admin-compteurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.admin-compteurs div {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 16px;
+}
+
+.admin-compteurs .valeur {
+  display: block;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-compteurs .etiquette {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* --- Groupes de réglages ------------------------------------------------ */
+
+.groupe-reglages {
+  margin-bottom: 36px;
+}
+
+.groupe-reglages > h2 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.groupe-reglages > .resume {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+.reglage {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 8px 24px;
+  align-items: start;
+}
+
+.reglage .reglage-titre {
+  /* `label` porte un style générique dans style.css (colonne, gris, petit) :
+     on le neutralise explicitement plutôt que de compter sur l'ordre des
+     feuilles, qui ne se voit pas quand on relit le fichier. */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.reglage .explication {
+  grid-column: 1;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.55;
+  max-width: 62ch;
+}
+
+.reglage .commande {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reglage .saisie {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reglage input[type='text'] {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+
+.reglage input[type='text']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.reglage .unite {
+  font-size: 13px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.reglage .defaut {
+  font-size: 12px;
+  color: var(--ink-faint);
+  text-align: right;
+}
+
+.reglage .defaut button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.reglage .reglage-retour {
+  font-size: 12px;
+  text-align: right;
+  line-height: 1.4;
+}
+
+.reglage .reglage-retour.ok {
+  color: var(--positive);
+}
+
+.reglage .reglage-retour.ko {
+  color: var(--negative);
+}
+
+/* Une pastille discrète sur ce qui n'est plus à sa valeur d'origine :
+   d'un coup d'œil on voit ce qu'on a touché. */
+.pastille-modifie {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--warn);
+  background: var(--warn-soft);
+  border: 1px solid #f0e0c6;
+  border-radius: var(--r-full);
+  padding: 1px 7px;
+}
+
+/* --- Journal ------------------------------------------------------------ */
+
+.table-journal {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.table-journal th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  font-weight: 600;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.table-journal td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.table-journal tr:last-child td {
+  border-bottom: none;
+}
+
+.table-journal .quand,
+.table-journal .qui {
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.enveloppe-table {
+  overflow-x: auto;
+}
+
+.vide {
+  background: var(--card);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+  padding: 28px;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+/* --- Écrans étroits ----------------------------------------------------- */
+
+@media (max-width: 800px) {
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-rail {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 12px 16px;
+  }
+
+  .admin-rail .admin-marque {
+    width: 100%;
+    padding: 0 0 8px;
+  }
+
+  .admin-rail .pied {
+    margin-top: 0;
+    width: 100%;
+    border-top: none;
+    padding-top: 8px;
+  }
+
+  .admin-rail .pied button {
+    width: auto;
+    padding: 6px 14px;
+  }
+
+  .admin-contenu {
+    padding: 24px 16px 60px;
+  }
+
+  .reglage {
+    grid-template-columns: 1fr;
+  }
+
+  .reglage .commande {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .reglage input[type='text'] {
+    text-align: left;
+  }
+
+  .reglage .defaut,
+  .reglage .reglage-retour {
+    text-align: left;
+  }
+}

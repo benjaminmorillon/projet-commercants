@@ -18,10 +18,11 @@ import { User, UserType } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
 import { WalletService } from '../wallet/wallet.service';
 import { CampaignTarget, TargetStatut } from './campaign-target.entity';
-import { Campaign, PART_JOUEUR } from './campaign.entity';
+import { Campaign } from './campaign.entity';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { RespondInvitationDto } from './dto/respond-invitation.dto';
 import { TargetingCriteriaDto } from './dto/targeting-criteria.dto';
+import { ReglagesService } from '../admin/reglages.service';
 
 export interface TargetingPreview {
   nombreCibles: number;
@@ -64,6 +65,7 @@ export class CampaignsService {
     private readonly playerEvents: PlayerEventsService,
     private readonly notifications: NotificationsService,
     private readonly ledger: LedgerService,
+    private readonly reglages: ReglagesService,
   ) {}
 
   private async getBusinessOrThrow(businessId: string): Promise<Business> {
@@ -139,7 +141,7 @@ export class CampaignsService {
       coutTotal,
       coutParCible,
       multiplicateur,
-      creditParJoueur: arrondir(montant * PART_JOUEUR),
+      creditParJoueur: arrondir(montant * this.reglages.nombre('campagnes.partJoueur')),
       // Le commerçant doit savoir avant de cliquer s'il a de quoi payer.
       soldeJetons,
       soldeSuffisant: soldeSuffisant(soldeJetons, coutTotal),
@@ -211,7 +213,7 @@ export class CampaignsService {
 
     // Le crédit part dès l'envoi : être ciblé suffit, la cible n'a pas
     // besoin d'accepter pour toucher sa part (section 3.4 des specs).
-    const creditJoueur = arrondir(dto.montantParCible * PART_JOUEUR);
+    const creditJoueur = arrondir(dto.montantParCible * this.reglages.nombre('campagnes.partJoueur'));
 
     await this.targets.save(
       profiles.map((profile) =>
@@ -341,7 +343,9 @@ export class CampaignsService {
           statut: target.statut,
           reaction: target.reaction,
           creditVerse: target.creditVerse,
-          creditPropose: Math.round(campaign.montantParCible * PART_JOUEUR * 100) / 100,
+          creditPropose: arrondir(
+            campaign.montantParCible * this.reglages.nombre('campagnes.partJoueur'),
+          ),
           type: campaign.type,
           message: campaign.message,
           imageDataUrl: campaign.imageDataUrl,

@@ -15,6 +15,7 @@ import {
   PrestatairePaiement,
 } from './prestataire-paiement';
 import { Rechargement } from './rechargement.entity';
+import { ReglagesService } from '../admin/reglages.service';
 
 export interface SoldeDetaille {
   solde: number;
@@ -33,6 +34,7 @@ export class JetonsService {
     private readonly checkIns: Repository<CheckIn>,
     @Inject(PRESTATAIRE_PAIEMENT)
     private readonly prestataire: PrestatairePaiement,
+    private readonly reglages: ReglagesService,
   ) {}
 
   // --- Côté commerçant -----------------------------------------------------
@@ -48,7 +50,7 @@ export class JetonsService {
    */
   async recharger(userId: string, montantBrut: number): Promise<Rechargement> {
     const montant = arrondir(montantBrut);
-    const verification = verifierMontant(montant);
+    const verification = verifierMontant(montant, this.reglages.nombre('jetons.montantMinimum'));
     if (!verification.valide) {
       throw new BadRequestException(verification.raison);
     }

@@ -9,6 +9,7 @@ import { cleZone } from '../unlocking/unlock-rules';
 import { UnlockingService } from '../unlocking/unlocking.service';
 import { MissionValidation } from '../validations/mission-validation.entity';
 import { choisirMissionsTypes } from './missions-types';
+import { ReglagesService } from '../admin/reglages.service';
 
 export type StatutMissionJoueur = 'disponible' | 'en_attente' | 'accomplie';
 
@@ -24,6 +25,7 @@ export class MapService {
     private readonly balancing: BalancingService,
     private readonly checkins: CheckinsService,
     private readonly unlocking: UnlockingService,
+    private readonly reglages: ReglagesService,
   ) {}
 
   async getMap(playerId?: string, position?: { latitude: number; longitude: number }) {
@@ -77,7 +79,11 @@ export class MapService {
 
     return {
       lieux: lieux.map((lieu) => {
-        const zone = cleZone(lieu.latitude, lieu.longitude);
+        const zone = cleZone(
+          lieu.latitude,
+          lieu.longitude,
+          this.reglages.nombre('carte.tailleZoneDegres'),
+        );
         const decouvert = zonesVisibles === null || zonesVisibles.has(zone);
 
         // Un lieu encore voilé n'expose que sa position et sa zone : ni nom,
@@ -94,7 +100,11 @@ export class MapService {
         }
 
         const propres = missionsDeLieux.filter((m) => m.businessId === lieu.id);
-        const types = choisirMissionsTypes(lieu.id, catalogue);
+        const types = choisirMissionsTypes(
+          lieu.id,
+          catalogue,
+          this.reglages.entier('carte.missionsParLieu'),
+        );
 
         return {
           id: lieu.id,

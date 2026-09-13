@@ -5,6 +5,10 @@ import { PlayerEventType } from '../player-events/event-weights';
 
 // XP gagnée par type d'action. Les actions qui demandent de se déplacer ou
 // d'aller vers les autres rapportent davantage.
+//
+// Valeurs de repli : ce qui s'applique tant que le back-office n'a rien
+// changé. Les valeurs réellement utilisées viennent des réglages listés
+// juste en dessous.
 export const XP_PAR_EVENEMENT: Record<PlayerEventType, number> = {
   lieu_inedit_visite: 25,
   lieu_habituel_visite: 5,
@@ -15,6 +19,21 @@ export const XP_PAR_EVENEMENT: Record<PlayerEventType, number> = {
   ami_ajoute: 20,
   invitation_acceptee: 15,
   don_effectue: 15,
+};
+
+// La clé de réglage qui pilote chaque action. La table est explicite plutôt
+// que déduite du nom : le jour où un type d'événement est renommé, TypeScript
+// signale l'oubli ici au lieu de laisser une XP silencieusement tomber à 0.
+export const CLE_REGLAGE_XP: Record<PlayerEventType, string> = {
+  lieu_inedit_visite: 'xp.lieuInedit',
+  lieu_habituel_visite: 'xp.lieuHabituel',
+  mission_solo_terminee: 'xp.missionSolo',
+  mission_groupe_terminee: 'xp.missionGroupe',
+  mission_competitive_terminee: 'xp.missionCompetitive',
+  avis_publie: 'xp.avisPublie',
+  ami_ajoute: 'xp.amiAjoute',
+  invitation_acceptee: 'xp.invitationAcceptee',
+  don_effectue: 'xp.donEffectue',
 };
 
 // Chaque niveau demande 100 XP de plus que le précédent : niveau 2 à 100 XP,

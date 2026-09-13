@@ -12,6 +12,7 @@ import {
   verifierMontant,
 } from './ledger-rules';
 import { MouvementJeton } from './mouvement.entity';
+import { ReglagesService } from '../admin/reglages.service';
 
 export interface MouvementLisible {
   id: string;
@@ -40,6 +41,7 @@ export class LedgerService implements OnModuleInit {
     @InjectRepository(MouvementJeton)
     private readonly mouvements: Repository<MouvementJeton>,
     private readonly dataSource: DataSource,
+    private readonly reglages: ReglagesService,
   ) {}
 
   /**
@@ -105,7 +107,7 @@ export class LedgerService implements OnModuleInit {
     options: OptionsMouvement,
   ): Promise<MouvementJeton> {
     const montant = arrondir(montantBrut);
-    const verification = verifierMontant(montant);
+    const verification = verifierMontant(montant, this.reglages.nombre('jetons.montantMinimum'));
     if (!verification.valide) {
       throw new BadRequestException(verification.raison);
     }

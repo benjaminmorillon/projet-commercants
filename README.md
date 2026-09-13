@@ -546,6 +546,13 @@ projet-commercants/
     │       ├── jetons.service.ts          ← recharger, payer chez un partenaire, donner
     │       ├── prestataire-paiement.ts    ← le contrat qu'un vrai prestataire devra remplir
     │       └── prestataire-simule.ts      ← l'implémentation de démonstration
+    ├── admin/                     L'espace administrateur
+    │   ├── catalogue-reglages.ts      ← LA liste des réglages : libellés, bornes, valeurs d'origine
+    │   ├── catalogue-reglages.spec.ts ← ses tests
+    │   ├── reglages.service.ts        ← lecture en mémoire, écriture en base
+    │   ├── admin.guard.ts             ← le droit d'administrer
+    │   ├── journal-admin.entity.ts    ← le journal des modifications
+    │   └── creer-admin.ts             ← npm run admin : donner le droit à un compte
     ├── demo/                      Le quartier de démonstration
     │   ├── donnees-demo.ts            ← les lieux, missions, joueurs et avis
     │   └── seed-demo.ts               ← la simulation, qui passe par les vrais services
@@ -562,10 +569,97 @@ projet-commercants/
         ├── commercant.html / commercant.js ← espace commerçant (activité / ciblage / concurrence)
         ├── lieux.html / lieux.js          ← check-in, avis, mini carte des lieux
         ├── carte.html / carte.js / carte.css ← la carte 3D plein écran et la fiche partenaire
+        ├── admin.html / admin.js / admin.css ← le back-office (réglages, journal)
         ├── vendor/inter/                  ← la police Inter (embarquée, pas de CDN)
         ├── vendor/leaflet/                ← mini carte de la page Lieux (embarquée, pas de CDN)
         └── vendor/maplibre/               ← carte 3D (embarquée, pas de CDN)
 ```
+
+## L'espace administrateur
+
+Jusqu'ici, changer une règle du jeu — le rayon dans lequel un joueur peut valider
+sa présence, ce que rapporte une mission, la part reversée au joueur ciblé —
+demandait d'ouvrir un fichier de code, de le modifier et de redémarrer le site.
+C'est exactement ce qu'un back-office doit supprimer.
+
+### Créer votre compte administrateur
+
+Le droit d'administrer ne s'accorde **jamais** depuis une page web. Si c'était le
+cas, n'importe qui pourrait se l'accorder en s'inscrivant. Il s'accorde en ligne
+de commande, sur la machine qui héberge le site :
+
+```bash
+cd backend
+
+# si vous avez déjà un compte sur le site
+npm run admin -- votre.email@exemple.fr
+
+# si vous n'en avez pas encore
+npm run admin -- votre.email@exemple.fr "un-mot-de-passe-solide"
+```
+
+Puis ouvrez **http://localhost:3000/admin.html** et connectez-vous avec cette
+adresse. C'est la connexion habituelle : il n'y a pas de « mot de passe
+administrateur » séparé, seulement un compte ordinaire à qui on a donné un droit
+en plus.
+
+Un compte qui n'a pas ce droit et qui tente d'entrer reçoit un refus clair
+(« Cet espace est réservé à l'administration »), pas une page blanche.
+
+### Les réglages du jeu
+
+24 valeurs sont modifiables, rangées en six familles :
+
+| Famille | Ce qu'on y règle |
+| --- | --- |
+| Le terrain | Rayon de validation de présence, taille d'un quartier de la carte, missions affichées par commerce |
+| Le rythme de jeu | Missions par jour au niveau 1, et le plafond |
+| Les points d'expérience | Ce que rapporte chacune des 10 actions du jeu |
+| Le rééquilibrage des lieux | Fenêtre de comptage, capacité supposée, sensibilité et bornes du coup de pouce |
+| Les jetons | Montant minimum d'un mouvement, part reversée au joueur ciblé |
+| La sécurité des comptes | Essais de connexion avant blocage, durée du blocage |
+
+Chaque réglage est accompagné de son explication en français : non pas ce que
+fait le code, mais **ce que ça change pour les joueurs**, et ce qui se passe si
+vous poussez trop loin dans un sens ou dans l'autre.
+
+Trois choses à savoir :
+
+- **Une modification s'applique tout de suite**, sans redémarrer le site. Vous
+  changez le rayon à 50 m, le check-in suivant est jugé avec 50 m.
+- **Rien n'est cassable.** Chaque valeur a un minimum et un maximum ; une saisie
+  hors bornes est refusée avec le message qui dit quoi corriger. Une valeur qui
+  deviendrait invalide plus tard (si on resserre les bornes) est ignorée au
+  démarrage et remplacée par la valeur d'origine — le site démarre toujours.
+- **Tout est réversible.** Un réglage que vous n'avez jamais touché n'existe même
+  pas en base : il prend sa valeur d'origine, celle écrite dans le code. Le lien
+  « remettre » supprime simplement la ligne. Une pastille « modifié » vous
+  montre d'un coup d'œil ce que vous avez changé.
+
+### Le journal des modifications
+
+Chaque changement laisse une trace : qui, quand, quoi, et la valeur d'avant.
+
+C'est indispensable dès maintenant, pas plus tard : un back-office permet de
+changer des règles qui touchent à l'argent et aux comptes des gens. Le jour où
+un chiffre paraît anormal, la seule question utile est « qui a changé quoi, et
+quand ». Sans journal, la réponse est perdue.
+
+Rien n'est effaçable depuis l'interface. Un réglage réenregistré sans être
+modifié n'écrit pas de ligne, pour que le journal reste lisible.
+
+### Comment c'est fait, en deux mots
+
+Il n'y a **qu'une seule liste** de réglages, déclarée dans
+`backend/src/admin/catalogue-reglages.ts`. C'est elle qui fournit à la fois le
+formulaire de la page, les contrôles de saisie et les valeurs d'origine. Ajouter
+un réglage, c'est ajouter une ligne dans cette liste : la page s'adapte toute
+seule, il n'y a ni HTML ni base de données à toucher.
+
+Les fonctions de calcul du jeu restent **pures** : elles reçoivent la valeur en
+paramètre, avec l'ancienne constante en valeur par défaut. C'est ce qui permet de
+les tester sans base de données — et 10 tests vérifient justement qu'un réglage
+modifié change bien le résultat, ce qui est la seule preuve qui compte.
 
 ## Et après ?
 
@@ -573,3 +667,4 @@ Les grandes briques fonctionnelles des specs sont désormais toutes implémenté
 
 - **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
 - **Les vrais paiements** — la mécanique des jetons est prête et attend un prestataire ; le brancher suppose un statut juridique, des vérifications d'identité et la conservation des justificatifs.
+- **L'administration des contenus** — la brique suivante : créer et modifier les commerces, les missions et les événements depuis le back-office, consulter les comptes joueurs, et suivre les mouvements de jetons. Les fondations (compte administrateur, garde d'accès, journal) sont déjà là.

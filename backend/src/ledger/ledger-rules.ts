@@ -41,6 +41,8 @@ export function enCentimes(montant: number): number {
   return Math.round(montant * 100 * (1 + Number.EPSILON));
 }
 
+// Valeur de repli, modifiable depuis le back-office
+// (réglage « jetons.montantMinimum »).
 export const MONTANT_MINIMUM = 0.01;
 
 export interface VerificationMontant {
@@ -48,12 +50,15 @@ export interface VerificationMontant {
   raison?: string;
 }
 
-export function verifierMontant(montant: number): VerificationMontant {
+export function verifierMontant(
+  montant: number,
+  minimum = MONTANT_MINIMUM,
+): VerificationMontant {
   if (!Number.isFinite(montant)) {
     return { valide: false, raison: 'Le montant doit être un nombre.' };
   }
-  if (montant < MONTANT_MINIMUM) {
-    return { valide: false, raison: `Le montant minimum est de ${MONTANT_MINIMUM} jeton.` };
+  if (montant < minimum) {
+    return { valide: false, raison: `Le montant minimum est de ${minimum} jeton.` };
   }
   return { valide: true };
 }

@@ -8,6 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AuthService } from './auth.service';
 import { lireCookie, NOM_COOKIE_SESSION } from './cookies';
+import { CLE_ADMIN } from '../admin/admin.decorator';
 import { CLE_AUTRE_JOUEUR, CLE_PUBLIC } from './public.decorator';
 
 /**
@@ -43,6 +44,13 @@ export class AuthGuard implements CanActivate {
     requete.utilisateur = utilisateur;
 
     if (this.reflector.getAllAndOverride<boolean>(CLE_AUTRE_JOUEUR, cibles)) {
+      return true;
+    }
+
+    // Les routes d'administration portent forcément l'identifiant de
+    // quelqu'un d'autre : c'est leur raison d'être. AdminGuard, posé sur ces
+    // routes par le décorateur @Admin(), prend le relais juste après.
+    if (this.reflector.getAllAndOverride<boolean>(CLE_ADMIN, cibles)) {
       return true;
     }
 

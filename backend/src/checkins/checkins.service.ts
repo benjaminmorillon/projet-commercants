@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ReglagesService } from '../admin/reglages.service';
 import { Business } from '../businesses/business.entity';
 import { BalancingService } from '../balancing/balancing.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
@@ -8,7 +9,7 @@ import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
 import { CreateCheckinDto } from './dto/create-checkin.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
-import { CHECKIN_RADIUS_METERS, distanceInMeters } from './geo';
+import { distanceInMeters } from './geo';
 import { CheckIn } from './checkin.entity';
 import { Review } from './review.entity';
 
@@ -31,6 +32,7 @@ export class CheckinsService {
     private readonly playerEvents: PlayerEventsService,
     private readonly balancing: BalancingService,
     private readonly unlocking: UnlockingService,
+    private readonly reglages: ReglagesService,
   ) {}
 
   private async getBusinessOrThrow(businessId: string): Promise<Business> {
@@ -60,9 +62,10 @@ export class CheckinsService {
       dto.longitude,
     );
 
-    if (distance > CHECKIN_RADIUS_METERS) {
+    const rayon = this.reglages.entier('checkin.rayonMetres');
+    if (distance > rayon) {
       throw new BadRequestException(
-        `Tu es à ${Math.round(distance)}m du lieu (max ${CHECKIN_RADIUS_METERS}m) : trop loin pour valider le check-in.`,
+        `Tu es à ${Math.round(distance)}m du lieu (max ${rayon}m) : trop loin pour valider le check-in.`,
       );
     }
 

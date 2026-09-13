@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { ReglagesService } from '../admin/reglages.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PlayerEventType } from '../player-events/event-weights';
 import { PlayerEvent } from '../player-events/player-event.entity';
@@ -8,11 +9,11 @@ import { PlayerBadge } from './player-badge.entity';
 import { PlayerProgression } from './player-progression.entity';
 import {
   BADGES,
+  CLE_REGLAGE_XP,
   niveauPourXp,
   PlayerStats,
   ProgressionSummary,
   resumeProgression,
-  XP_PAR_EVENEMENT,
 } from './xp-rules';
 
 export interface ProgressionDetails extends ProgressionSummary {
@@ -30,6 +31,7 @@ export class ProgressionService {
     @InjectRepository(PlayerEvent)
     private readonly events: Repository<PlayerEvent>,
     private readonly notifications: NotificationsService,
+    private readonly reglages: ReglagesService,
   ) {}
 
   private async getOrCreate(playerId: string): Promise<PlayerProgression> {
@@ -75,7 +77,10 @@ export class ProgressionService {
     const progression = await this.getOrCreate(playerId);
     const niveauAvant = progression.niveauActuel;
 
-    progression.xpTotal += XP_PAR_EVENEMENT[type] ?? 0;
+    // La clé peut manquer si un type d'événement a été ajouté sans réglage
+    // correspondant : on n'accorde alors rien plutôt que de planter.
+    const cle = CLE_REGLAGE_XP[type];
+    progression.xpTotal += cle ? this.reglages.entier(cle) : 0;
     progression.niveauActuel = niveauPourXp(progression.xpTotal);
     progression.updatedAt = new Date();
     await this.progressions.save(progression);

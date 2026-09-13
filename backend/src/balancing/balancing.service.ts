@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { ReglagesService } from '../admin/reglages.service';
 import { Business } from '../businesses/business.entity';
 import { CheckIn } from '../checkins/checkin.entity';
 import { Review } from '../checkins/review.entity';
-import { computePlaceBalancing, FENETRE_JOURS, PlaceBalancing } from './place-multiplier';
+import { computePlaceBalancing, PlaceBalancing } from './place-multiplier';
 
 @Injectable()
 export class BalancingService {
@@ -15,6 +16,7 @@ export class BalancingService {
     private readonly checkIns: Repository<CheckIn>,
     @InjectRepository(Review)
     private readonly reviews: Repository<Review>,
+    private readonly reglages: ReglagesService,
   ) {}
 
   async getForBusinesses(businessIds: string[]): Promise<Map<string, PlaceBalancing>> {
@@ -23,7 +25,8 @@ export class BalancingService {
       return result;
     }
 
-    const debutFenetre = new Date(Date.now() - FENETRE_JOURS * 24 * 60 * 60 * 1000);
+    const fenetreJours = this.reglages.entier('equilibrage.fenetreJours');
+    const debutFenetre = new Date(Date.now() - fenetreJours * 24 * 60 * 60 * 1000);
 
     const [businesses, visites, notes] = await Promise.all([
       this.businesses.find({ where: { id: In(businessIds) } }),
@@ -55,6 +58,11 @@ export class BalancingService {
           capaciteEstimee: business.capaciteEstimee,
           // Avis internes en priorité, note Google en attendant d'en avoir.
           note: noteById.get(business.id) ?? business.noteGoogle ?? null,
+        }, {
+          capaciteParDefaut: this.reglages.entier('equilibrage.capaciteParDefaut'),
+          facteurEcart: this.reglages.nombre('equilibrage.facteurEcart'),
+          multiplicateurMin: this.reglages.nombre('equilibrage.multiplicateurMin'),
+          multiplicateurMax: this.reglages.nombre('equilibrage.multiplicateurMax'),
         }),
       );
     });

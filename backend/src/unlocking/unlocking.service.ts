@@ -21,6 +21,7 @@ import {
   zonesVoisines,
 } from './unlock-rules';
 import { ZoneDecouverte } from './zone-decouverte.entity';
+import { ReglagesService } from '../admin/reglages.service';
 
 export interface MissionsDuJour {
   limite: number;
@@ -54,6 +55,7 @@ export class UnlockingService {
     @InjectRepository(ZoneDecouverte)
     private readonly zones: Repository<ZoneDecouverte>,
     private readonly progression: ProgressionService,
+    private readonly reglages: ReglagesService,
   ) {}
 
   // L'état du joueur se reconstitue entièrement depuis ce qu'il a fait :
@@ -89,7 +91,11 @@ export class UnlockingService {
 
   async getMissionsDuJour(playerId: string, etat?: EtatJoueur): Promise<MissionsDuJour> {
     const niveau = (etat ?? (await this.getEtat(playerId))).niveau;
-    const limite = limiteMissionsParJour(niveau);
+    const limite = limiteMissionsParJour(
+      niveau,
+      this.reglages.entier('missions.parJourDepart'),
+      this.reglages.entier('missions.parJourMax'),
+    );
 
     // Une demande refusée ne doit pas consommer le quota du joueur.
     const utilisees = await this.validations.count({
@@ -171,7 +177,11 @@ export class UnlockingService {
   ): Promise<Set<string>> {
     const visibles = await this.zonesDecouvertes(playerId);
     if (position) {
-      zonesVoisines(position.latitude, position.longitude).forEach((cle) => visibles.add(cle));
+      zonesVoisines(
+        position.latitude,
+        position.longitude,
+        this.reglages.nombre('carte.tailleZoneDegres'),
+      ).forEach((cle) => visibles.add(cle));
     }
     return visibles;
   }
@@ -186,14 +196,18 @@ export class UnlockingService {
     business: Business,
     multiplicateurLieu: number,
   ): Promise<ZoneDecouverte | null> {
-    const cle = cleZone(business.latitude, business.longitude);
+    const cle = cleZone(
+      business.latitude,
+      business.longitude,
+      this.reglages.nombre('carte.tailleZoneDegres'),
+    );
 
     const deja = await this.zones.findOne({ where: { playerId, cleZone: cle } });
     if (deja) {
       return null;
     }
 
-    const xp = xpDecouverteZone(multiplicateurLieu);
+    const xp = xpDecouverteZone(multiplicateurLieu, this.reglages.entier('xp.decouverteZone'));
     const zone = await this.zones.save(
       this.zones.create({ playerId, cleZone: cle, businessId: business.id, xpGagnee: xp }),
     );

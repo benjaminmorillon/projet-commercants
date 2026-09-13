@@ -47,3 +47,52 @@ describe('computePlaceBalancing', () => {
     expect(sansCapacite.multiplicateur).toBe(avec50.multiplicateur);
   });
 });
+
+// --- Ce que le back-office peut changer ------------------------------------
+
+describe('réglages appliqués au rééquilibrage', () => {
+  const lieuVideEtBon = { nombreVisites: 0, capaciteEstimee: 100, note: 5 };
+
+  it('désactive complètement le rééquilibrage quand la sensibilité est à 0', () => {
+    const resultat = computePlaceBalancing(lieuVideEtBon, { facteurEcart: 0 });
+    expect(resultat.multiplicateur).toBe(1);
+  });
+
+  it('respecte les bornes réglées', () => {
+    const genereux = computePlaceBalancing(lieuVideEtBon, {
+      facteurEcart: 2,
+      multiplicateurMax: 1.5,
+    });
+    expect(genereux.multiplicateur).toBe(1.5);
+
+    const bonde = computePlaceBalancing(
+      { nombreVisites: 500, capaciteEstimee: 100, note: 2.5 },
+      { facteurEcart: 2, multiplicateurMin: 0.4 },
+    );
+    expect(bonde.multiplicateur).toBe(0.4);
+  });
+
+  // Un réglage incohérent saisi dans le back-office ne doit pas produire de
+  // résultat absurde : on redresse plutôt que d'inverser les bornes.
+  it('ne renvoie pas n’importe quoi si le maximum est réglé sous le minimum', () => {
+    const resultat = computePlaceBalancing(lieuVideEtBon, {
+      multiplicateurMin: 0.9,
+      multiplicateurMax: 0.5,
+    });
+    expect(resultat.multiplicateur).toBe(0.9);
+  });
+
+  it('utilise la capacité par défaut réglée quand le lieu n’a rien renseigné', () => {
+    const petiteCapacite = computePlaceBalancing(
+      { nombreVisites: 20, capaciteEstimee: null, note: 5 },
+      { capaciteParDefaut: 20 },
+    );
+    const grandeCapacite = computePlaceBalancing(
+      { nombreVisites: 20, capaciteEstimee: null, note: 5 },
+      { capaciteParDefaut: 200 },
+    );
+    // Vingt visites, c'est plein pour un lieu de 20 places et vide pour un
+    // lieu de 200 : le coup de pouce doit être bien plus élevé au second.
+    expect(grandeCapacite.multiplicateur).toBeGreaterThan(petiteCapacite.multiplicateur);
+  });
+});

@@ -104,3 +104,39 @@ describe('zones de la carte', () => {
     expect(xpDecouverteZone(0.7)).toBeLessThan(xpDecouverteZone(1));
   });
 });
+
+// --- Ce que le back-office peut changer ------------------------------------
+// Ces tests ne vérifient pas une règle de jeu mais un branchement : qu'une
+// valeur réglée depuis l'espace d'administration arrive bien jusqu'au calcul.
+
+describe('réglages appliqués aux règles de déblocage', () => {
+  it('utilise le quota de départ et le plafond qu’on lui donne', () => {
+    // Par défaut : 3 au niveau 1, plafonné à 10.
+    expect(limiteMissionsParJour(1)).toBe(3);
+    expect(limiteMissionsParJour(50)).toBe(10);
+
+    // Réglé plus généreusement : 5 au départ, plafond 6.
+    expect(limiteMissionsParJour(1, 5, 6)).toBe(5);
+    expect(limiteMissionsParJour(2, 5, 6)).toBe(6);
+    expect(limiteMissionsParJour(50, 5, 6)).toBe(6);
+  });
+
+  it('découpe le monde en quartiers de la taille demandée', () => {
+    // Deux points distants d'environ 400 m à Paris.
+    const a = { lat: 48.86, lon: 2.36 };
+    const b = { lat: 48.8636, lon: 2.36 };
+
+    // Avec des quartiers de 0,005° ils tombent dans le même.
+    expect(cleZone(a.lat, a.lon, 0.005)).toBe(cleZone(b.lat, b.lon, 0.005));
+
+    // Avec des quartiers dix fois plus petits, ils se séparent.
+    expect(cleZone(a.lat, a.lon, 0.0005)).not.toBe(cleZone(b.lat, b.lon, 0.0005));
+  });
+
+  it('applique la récompense de découverte qu’on lui donne', () => {
+    expect(xpDecouverteZone(1)).toBe(40);
+    expect(xpDecouverteZone(1, 100)).toBe(100);
+    // Le coup de pouce du lieu s'applique toujours par-dessus.
+    expect(xpDecouverteZone(1.1, 100)).toBe(110);
+  });
+});

@@ -550,6 +550,8 @@ projet-commercants/
     │   ├── catalogue-reglages.ts      ← LA liste des réglages : libellés, bornes, valeurs d'origine
     │   ├── catalogue-reglages.spec.ts ← ses tests
     │   ├── reglages.service.ts        ← lecture en mémoire, écriture en base
+    │   ├── contenus.service.ts        ← commerces, missions, événements
+    │   ├── diff.ts / diff.spec.ts     ← ce qui a changé, et comment le raconter
     │   ├── admin.guard.ts             ← le droit d'administrer
     │   ├── journal-admin.entity.ts    ← le journal des modifications
     │   └── creer-admin.ts             ← npm run admin : donner le droit à un compte
@@ -636,6 +638,48 @@ Trois choses à savoir :
   « remettre » supprime simplement la ligne. Une pastille « modifié » vous
   montre d'un coup d'œil ce que vous avez changé.
 
+### Les contenus : commerces, missions, événements
+
+Trois pages de plus, qui partagent le même geste : une fiche repliée montre
+l'essentiel, un clic la déplie en formulaire.
+
+**Commerces.** Nom, adresse, type, capacité, note Google et surtout les
+coordonnées GPS — c'est sur elles que le site vérifie qu'un joueur est
+physiquement sur place. Une latitude ou une longitude hors du monde est
+refusée : elle déplacerait le lieu au milieu de nulle part, la carte
+s'afficherait encore mais plus aucun check-in ne serait possible, et personne
+ne comprendrait pourquoi.
+
+Un commerce ne se supprime pas depuis cet écran, et l'interface le dit au lieu
+de proposer un bouton qui échouerait : ses visites, ses missions, ses
+événements et ses mouvements de jetons y renvoient tous.
+
+**Missions.** Le catalogue complet et les missions créées par les commerçants,
+avec une recherche par titre, identifiant ou thème. Vous pouvez en créer de
+nouvelles : une mission de catalogue n'est rattachée à aucun commerce, elle est
+proposée partout sur la carte aux lieux qui n'ont pas créé les leurs. Elle
+reçoit un identifiant lisible du type `ADM-001`, dans la continuité du
+catalogue de référence (`EXP-001`).
+
+**Une mission déjà jouée ne peut plus être supprimée.** Le refus est explicite
+et dit combien de fois elle a servi. Ce n'est pas une limitation technique :
+les validations, l'XP et les jetons des joueurs y renvoient, et la supprimer
+laisserait des trous dans leurs profils sans rien nettoyer. Elle reste
+entièrement modifiable — et si vous voulez qu'elle cesse d'être proposée,
+baissez sa récompense.
+
+**Événements.** Titre, description, date et heure. Un événement auquel une
+campagne d'invitation renvoie ne peut pas être supprimé non plus : des joueurs
+ont déjà été crédités pour lui, et la ligne est passée dans le registre de
+jetons. On ne supprime pas ce à quoi de l'argent renvoie.
+
+Chaque modification passe au journal, mais **seulement ce qui a réellement
+changé** : « Le Café des Arts — capacité estimée : 50 → 120 ». Réenregistrer un
+formulaire sans y toucher est le geste le plus courant du monde et n'écrit
+rien. Les champs que le formulaire ne propose pas (un identifiant, une date de
+création, le propriétaire d'un commerce) sont ignorés même s'ils arrivent dans
+la requête.
+
 ### Le journal des modifications
 
 Chaque changement laisse une trace : qui, quand, quoi, et la valeur d'avant.
@@ -661,10 +705,21 @@ paramètre, avec l'ancienne constante en valeur par défaut. C'est ce qui permet
 les tester sans base de données — et 10 tests vérifient justement qu'un réglage
 modifié change bien le résultat, ce qui est la seule preuve qui compte.
 
+Même principe côté contenus : ce qui décide de la phrase du journal (« quels
+champs ont changé, et comment l'écrire ») est une fonction pure, testée à part,
+avec ses 14 tests. C'est elle qui sait que « 50 » saisi au clavier et 50 lu en
+base sont la même chose, et qu'une date écrite `2026-12-24T20:00` doit
+s'afficher comme celle d'à côté.
+
+Enfin, le vocabulaire des missions (archétypes, durées, thèmes, modes) vit
+maintenant dans un seul fichier, `backend/src/missions/vocabulaire.ts`. Il sert
+à la fois à valider ce qu'un commerçant envoie et à remplir les listes
+déroulantes du back-office : les deux ne peuvent plus diverger.
+
 ## Et après ?
 
 Les grandes briques fonctionnelles des specs sont désormais toutes implémentées. Ce qui reste, c'est le passage du prototype à un vrai produit :
 
 - **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
 - **Les vrais paiements** — la mécanique des jetons est prête et attend un prestataire ; le brancher suppose un statut juridique, des vérifications d'identité et la conservation des justificatifs.
-- **L'administration des contenus** — la brique suivante : créer et modifier les commerces, les missions et les événements depuis le back-office, consulter les comptes joueurs, et suivre les mouvements de jetons. Les fondations (compte administrateur, garde d'accès, journal) sont déjà là.
+- **L'administration des comptes et des jetons** — la brique suivante : consulter les comptes joueurs et commerçants depuis le back-office, suivre les mouvements de jetons compte par compte, et corriger une erreur de crédit. Les fondations (compte administrateur, garde d'accès, journal, fiches modifiables) sont déjà là.

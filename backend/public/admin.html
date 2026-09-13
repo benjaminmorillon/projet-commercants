@@ -37,6 +37,9 @@
     <nav class="admin-rail" aria-label="Sections d'administration">
       <span class="admin-marque">Administration</span>
       <a href="#tableau-de-bord" data-section="tableau-de-bord">Tableau de bord</a>
+      <a href="#commerces" data-section="commerces">Commerces</a>
+      <a href="#missions" data-section="missions">Missions</a>
+      <a href="#evenements" data-section="evenements">Événements</a>
       <a href="#reglages" data-section="reglages">Réglages du jeu</a>
       <a href="#journal" data-section="journal">Journal des modifications</a>
       <div class="pied">
@@ -53,6 +56,93 @@
         <div class="admin-compteurs" id="compteurs"></div>
         <h2 style="font-size:16px;margin:0 0 12px">Dernières modifications</h2>
         <div id="journal-court"></div>
+      </section>
+
+      <section id="section-commerces" hidden>
+        <h1>Commerces</h1>
+        <p class="chapeau">
+          Les établissements partenaires. Cliquez sur une fiche pour la modifier.
+          Les coordonnées GPS comptent : c'est sur elles que le site vérifie qu'un
+          joueur est bien sur place.
+        </p>
+        <div class="barre-outils">
+          <span class="compte" id="compte-commerces"></span>
+        </div>
+        <div id="liste-commerces"></div>
+      </section>
+
+      <section id="section-missions" hidden>
+        <h1>Missions</h1>
+        <p class="chapeau">
+          Le catalogue, et les missions créées par les commerçants. Une mission déjà
+          jouée ne peut plus être supprimée — elle fait partie de l'histoire des
+          joueurs — mais elle reste modifiable.
+        </p>
+
+        <div class="bloc-creation">
+          <h2>Créer une mission de catalogue</h2>
+          <p>
+            Une mission de catalogue n'est rattachée à aucun commerce : elle est
+            proposée partout, sur la carte, aux lieux qui n'ont pas créé les leurs.
+          </p>
+          <form id="form-mission">
+            <div class="champs">
+              <label class="pleine-largeur">
+                Titre
+                <input type="text" name="titre" required minlength="2" maxlength="100"
+                       placeholder="Ex : Trouver la photo la plus ancienne du bar" />
+              </label>
+              <label class="pleine-largeur">
+                Description
+                <textarea name="description" required minlength="10" maxlength="1000"
+                          placeholder="Ce que le joueur doit faire, concrètement."></textarea>
+              </label>
+              <label>
+                Archétype dominant
+                <select name="archetypeDominant" data-vocabulaire="archetypes"></select>
+              </label>
+              <label>
+                Durée
+                <select name="duree" data-vocabulaire="durees"></select>
+              </label>
+              <label>
+                Thème
+                <select name="theme" data-vocabulaire="themes"></select>
+              </label>
+              <label>
+                Mode
+                <select name="modeInteraction" data-vocabulaire="modesInteraction"></select>
+              </label>
+              <label>
+                Récompense (jetons)
+                <input type="number" name="recompenseBase" required min="0.01" step="0.01" value="1" />
+              </label>
+            </div>
+            <div class="actions-fiche">
+              <button type="submit">Créer la mission</button>
+              <span class="message" id="message-creation"></span>
+            </div>
+          </form>
+        </div>
+
+        <div class="barre-outils">
+          <input type="search" id="recherche-missions" placeholder="Chercher un titre, un identifiant, un thème…" />
+          <span class="compte" id="compte-missions"></span>
+        </div>
+        <div id="liste-missions"></div>
+      </section>
+
+      <section id="section-evenements" hidden>
+        <h1>Événements</h1>
+        <p class="chapeau">
+          Les événements organisés par les commerçants. Un événement auquel une
+          campagne d'invitation renvoie ne peut pas être supprimé : des joueurs ont
+          déjà été crédités pour lui.
+        </p>
+        <div class="barre-outils">
+          <span class="compte" id="compte-evenements"></span>
+        </div>
+        <div id="liste-evenements"></div>
       </section>
 
       <section id="section-reglages" hidden>

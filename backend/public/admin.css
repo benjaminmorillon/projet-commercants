@@ -435,3 +435,253 @@ body.admin {
     text-align: left;
   }
 }
+
+/* ===========================================================================
+   Les contenus : commerces, missions, événements.
+
+   Un seul motif pour les trois : une fiche repliée qui montre l'essentiel,
+   et qui se déplie en formulaire quand on veut la modifier. Pas de fenêtre
+   modale — on garde la liste sous les yeux.
+   =========================================================================== */
+
+.barre-outils {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.barre-outils input[type='search'] {
+  flex: 1 1 220px;
+  min-width: 0;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+
+.barre-outils .compte {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.bouton-discret {
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  border-radius: var(--r-sm);
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bouton-discret:hover {
+  background: var(--raised);
+}
+
+.bouton-danger {
+  border-color: #e6c6c2;
+  color: var(--negative);
+}
+
+.bouton-danger:hover {
+  background: #fdf3f2;
+}
+
+.fiche {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.fiche-entete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  width: 100%;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+}
+
+.fiche-entete:hover {
+  background: var(--raised);
+}
+
+.fiche-entete .nom {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fiche-entete .meta {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-muted);
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.fiche-entete .chevron {
+  color: var(--ink-faint);
+  font-size: 12px;
+  flex: none;
+}
+
+.fiche[open] .fiche-entete {
+  border-bottom: 1px solid var(--line);
+}
+
+.fiche-corps {
+  padding: 18px 16px;
+}
+
+/* Les champs : deux colonnes sur large, une seule quand c'est étroit. */
+.champs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.champs .pleine-largeur {
+  grid-column: 1 / -1;
+}
+
+.champs label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  letter-spacing: 0.01em;
+}
+
+.champs input,
+.champs select,
+.champs textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--ink);
+  width: 100%;
+}
+
+/* Un <select> sans repère visuel ressemble à un champ texte : on ne devine
+   pas qu'il se déroule. Le chevron est dessiné en SVG embarqué — la politique
+   de sécurité de la page interdit les images venues d'ailleurs. */
+.champs select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%236c7077' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 11px;
+  cursor: pointer;
+}
+
+.champs textarea {
+  min-height: 90px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.champs input:focus-visible,
+.champs select:focus-visible,
+.champs textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.actions-fiche {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.actions-fiche button[type='submit'] {
+  background: var(--accent);
+  color: var(--ink-invert);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  padding: 8px 18px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.actions-fiche button[type='submit']:hover {
+  background: var(--accent-ink);
+}
+
+.actions-fiche .message {
+  font-size: 12px;
+  line-height: 1.45;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.actions-fiche .message.ok {
+  color: var(--positive);
+}
+
+.actions-fiche .message.ko {
+  color: var(--negative);
+}
+
+/* Le formulaire de création, mis en avant sans être tapageur. */
+.bloc-creation {
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.bloc-creation h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.bloc-creation > p {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+/* La pastille qui dit qu'un contenu a déjà servi — et qu'on ne peut donc
+   plus le supprimer. */
+.pastille-joue {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: var(--r-full);
+  padding: 1px 7px;
+  white-space: nowrap;
+}

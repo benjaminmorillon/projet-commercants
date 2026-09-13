@@ -1,49 +1,41 @@
 import { IsIn, IsNumber, IsPositive, Length } from 'class-validator';
+import {
+  ARCHETYPES,
+  DUREES,
+  MODES_INTERACTION,
+  THEMES,
+  Terme,
+  valeursDe,
+} from '../vocabulaire';
 
-const ARCHETYPES = [
-  'explorateur',
-  'accomplisseur',
-  'competiteur',
-  'socialisateur',
-  'mixte',
-];
-const DUREES = ['courte', 'moyenne', 'longue'];
-const THEMES = [
-  'culture',
-  'gastronomie',
-  'musique',
-  'art',
-  'humour_insolite',
-  'sport',
-  'jeux_esprit',
-];
-const MODES_INTERACTION = [
-  'solo',
-  'duo_affinite_naturelle',
-  'duo_defi_complementarite',
-  'groupe',
-];
+// « theme must be one of the following values: culture, gastronomie… » n'est
+// pas une phrase qu'on montre à quelqu'un. On fabrique le message à partir
+// des libellés lisibles du vocabulaire.
+const parmi = (quoi: string, termes: Terme[]) =>
+  `${quoi} doit être : ${termes.map((t) => t.libelle).join(', ')}.`;
 
 export class CreateMissionDto {
-  @Length(2, 100)
+  @Length(2, 100, { message: 'Le titre doit faire entre 2 et 100 caractères.' })
   titre: string;
 
-  @Length(10, 1000)
+  @Length(10, 1000, {
+    message: 'La description doit faire entre 10 et 1000 caractères.',
+  })
   description: string;
 
-  @IsIn(ARCHETYPES)
+  @IsIn(valeursDe(ARCHETYPES), { message: parmi("L'archétype", ARCHETYPES) })
   archetypeDominant: string;
 
-  @IsIn(DUREES)
+  @IsIn(valeursDe(DUREES), { message: parmi('La durée', DUREES) })
   duree: string;
 
-  @IsIn(THEMES)
+  @IsIn(valeursDe(THEMES), { message: parmi('Le thème', THEMES) })
   theme: string;
 
-  @IsIn(MODES_INTERACTION)
+  @IsIn(valeursDe(MODES_INTERACTION), { message: parmi('Le mode', MODES_INTERACTION) })
   modeInteraction: string;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({}, { message: 'La récompense doit être un nombre.' })
+  @IsPositive({ message: 'La récompense doit être supérieure à zéro.' })
   recompenseBase: number;
 }

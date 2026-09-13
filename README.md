@@ -19,6 +19,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 13 : la carte 3D** — une carte plein écran qu'on parcourt comme un plan Google (on incline, on tourne, on zoome), où les partenaires apparaissent avec leur étiquette et leurs missions en éventail (solo ou duo), et où un clic ouvre la fiche du partenaire avec ses missions, ses avis et le check-in.
 - ✅ **Brique 14 : déblocage progressif** — tutoriel obligatoire en 3 étapes, carte voilée qu'on lève quartier par quartier en allant sur place, nombre de missions limité par jour, et fonctionnalités (profils des autres, duos, don) qui s'ouvrent au fil de la progression.
 - ✅ **Brique 15 : titres et objets de collection** — une étiquette gagnée par le comportement, que le joueur choisit d'afficher sur son profil, et deux séries d'objets souvenirs à compléter (un par type de lieu poussé, un par thème de mission mené jusqu'au bout).
+- ✅ **Brique 20 : prêt pour la mise en ligne** — mot de passe oublié, limitation des tentatives de connexion, en-têtes de sécurité et redirection HTTPS.
 - ✅ **Brique 19 : l'économie de jetons** — un vrai registre à double entrée : le commerçant recharge son compte, paie ses campagnes avec, les joueurs touchent leur part et la dépensent chez les partenaires. Circuit fermé, aucune sortie de fonds.
 - ✅ **Brique 18 : notifications** — une cloche avec le nombre de choses en attente, un centre de notifications dans l'appli, et des notifications push pour être prévenu même quand l'appli est fermée.
 - ✅ **Brique 17 : comptes, mots de passe et sessions** — une vraie connexion, et surtout un serveur qui vérifie à chaque requête que vous n'agissez que pour votre propre compte.
@@ -223,6 +224,20 @@ Chaque lieu propose ses propres missions (postées par le commerçant, validées
 
 > **Note sur les bâtiments en 3D** : le fond de plan vient d'OpenStreetMap sous forme d'images, qui ne contiennent pas la hauteur des immeubles. Le bouton 🏢 va donc chercher les contours et les hauteurs réelles des bâtiments visibles auprès d'un service public d'OpenStreetMap (Overpass), puis les dresse en volume. C'est volontairement sur demande : la requête peut prendre quelques secondes et ce service est parfois saturé. Si ça échoue, la carte reste utilisable et un message le dit — rien n'est cassé. Une carte avec les bâtiments déjà en 3D d'origine existe (fonds vectoriels type MapTiler) mais demande une clé d'API payante au-delà d'un certain volume : à rediscuter quand le projet passera en production.
 
+### Ce qu'il fallait avant une mise en ligne
+
+Trois manques bloquaient une mise en ligne, même auprès d'une poignée de testeurs. Ils sont comblés.
+
+**Mot de passe oublié.** Un lien arrive par email, valable **une heure** et utilisable **une seule fois**. Ce qui est stocké en base n'est pas le lien mais son empreinte : quelqu'un qui lirait la base ne pourrait pas s'en servir pour prendre un compte. Le formulaire répond toujours la même chose, que l'adresse existe ou non — sinon il dirait à un inconnu quelles adresses ont un compte. Et changer de mot de passe **coupe les sessions ouvertes ailleurs** : si quelqu'un d'autre était connecté, il est éjecté.
+
+L'envoi passe par une interface d'expéditeur dont la seule implémentation écrit l'email **dans la console du serveur** — même principe que le prestataire de paiement. Le parcours se déroule donc entièrement sans compte chez un fournisseur ; brancher un vrai service (Brevo, Postmark, SES…) tiendra en une seconde implémentation et une ligne à changer.
+
+**Limitation des tentatives de connexion.** Le hachage scrypt rend déjà chaque essai lent, mais un attaquant patient finirait par passer. Au-delà de **5 échecs en 15 minutes** sur la même adresse, la porte se ferme 15 minutes, avec un message qui le dit. Trois précisions qui comptent : les échecs trop anciens sont oubliés (quatre hier plus un aujourd'hui ne font pas cinq), un blocage purgé repart de zéro, et une connexion réussie efface l'ardoise. Le compteur vit en mémoire — suffisant pour un serveur unique, à remplacer par un stockage partagé le jour où il y en aura plusieurs.
+
+**HTTPS et en-têtes de sécurité.** En production, toute requête arrivant en clair est redirigée vers HTTPS, et le navigateur reçoit l'instruction de ne plus jamais revenir en clair sur ce domaine. Cinq en-têtes sont posés sur chaque réponse, dont une **politique de contenu** qui n'autorise que ce que le site charge vraiment : son propre code, ses propres polices, et — pour la carte — les tuiles OpenStreetMap et Overpass. Rien d'autre ne peut s'exécuter dans la page, ce qui referme la porte aux scripts injectés. Le tout est écrit à la main plutôt qu'avec une bibliothèque : quelques lignes, et on voit exactement ce qu'on envoie.
+
+> **Pour déployer** : servez le site derrière un proxy qui termine le HTTPS (Nginx, Caddy, ou l'hébergeur lui-même), et lancez le serveur avec `NODE_ENV=production`. C'est ce qui active la redirection, l'en-tête HSTS et le cookie de session « HTTPS uniquement ».
+
 ### L'économie de jetons
 
 Jusqu'ici, l'argent était une illusion : les campagnes de ciblage ne coûtaient **rien** au commerçant, les récompenses apparaissaient de nulle part, et « dépenser » son crédit le faisait simplement disparaître. Tout est maintenant un vrai circuit fermé.
@@ -316,7 +331,7 @@ Ce garde est branché **globalement** : une route qu'on ajouterait demain en oub
 
 > **Si vous aviez déjà lancé le projet** : les comptes créés avant cette brique n'ont pas de mot de passe et ne peuvent donc pas se connecter. Supprimez `backend/data/app.sqlite` et relancez le serveur pour repartir d'une base propre.
 
-> **Ce qui reste à faire avant une vraie mise en ligne** : le « mot de passe oublié » (il faut un service d'envoi d'emails), la limitation du nombre de tentatives de connexion, et le passage en HTTPS — le cookie est déjà configuré pour ne voyager qu'en HTTPS dès que le serveur tourne en production.
+> **Ces trois manques sont comblés** depuis : voir « Ce qu'il fallait avant une mise en ligne » plus haut.
 
 ### L'habillage visuel
 
@@ -412,7 +427,7 @@ cd backend
 npm test
 ```
 
-Tout doit passer en vert (`101 passed`).
+Tout doit passer en vert (`107 passed`).
 
 ---
 
@@ -493,11 +508,15 @@ projet-commercants/
     │   ├── collection/           Titres et objets de collection
     │   │   ├── collection-rules.ts / .spec.ts     ← catalogue des titres et des deux séries d'objets
     │   │   └── collection.service.ts      ← recalcule tout depuis les actions du joueur, équipe un titre
+    │   ├── securite.ts           En-têtes de sécurité et redirection HTTPS
     │   ├── auth/                 Comptes, mots de passe et sessions
     │       ├── password.ts / .spec.ts             ← empreinte scrypt et jetons de session
     │       ├── cookies.ts / .spec.ts              ← lecture du cookie de session
     │       ├── session.entity.ts                  ← les connexions ouvertes
     │       ├── auth.service.ts            ← inscription, connexion, déconnexion
+    │   │   ├── rate-limit.ts / .spec.ts           ← limitation des tentatives de connexion
+    │   │   ├── reinitialisation.entity.ts         ← les liens de mot de passe oublié
+    │   │   ├── expediteur-email.ts        ← le contrat qu'un vrai service d'emails devra remplir
     │   │   ├── auth.guard.ts              ← être connecté, et n'agir que pour soi
     │   │   └── business-owner.guard.ts    ← l'établissement visé est bien le sien
     │   ├── notifications/        Cloche, centre de notifications et push
@@ -536,4 +555,3 @@ Les grandes briques fonctionnelles des specs sont désormais toutes implémenté
 
 - **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
 - **Les vrais paiements** — la mécanique des jetons est prête et attend un prestataire ; le brancher suppose un statut juridique, des vérifications d'identité et la conservation des justificatifs.
-- **Avant une mise en ligne** — le « mot de passe oublié » (il faut un service d'envoi d'emails), la limitation du nombre de tentatives de connexion, et le HTTPS.

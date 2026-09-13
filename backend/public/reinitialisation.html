@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Nouveau mot de passe</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Nouveau mot de passe</h1>
+      <p class="subtitle">Choisis-en un nouveau : tu seras connecté dans la foulée.</p>
+    </header>
+
+    <section class="card" id="carte-formulaire">
+      <form id="reinit-form">
+        <label>
+          Nouveau mot de passe
+          <input type="password" id="mot-de-passe" required minlength="8" placeholder="8 caractères minimum" autocomplete="new-password" />
+        </label>
+        <button type="submit">Changer mon mot de passe</button>
+      </form>
+      <p id="reinit-erreur" class="error" hidden></p>
+      <p class="hint">Changer de mot de passe déconnecte les autres appareils.</p>
+    </section>
+
+    <section class="card" id="carte-lien-invalide" hidden>
+      <h2>Lien expiré</h2>
+      <p class="hint">Ce lien n'est plus valable — ils ne durent qu'une heure et ne servent qu'une fois. <a href="index.html">Demande-en un nouveau</a>.</p>
+    </section>
+  </main>
+
+  <script src="nav.js"></script>
+  <script src="utils.js"></script>
+  <script src="reinitialisation.js"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@ import { AuthService, UtilisateurConnecte } from './auth.service';
 import { lireCookie, NOM_COOKIE_SESSION } from './cookies';
 import { ConnexionDto } from './dto/connexion.dto';
 import { InscriptionDto } from './dto/inscription.dto';
+import { MotDePasseOublieDto, ReinitialiserDto } from './dto/mot-de-passe.dto';
 import { Public } from './public.decorator';
 import { Utilisateur } from './utilisateur.decorator';
 
@@ -44,6 +45,32 @@ export class AuthController {
     @Res({ passthrough: true }) reponse: Response,
   ) {
     const { utilisateur, jeton } = await this.auth.connecter(dto);
+    this.poserCookie(reponse, jeton);
+    return utilisateur;
+  }
+
+  // On répond toujours la même chose, que l'adresse existe ou non.
+  @Public()
+  @Post('mot-de-passe-oublie')
+  async motDePasseOublie(@Body() dto: MotDePasseOublieDto, @Req() requete: Request) {
+    const origine = `${requete.protocol}://${requete.get('host')}`;
+    await this.auth.demanderReinitialisation(dto.email, origine);
+    return {
+      message:
+        'Si un compte existe avec cette adresse, un lien de réinitialisation vient d’être envoyé.',
+    };
+  }
+
+  @Public()
+  @Post('reinitialiser')
+  async reinitialiser(
+    @Body() dto: ReinitialiserDto,
+    @Res({ passthrough: true }) reponse: Response,
+  ) {
+    const { utilisateur, jeton } = await this.auth.reinitialiserMotDePasse(
+      dto.jeton,
+      dto.motDePasse,
+    );
     this.poserCookie(reponse, jeton);
     return utilisateur;
   }

@@ -313,8 +313,29 @@ function appliquerModeAuth() {
     inscription ? 'new-password' : 'current-password',
   );
   document.getElementById('auth-aide').hidden = !inscription;
+  // « Mot de passe oublié » n'a de sens que sur l'écran de connexion.
+  document.getElementById('auth-oubli').hidden = inscription;
+  document.getElementById('oubli-message').hidden = true;
   accountError.hidden = true;
 }
+
+document.getElementById('btn-oubli').addEventListener('click', async () => {
+  const message = document.getElementById('oubli-message');
+  const email = document.getElementById('email').value.trim();
+  accountError.hidden = true;
+
+  if (!email) {
+    accountError.textContent = 'Indique d’abord ton adresse email.';
+    accountError.hidden = false;
+    return;
+  }
+
+  const reponse = await apiPost('/auth/mot-de-passe-oublie', { email }).catch((e) => ({
+    message: e.message,
+  }));
+  message.textContent = reponse.message;
+  message.hidden = false;
+});
 
 document.getElementById('auth-tabs').addEventListener('click', (event) => {
   const btn = event.target.closest('.tab-btn');

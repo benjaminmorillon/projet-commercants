@@ -35,6 +35,7 @@ import { MapModule } from './map/map.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
+import { DemandeReinitialisation } from './auth/reinitialisation.entity';
 import { Session } from './auth/session.entity';
 import { CollectionModule } from './collection/collection.module';
 import { LedgerModule } from './ledger/ledger.module';
@@ -72,6 +73,7 @@ import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
         PairingOutcome,
         ZoneDecouverte,
         Session,
+        DemandeReinitialisation,
         Notification,
         PushSubscription,
         Compte,

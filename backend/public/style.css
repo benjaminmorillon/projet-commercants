@@ -1807,3 +1807,32 @@ select:user-invalid,
 textarea:user-invalid {
   border-color: var(--negative);
 }
+
+/* --- Régler / recharger en jetons (fiche partenaire et espace commerçant) --- */
+
+.paiement {
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 16px;
+}
+
+.paiement .hint {
+  margin: 0;
+}
+
+.paiement-ligne {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 10px;
+}
+
+.paiement-ligne input {
+  flex: 1;
+  min-width: 0;
+}
+
+.paiement-ligne button {
+  flex-shrink: 0;
+  min-width: 104px;
+}

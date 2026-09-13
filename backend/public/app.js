@@ -20,11 +20,9 @@ const ARCHETYPE_LABELS = {
   scoreSocialisateur: 'Socialisateur',
 };
 
-const TRANSACTION_LABELS = {
-  gagne: 'Gagné',
-  depense: 'Dépensé',
-  don: 'Donné',
-};
+// Les jetons circulent entre comptes : chaque ligne dit d'où ils viennent
+// ou vers qui ils partent.
+const SENS_SIGNE = { entree: '+', sortie: '−' };
 
 let playerId = localStorage.getItem('playerId');
 
@@ -283,18 +281,16 @@ async function loadWallet() {
   const wallet = await apiGet(`/players/${playerId}/wallet`);
   walletSection.hidden = false;
   // Le solde se lit d'un coup d'œil : le chiffre en grand, l'unité à côté.
-  walletSoldeEl.innerHTML = `${wallet.solde}<span class="wallet-unite">crédit${wallet.solde > 1 ? 's' : ''}</span>`;
-  walletHistoryEmpty.hidden = wallet.transactions.length > 0;
+  walletSoldeEl.innerHTML = `${wallet.solde}<span class="wallet-unite">jeton${wallet.solde > 1 ? 's' : ''}</span>`;
+  walletHistoryEmpty.hidden = wallet.mouvements.length > 0;
 
-  walletHistoryEl.innerHTML = wallet.transactions
-    .map((t) => {
-      const label = TRANSACTION_LABELS[t.type] || t.type;
-      const sign = t.montant > 0 ? '+' : '';
-      const date = new Date(t.createdAt).toLocaleDateString('fr-FR');
+  walletHistoryEl.innerHTML = wallet.mouvements
+    .map((m) => {
+      const date = new Date(m.createdAt).toLocaleDateString('fr-FR');
       return `
         <div class="transaction-row">
-          <span>${escapeHtml(label)} — ${escapeHtml(t.libelle || 'Mission')} <span class="hint">(${date})</span></span>
-          <span class="${t.montant > 0 ? 'positive' : 'negative'}">${sign}${t.montant} crédit${Math.abs(t.montant) > 1 ? 's' : ''}</span>
+          <span>${escapeHtml(m.libelle)}${m.detail ? ` — ${escapeHtml(m.detail)}` : ''} <span class="hint">(${date})</span></span>
+          <span class="${m.sens === 'entree' ? 'positive' : 'negative'}">${SENS_SIGNE[m.sens]}${m.montant}</span>
         </div>
       `;
     })

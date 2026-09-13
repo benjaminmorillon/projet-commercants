@@ -19,6 +19,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 13 : la carte 3D** — une carte plein écran qu'on parcourt comme un plan Google (on incline, on tourne, on zoome), où les partenaires apparaissent avec leur étiquette et leurs missions en éventail (solo ou duo), et où un clic ouvre la fiche du partenaire avec ses missions, ses avis et le check-in.
 - ✅ **Brique 14 : déblocage progressif** — tutoriel obligatoire en 3 étapes, carte voilée qu'on lève quartier par quartier en allant sur place, nombre de missions limité par jour, et fonctionnalités (profils des autres, duos, don) qui s'ouvrent au fil de la progression.
 - ✅ **Brique 15 : titres et objets de collection** — une étiquette gagnée par le comportement, que le joueur choisit d'afficher sur son profil, et deux séries d'objets souvenirs à compléter (un par type de lieu poussé, un par thème de mission mené jusqu'au bout).
+- ✅ **Brique 19 : l'économie de jetons** — un vrai registre à double entrée : le commerçant recharge son compte, paie ses campagnes avec, les joueurs touchent leur part et la dépensent chez les partenaires. Circuit fermé, aucune sortie de fonds.
 - ✅ **Brique 18 : notifications** — une cloche avec le nombre de choses en attente, un centre de notifications dans l'appli, et des notifications push pour être prévenu même quand l'appli est fermée.
 - ✅ **Brique 17 : comptes, mots de passe et sessions** — une vraie connexion, et surtout un serveur qui vérifie à chaque requête que vous n'agissez que pour votre propre compte.
 - ✅ **Brique 16 : l'habillage visuel** — un système de design minimaliste appliqué à toutes les pages : une seule couleur d'accent, beaucoup de blanc, la typographie Inter embarquée, et une vraie coquille d'application (barre du haut, barre d'onglets en bas).
@@ -222,6 +223,39 @@ Chaque lieu propose ses propres missions (postées par le commerçant, validées
 
 > **Note sur les bâtiments en 3D** : le fond de plan vient d'OpenStreetMap sous forme d'images, qui ne contiennent pas la hauteur des immeubles. Le bouton 🏢 va donc chercher les contours et les hauteurs réelles des bâtiments visibles auprès d'un service public d'OpenStreetMap (Overpass), puis les dresse en volume. C'est volontairement sur demande : la requête peut prendre quelques secondes et ce service est parfois saturé. Si ça échoue, la carte reste utilisable et un message le dit — rien n'est cassé. Une carte avec les bâtiments déjà en 3D d'origine existe (fonds vectoriels type MapTiler) mais demande une clé d'API payante au-delà d'un certain volume : à rediscuter quand le projet passera en production.
 
+### L'économie de jetons
+
+Jusqu'ici, l'argent était une illusion : les campagnes de ciblage ne coûtaient **rien** au commerçant, les récompenses apparaissaient de nulle part, et « dépenser » son crédit le faisait simplement disparaître. Tout est maintenant un vrai circuit fermé.
+
+**Le principe : un jeton ne se crée ni ne se perd par accident.** Chaque mouvement part d'un compte et arrive dans un autre, écrit une fois pour toutes dans un journal qui fait foi ; les soldes n'en sont qu'un résumé. Joueurs, commerçants, plateforme et causes ont chacun leur compte, pour que tout mouvement ait bien deux extrémités identifiables.
+
+**Le circuit :**
+
+| Étape | Ce qui bouge |
+| --- | --- |
+| Le commerçant recharge son compte | Des jetons entrent dans le circuit, en échange d'un paiement |
+| Il lance une campagne de ciblage | Son compte est **débité** ; chaque joueur ciblé reçoit sa part, la plateforme garde sa commission |
+| Un joueur accomplit une mission | La plateforme émet la récompense (c'est elle qui finance le jeu) |
+| Le joueur règle chez un partenaire | Ses jetons passent **directement** au compte du commerçant |
+| Le joueur donne à une cause | Ses jetons partent vers le compte de la cause |
+
+Rien ne sort du circuit : les jetons d'un commerçant reviennent dans ses campagnes, ceux d'un joueur reviennent chez les commerçants. **Aucune sortie de fonds réelle.**
+
+**Deux conséquences immédiates**, qui étaient des trous avant :
+
+- **Une campagne trop chère est refusée**, avec le montant manquant. L'aperçu de ciblage prévient même avant de cliquer : « Solde insuffisant : il te reste 93 jetons ».
+- **Payer chez un partenaire exige d'y être passé** (check-in) — sinon n'importe qui transférerait ses jetons à n'importe quel commerçant depuis son canapé.
+
+**Le paiement du rechargement passe par un prestataire simulé.** Tout le code ne connaît qu'une interface : le jour où un vrai prestataire arrivera, il n'y aura qu'à écrire une seconde implémentation et changer **une ligne** — aucune règle métier à réécrire. La simulation sait aussi échouer (un montant de 13 est refusé), pour qu'on puisse voir le parcours d'erreur sans attendre un vrai incident. L'espace commerçant l'affiche en clair : « Paiement en mode démonstration : aucune somme réelle n'est prélevée ».
+
+**Un filet de sécurité** : au démarrage, le serveur recalcule tous les soldes depuis le journal et les compare à ceux stockés. S'ils divergent un jour, on l'apprendra dans les logs au lancement, pas dans un litige avec un commerçant.
+
+> **Changement de vocabulaire** : on parle désormais de **jetons** partout, plus de « crédits » ni d'euros. C'est plus juste — ce sont des jetons qui circulent en circuit fermé, pas de la monnaie.
+
+> **Changement de comportement à connaître** : le choix fait en accomplissant une mission ne détruit plus les jetons. « Dépenser » veut maintenant dire que vous les garderez pour un partenaire (la dépense se fait sur place, depuis la fiche du lieu) ; « donner » les transfère réellement à une cause ; « accumuler » les laisse dormir. Avant, « dépenser » les faisait disparaître sans que rien ne soit dépensé nulle part.
+
+> **Ce qui resterait à faire pour de vrais paiements** : brancher un prestataire (Stripe ou autre), ce qui suppose un statut juridique, des vérifications d'identité, et la conservation des justificatifs. La mécanique, elle, est prête à l'accueillir.
+
 ### Les notifications
 
 Jusqu'ici, si quelqu'un attendait votre validation, **personne ne le savait** tant qu'il n'ouvrait pas l'onglet. Tout le jeu repose sur des allers-retours entre joueurs — une validation, un duo, une invitation — et rien ne prévenait que c'était à vous de jouer.
@@ -378,7 +412,7 @@ cd backend
 npm test
 ```
 
-Tout doit passer en vert (`88 passed`).
+Tout doit passer en vert (`101 passed`).
 
 ---
 
@@ -466,11 +500,18 @@ projet-commercants/
     │       ├── auth.service.ts            ← inscription, connexion, déconnexion
     │   │   ├── auth.guard.ts              ← être connecté, et n'agir que pour soi
     │   │   └── business-owner.guard.ts    ← l'établissement visé est bien le sien
-    │   └── notifications/        Cloche, centre de notifications et push
+    │   ├── notifications/        Cloche, centre de notifications et push
     │       ├── notification-rules.ts / .spec.ts   ← le texte de chaque notification
     │       ├── notification.entity.ts / push-subscription.entity.ts
-    │       ├── notifications.service.ts   ← prévenir quelqu'un, lister, marquer lu
-    │       └── push.service.ts            ← clés VAPID et envoi vers les navigateurs
+    │   │   ├── notifications.service.ts   ← prévenir quelqu'un, lister, marquer lu
+    │   │   └── push.service.ts            ← clés VAPID et envoi vers les navigateurs
+    │   └── ledger/               L'économie de jetons
+    │       ├── ledger-rules.ts / .spec.ts         ← arrondi au centime, répartition, vérifications
+    │       ├── compte.entity.ts / mouvement.entity.ts ← les comptes et le journal
+    │       ├── ledger.service.ts          ← déplacer des jetons, historique, contrôle de cohérence
+    │       ├── jetons.service.ts          ← recharger, payer chez un partenaire, donner
+    │       ├── prestataire-paiement.ts    ← le contrat qu'un vrai prestataire devra remplir
+    │       └── prestataire-simule.ts      ← l'implémentation de démonstration
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── style.css                      ← le système de design (couleurs, typographie, composants)
         ├── nav.js                         ← la coquille : barre du haut, onglets et cloche
@@ -494,4 +535,5 @@ projet-commercants/
 Les grandes briques fonctionnelles des specs sont désormais toutes implémentées. Ce qui reste, c'est le passage du prototype à un vrai produit :
 
 - **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
-- **Les vraies transactions** — "dépenser" et "donner" sont pour l'instant symboliques, tracés comme un comportement, sans paiement réel.
+- **Les vrais paiements** — la mécanique des jetons est prête et attend un prestataire ; le brancher suppose un statut juridique, des vérifications d'identité et la conservation des justificatifs.
+- **Avant une mise en ligne** — le « mot de passe oublié » (il faut un service d'envoi d'emails), la limitation du nombre de tentatives de connexion, et le HTTPS.

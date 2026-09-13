@@ -1,24 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { LedgerService, MouvementLisible } from '../ledger/ledger.service';
+import { MotifMouvement } from '../ledger/ledger-rules';
 import { User, UserType } from '../users/user.entity';
-import { Transaction, TransactionType } from './transaction.entity';
-import { Wallet } from './wallet.entity';
 
 export interface WalletSummary {
   solde: number;
-  transactions: Transaction[];
+  mouvements: MouvementLisible[];
 }
 
+/**
+ * Le portefeuille d'un joueur n'est plus une table à part : c'est la lecture
+ * de son compte dans le registre de jetons. Un seul endroit fait foi, donc
+ * plus de risque que deux totaux divergent.
+ */
 @Injectable()
 export class WalletService {
   constructor(
     @InjectRepository(User)
     private readonly users: Repository<User>,
-    @InjectRepository(Wallet)
-    private readonly wallets: Repository<Wallet>,
-    @InjectRepository(Transaction)
-    private readonly transactions: Repository<Transaction>,
+    private readonly ledger: LedgerService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -29,92 +31,54 @@ export class WalletService {
     return player;
   }
 
-  private async getOrCreateWallet(playerId: string): Promise<Wallet> {
-    const existing = await this.wallets.findOne({ where: { playerId } });
-    if (existing) {
-      return existing;
-    }
-    return this.wallets.save(this.wallets.create({ playerId, solde: 0 }));
-  }
-
-  // Appelé par le module "validations" une fois qu'un tiers a validé la
-  // mission — jamais directement par le joueur qui l'a accomplie.
+  /**
+   * Récompense d'une mission validée. Les jetons sont émis par la plateforme :
+   * c'est elle qui finance le jeu (et qui ajuste le montant via le
+   * multiplicateur de rééquilibrage, section 4 des specs).
+   *
+   * Le choix du joueur ne change plus le montant crédité : « dépenser » veut
+   * dire qu'il gardera ses jetons pour un partenaire, « donner » les transfère
+   * aussitôt à une cause, « accumuler » les laisse dormir.
+   */
   async applyMissionReward(
     playerId: string,
     missionId: string,
     montant: number,
     choix: 'depense' | 'don' | 'accumulation',
     libelle: string,
-  ): Promise<Transaction[]> {
-    const wallet = await this.getOrCreateWallet(playerId);
-    const created: Transaction[] = [];
+  ): Promise<void> {
+    const compte = await this.ledger.compteJoueur(playerId);
+    await this.ledger.emettre(compte, montant, {
+      motif: 'recompense_mission',
+      reference: missionId,
+      detail: libelle,
+    });
 
-    wallet.solde += montant;
-    created.push(
-      await this.transactions.save(
-        this.transactions.create({
-          playerId,
-          type: 'gagne',
-          montant,
-          reference: missionId,
-          libelle,
-        }),
-      ),
-    );
-
-    if (choix !== 'accumulation') {
-      const type: TransactionType = choix;
-      wallet.solde -= montant;
-      created.push(
-        await this.transactions.save(
-          this.transactions.create({
-            playerId,
-            type,
-            montant: -montant,
-            reference: missionId,
-            libelle,
-          }),
-        ),
-      );
+    if (choix === 'don') {
+      const cause = await this.ledger.compteCause();
+      await this.ledger.deplacer(compte, cause, montant, {
+        motif: 'don_a_une_cause',
+        reference: missionId,
+        detail: libelle,
+      });
     }
-
-    wallet.updatedAt = new Date();
-    await this.wallets.save(wallet);
-
-    return created;
   }
 
-  // Crédit hors mission : par exemple la part reversée au joueur quand il
-  // accepte une invitation d'un commerçant (section 3.4 des specs).
+  /** Crédit émis par la plateforme (récompense de duo, par exemple). */
   async applyCredit(
     playerId: string,
     montant: number,
     reference: string,
     libelle: string,
-  ): Promise<Transaction> {
-    const wallet = await this.getOrCreateWallet(playerId);
-    wallet.solde += montant;
-    wallet.updatedAt = new Date();
-    await this.wallets.save(wallet);
-
-    return this.transactions.save(
-      this.transactions.create({
-        playerId,
-        type: 'gagne',
-        montant,
-        reference,
-        libelle,
-      }),
-    );
+    motif: MotifMouvement = 'recompense_duo',
+  ): Promise<void> {
+    const compte = await this.ledger.compteJoueur(playerId);
+    await this.ledger.emettre(compte, montant, { motif, reference, detail: libelle });
   }
 
   async getWallet(playerId: string): Promise<WalletSummary> {
     await this.getPlayerOrThrow(playerId);
-    const wallet = await this.getOrCreateWallet(playerId);
-    const transactions = await this.transactions.find({
-      where: { playerId },
-      order: { createdAt: 'DESC' },
-    });
-    return { solde: wallet.solde, transactions };
+    const compte = await this.ledger.compteJoueur(playerId);
+    return { solde: compte.solde, mouvements: await this.ledger.historique(compte) };
   }
 }

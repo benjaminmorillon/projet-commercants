@@ -13,8 +13,6 @@ import { CheckinsModule } from './checkins/checkins.module';
 import { CheckIn } from './checkins/checkin.entity';
 import { Review } from './checkins/review.entity';
 import { WalletModule } from './wallet/wallet.module';
-import { Wallet } from './wallet/wallet.entity';
-import { Transaction } from './wallet/transaction.entity';
 import { ValidationsModule } from './validations/validations.module';
 import { MissionValidation } from './validations/mission-validation.entity';
 import { FriendsModule } from './friends/friends.module';
@@ -39,6 +37,10 @@ import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { Session } from './auth/session.entity';
 import { CollectionModule } from './collection/collection.module';
+import { LedgerModule } from './ledger/ledger.module';
+import { Compte } from './ledger/compte.entity';
+import { MouvementJeton } from './ledger/mouvement.entity';
+import { Rechargement } from './ledger/rechargement.entity';
 import { NotificationsModule } from './notifications/notifications.module';
 import { Notification } from './notifications/notification.entity';
 import { PushSubscription } from './notifications/push-subscription.entity';
@@ -57,8 +59,6 @@ import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
         Business,
         CheckIn,
         Review,
-        Wallet,
-        Transaction,
         MissionValidation,
         Friendship,
         Event,
@@ -74,6 +74,9 @@ import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
         Session,
         Notification,
         PushSubscription,
+        Compte,
+        MouvementJeton,
+        Rechargement,
       ],
       synchronize: true,
     }),
@@ -97,6 +100,7 @@ import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
     CollectionModule,
     AuthModule,
     NotificationsModule,
+    LedgerModule,
   ],
   // Le garde s'applique à TOUTES les routes : une route oubliée est protégée
   // par défaut, plutôt que l'inverse.

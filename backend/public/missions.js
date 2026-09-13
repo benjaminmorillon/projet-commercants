@@ -69,10 +69,10 @@ async function apiCall(method, path, body) {
 function renderWalletBanner(solde) {
   if (!walletBanner) return;
   if (!playerId) {
-    walletBanner.innerHTML = `<a href="index.html">Crée ton profil joueur</a> pour pouvoir accomplir des missions et gagner des crédits.`;
+    walletBanner.innerHTML = `<a href="index.html">Crée ton profil joueur</a> pour pouvoir accomplir des missions et gagner des jetons.`;
     return;
   }
-  walletBanner.innerHTML = `Ton solde : <strong>${solde} crédit${solde > 1 ? 's' : ''}</strong>`;
+  walletBanner.innerHTML = `Ton solde : <strong>${solde} jeton${solde > 1 ? 's' : ''}</strong>`;
 }
 
 // Pour chaque mission, ne garde que la demande de validation la plus récente
@@ -167,7 +167,7 @@ function renderMissions(missions, statusByMission) {
     card.innerHTML = `
       <div class="mission-card-header">
         <h3>${escapeHtml(mission.titre)}</h3>
-        <span class="reward">+${mission.recompenseBase} crédit${mission.recompenseBase > 1 ? 's' : ''}</span>
+        <span class="reward">+${mission.recompenseBase} jeton${mission.recompenseBase > 1 ? 's' : ''}</span>
       </div>
       <p>${escapeHtml(mission.description)}</p>
       <div class="badges">${badges}</div>
@@ -209,7 +209,7 @@ function renderCompletionArea(mission, status) {
     <button type="button" class="complete-btn">J'ai terminé cette mission</button>
     <div class="choix-credit" hidden>
       ${validatorField}
-      <p class="hint">Que fais-tu du crédit gagné (une fois validé) ?</p>
+      <p class="hint">Que fais-tu des jetons gagnés (une fois la mission validée) ?</p>
       <div class="choix-buttons">
         <button type="button" data-choix="depense">Dépenser</button>
         <button type="button" data-choix="don"${donEstOuvert() ? '' : ` disabled title="${escapeHtml(conditionDon())}"`}>Donner${donEstOuvert() ? '' : ' 🔒'}</button>

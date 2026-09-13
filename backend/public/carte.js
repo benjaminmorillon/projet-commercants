@@ -547,7 +547,7 @@ function blocMission(lieu, mission) {
                  <input type="text" class="validator-pseudo" placeholder="Ex : Bob" /></label>`
             : ''
         }
-        <p class="hint">Que fais-tu du crédit gagné (une fois validé) ?</p>
+        <p class="hint">Que fais-tu des jetons gagnés (une fois la mission validée) ?</p>
         <div class="choix-buttons">
           <button type="button" data-choix="depense">Dépenser</button>
           <button type="button" data-choix="don">Donner</button>
@@ -562,7 +562,7 @@ function blocMission(lieu, mission) {
     <article class="mission-bloc ${mission.estDuo ? 'duo' : ''}" data-mission="${mission.id}">
       <div class="mission-card-header">
         <h4>${escapeHtml(mission.titre)}</h4>
-        <span class="reward">+${recompenseFinale} crédit${recompenseFinale > 1 ? 's' : ''}</span>
+        <span class="reward">+${recompenseFinale} jeton${recompenseFinale > 1 ? 's' : ''}</span>
       </div>
       <p>${escapeHtml(mission.description)}</p>
       <div class="badges">
@@ -629,6 +629,19 @@ function ouvrirFiche(lieu, missionCiblee) {
     </div>
     <p id="fiche-checkin-statut" class="hint" hidden></p>
     <div id="fiche-avis-liste" hidden></div>
+
+    ${playerId ? `
+      <p class="fiche-section-titre">Payer avec mes jetons</p>
+      <div class="paiement">
+        <p class="hint" id="paiement-solde">Chargement du solde...</p>
+        <div class="paiement-ligne">
+          <input type="number" id="paiement-montant" min="0.01" step="0.5" placeholder="Montant" />
+          <button type="button" id="paiement-valider">Payer</button>
+        </div>
+        <p class="hint">Les jetons passent directement de ton compte à celui du partenaire.</p>
+        <p id="paiement-message" class="error" hidden></p>
+      </div>
+    ` : ''}
 
     <p class="fiche-section-titre">Missions solo (${solos.length})</p>
     ${solos.map((m) => blocMission(lieu, m)).join('') || '<p class="hint">Aucune mission solo ici.</p>'}
@@ -707,6 +720,8 @@ function brancherFiche(lieu) {
     });
   }
 
+  brancherPaiement(lieu);
+
   const avisBtn = document.getElementById('fiche-avis');
   const avisListe = document.getElementById('fiche-avis-liste');
   avisBtn.addEventListener('click', async () => {
@@ -735,6 +750,57 @@ function brancherFiche(lieu) {
     const mission = lieu.missions.find((m) => m.id === bloc.dataset.mission);
     if (!mission) return;
     brancherMission(bloc, lieu, mission);
+  });
+}
+
+// Régler une consommation chez le partenaire avec ses jetons : ils passent
+// du compte du joueur à celui du commerçant, sans passer par nous.
+function brancherPaiement(lieu) {
+  const bouton = document.getElementById('paiement-valider');
+  if (!bouton) return;
+
+  const soldeEl = document.getElementById('paiement-solde');
+  const montantEl = document.getElementById('paiement-montant');
+  const messageEl = document.getElementById('paiement-message');
+
+  const afficherSolde = (solde) => {
+    soldeEl.textContent = `Tu as ${solde} jeton${solde > 1 ? 's' : ''} disponible${solde > 1 ? 's' : ''}.`;
+    montantEl.max = solde;
+  };
+
+  apiCall('GET', '/jetons/mon-solde')
+    .then((donnees) => afficherSolde(donnees.solde))
+    .catch(() => {
+      soldeEl.textContent = 'Solde indisponible.';
+    });
+
+  bouton.addEventListener('click', async () => {
+    messageEl.hidden = true;
+    messageEl.className = 'error';
+    const montant = Number(montantEl.value);
+    if (!montant || montant <= 0) {
+      messageEl.textContent = 'Indique le montant à régler.';
+      messageEl.hidden = false;
+      return;
+    }
+
+    bouton.disabled = true;
+    try {
+      const resultat = await apiCall('POST', '/jetons/payer', {
+        businessId: lieu.id,
+        montant,
+      });
+      montantEl.value = '';
+      afficherSolde(resultat.solde);
+      messageEl.className = 'success';
+      messageEl.textContent = `${montant} jeton${montant > 1 ? 's' : ''} réglé${montant > 1 ? 's' : ''} au ${resultat.lieu}.`;
+      messageEl.hidden = false;
+    } catch (erreur) {
+      messageEl.textContent = erreur.message;
+      messageEl.hidden = false;
+    } finally {
+      bouton.disabled = false;
+    }
   });
 }
 

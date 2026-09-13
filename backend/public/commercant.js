@@ -165,6 +165,68 @@ async function retrouverMonEtablissement() {
   showDashboard();
 }
 
+/* ---------- Compte de jetons ---------- */
+
+async function loadJetons() {
+  const donnees = await apiCall('GET', `/businesses/${businessId}/jetons`).catch(() => null);
+  if (!donnees) return;
+
+  document.getElementById('jetons-solde').innerHTML =
+    `${donnees.solde}<span class="wallet-unite">jeton${donnees.solde > 1 ? 's' : ''}</span>`;
+
+  const prestataire = document.getElementById('jetons-prestataire');
+  if (donnees.prestataire?.simule) {
+    prestataire.hidden = false;
+    prestataire.textContent =
+      "Paiement en mode démonstration : aucune somme réelle n'est prélevée, les jetons sont simplement crédités.";
+  }
+
+  const liste = document.getElementById('jetons-mouvements');
+  document.getElementById('jetons-mouvements-vide').hidden = donnees.mouvements.length > 0;
+  liste.innerHTML = donnees.mouvements
+    .map((m) => {
+      const date = new Date(m.createdAt).toLocaleDateString('fr-FR');
+      return `
+        <div class="transaction-row">
+          <span>${escapeHtml(m.libelle)}${m.detail ? ` — ${escapeHtml(m.detail)}` : ''} <span class="hint">(${date})</span></span>
+          <span class="${m.sens === 'entree' ? 'positive' : 'negative'}">${m.sens === 'entree' ? '+' : '−'}${m.montant}</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+document.getElementById('recharge-valider')?.addEventListener('click', async () => {
+  const bouton = document.getElementById('recharge-valider');
+  const message = document.getElementById('recharge-message');
+  const champ = document.getElementById('recharge-montant');
+  message.hidden = true;
+  message.className = 'error';
+
+  const montant = Number(champ.value);
+  if (!montant || montant < 1) {
+    message.textContent = 'Indique un montant d’au moins 1 jeton.';
+    message.hidden = false;
+    return;
+  }
+
+  bouton.disabled = true;
+  try {
+    await apiCall('POST', `/businesses/${businessId}/jetons/recharger`, { montant });
+    champ.value = '';
+    message.className = 'success';
+    message.textContent = `${montant} jetons crédités sur ton compte.`;
+    message.hidden = false;
+    await loadJetons();
+    refreshPreview();
+  } catch (erreur) {
+    message.textContent = erreur.message;
+    message.hidden = false;
+  } finally {
+    bouton.disabled = false;
+  }
+});
+
 /* ---------- Onglets ---------- */
 
 document.querySelectorAll('#dashboard-tabs .tab-btn').forEach((btn) => {
@@ -285,7 +347,7 @@ async function loadMissions() {
         <article class="mission-card">
           <div class="mission-card-header">
             <h3>${escapeHtml(mission.titre)}</h3>
-            <span class="reward">+${mission.recompenseBase} crédit${mission.recompenseBase > 1 ? 's' : ''}</span>
+            <span class="reward">+${mission.recompenseBase} jeton${mission.recompenseBase > 1 ? 's' : ''}</span>
           </div>
           <p>${escapeHtml(mission.description)}</p>
           <p class="hint">Publiée le ${new Date(mission.createdAt).toLocaleDateString('fr-FR')}</p>
@@ -346,11 +408,17 @@ async function refreshPreview() {
           ? `<span class="hint">Tarif majoré de ${-remise}% : ton lieu est déjà très fréquenté au regard de sa note.</span>`
           : '';
 
+    // Le commerçant doit voir avant de cliquer si son compte suffit.
+    const alerteSolde = result.soldeSuffisant
+      ? ''
+      : `<span class="error">Solde insuffisant : il te reste ${result.soldeJetons} jeton${result.soldeJetons > 1 ? 's' : ''}. Recharge ton compte depuis « Mon activité ».</span>`;
+
     campaignPreview.innerHTML = result.nombreCibles
       ? `<strong>${result.nombreCibles} joueur${result.nombreCibles > 1 ? 's' : ''} ciblé${result.nombreCibles > 1 ? 's' : ''}</strong>
-         · ${result.coutTotal.toFixed(2)} € au total (${result.coutParCible.toFixed(2)} € par personne)
-         · ${result.creditParJoueur.toFixed(2)} € versés à chacun dès l'envoi
+         · ${result.coutTotal.toFixed(2)} jetons au total (${result.coutParCible.toFixed(2)} par personne)
+         · ${result.creditParJoueur.toFixed(2)} versés à chacun dès l'envoi
          ${ligneTarif}
+         ${alerteSolde}
          ${exemples ? `<span class="hint">Ex : ${exemples}</span>` : ''}`
       : `<strong>Aucun joueur ne correspond</strong> <span class="hint">Baisse les curseurs pour élargir ta cible.</span>`;
   } catch (error) {
@@ -394,12 +462,15 @@ campaignForm.addEventListener('submit', async (event) => {
       message: document.getElementById('campaign-message').value.trim(),
       ...(campaignImageDataUrl ? { imageDataUrl: campaignImageDataUrl } : {}),
     });
-    campaignSuccess.textContent = `Campagne envoyée à ${campaign.nombreCibles} joueur${campaign.nombreCibles > 1 ? 's' : ''} pour ${campaign.coutTotal.toFixed(2)} €.`;
+    campaignSuccess.textContent = `Campagne envoyée à ${campaign.nombreCibles} joueur${campaign.nombreCibles > 1 ? 's' : ''} pour ${campaign.coutTotal.toFixed(2)} jetons.`;
     campaignSuccess.hidden = false;
     document.getElementById('campaign-message').value = '';
     campaignImageDataUrl = null;
     document.getElementById('campaign-image-preview').hidden = true;
     loadCampaigns();
+    // Les jetons viennent de sortir du compte : le solde affiché doit suivre.
+    loadJetons();
+    refreshPreview();
   } catch (error) {
     campaignError.textContent = error.message;
     campaignError.hidden = false;
@@ -432,7 +503,7 @@ async function loadCampaigns() {
         <article class="mission-card">
           <div class="mission-card-header">
             <h3>${campaign.type === 'invitation' ? escapeHtml(campaign.eventTitre || 'Invitation') : 'Publicité'}</h3>
-            <span class="reward">${campaign.coutTotal.toFixed(2)} €</span>
+            <span class="reward">${campaign.coutTotal.toFixed(2)} jetons</span>
           </div>
           <p>${escapeHtml(campaign.message)}</p>
           <div class="badges">
@@ -549,6 +620,7 @@ document.getElementById('concurrence-filters').addEventListener('change', loadCo
 function showDashboard() {
   stepAccount.hidden = true;
   dashboard.hidden = false;
+  loadJetons();
   loadEvents();
   loadMissions();
   loadCampaigns();

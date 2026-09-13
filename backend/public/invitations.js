@@ -32,7 +32,7 @@ function openResponsePopup(invitation, accepte) {
   overlay.innerHTML = `
     <div class="popup-card">
       <h3>${accepte ? 'Ça t’intéresse' : 'Pas intéressé'}</h3>
-      <p class="hint">Dis à ${escapeHtml(invitation.lieuNom)} ce que tu en penses — ça les aide à mieux cibler la prochaine fois. Tes ${invitation.creditVerse} € restent acquis quoi qu'il arrive.</p>
+      <p class="hint">Dis à ${escapeHtml(invitation.lieuNom)} ce que tu en penses — ça les aide à mieux cibler la prochaine fois. Tes ${invitation.creditVerse} jeton${invitation.creditVerse > 1 ? 's' : ''} restent acquis quoi qu'il arrive.</p>
       <div class="reaction-buttons">
         ${reactions.map((r) => `<button type="button" class="reaction-btn" data-reaction="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join('')}
       </div>
@@ -85,9 +85,9 @@ function renderInvitation(invitation) {
        <p>${escapeHtml(invitation.evenement.description)}</p>`
     : '';
 
-  // Le crédit est versé dès le ciblage : répondre ne change rien au montant,
+  // Les jetons sont versés dès le ciblage : répondre ne change rien au montant,
   // ça dit juste au lieu si ça t'intéresse.
-  const credit = `<p class="mission-done">+${invitation.creditVerse} € déjà crédités</p>`;
+  const credit = `<p class="mission-done">+${invitation.creditVerse} jeton${invitation.creditVerse > 1 ? 's' : ''} déjà versé${invitation.creditVerse > 1 ? 's' : ''}</p>`;
 
   const actions =
     invitation.statut === 'envoyee'

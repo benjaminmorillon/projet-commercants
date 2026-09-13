@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, LessThan, Repository } from 'typeorm';
+import { PlayerProfile } from '../players/player-profile.entity';
 import { User, UserType } from '../users/user.entity';
 import { ConnexionDto } from './dto/connexion.dto';
 import { InscriptionDto } from './dto/inscription.dto';
@@ -32,6 +33,8 @@ export class AuthService {
     private readonly users: Repository<User>,
     @InjectRepository(Session)
     private readonly sessions: Repository<Session>,
+    @InjectRepository(PlayerProfile)
+    private readonly profiles: Repository<PlayerProfile>,
   ) {}
 
   private enUtilisateurConnecte(user: User): UtilisateurConnecte {
@@ -46,23 +49,38 @@ export class AuthService {
       throw new BadRequestException('Un compte existe déjà avec cette adresse email.');
     }
 
-    // Le pseudo sert à désigner quelqu'un (choisir un validateur, envoyer une
-    // demande d'ami) : deux personnes ne peuvent pas porter le même, sinon on
-    // ne sait pas de qui on parle. Comparaison insensible à la casse.
     const pseudo = dto.pseudo.trim();
-    const pseudoPris = await this.users.findOne({ where: { pseudo: ILike(pseudo) } });
-    if (pseudoPris) {
-      throw new BadRequestException('Ce pseudo est déjà pris — choisis-en un autre.');
+    const type = dto.type === 'commercant' ? UserType.COMMERCANT : UserType.PARTICULIER;
+
+    // Le pseudo d'un JOUEUR sert à le désigner (choisir un validateur,
+    // envoyer une demande d'ami) : deux joueurs ne peuvent pas porter le même,
+    // sinon on ne sait pas de qui on parle. Comparaison insensible à la casse.
+    //
+    // Le nom d'un établissement, lui, n'a pas à être unique : deux « Le
+    // Comptoir » dans deux villes différentes doivent pouvoir exister.
+    if (type === UserType.PARTICULIER) {
+      const pseudoPris = await this.users.findOne({
+        where: { pseudo: ILike(pseudo), type: UserType.PARTICULIER },
+      });
+      if (pseudoPris) {
+        throw new BadRequestException('Ce pseudo est déjà pris — choisis-en un autre.');
+      }
     }
 
     const user = await this.users.save(
       this.users.create({
         email,
         pseudo,
-        type: dto.type === 'commercant' ? UserType.COMMERCANT : UserType.PARTICULIER,
+        type,
         motDePasseHache: hacherMotDePasse(dto.motDePasse),
       }),
     );
+
+    // Un joueur a besoin de son profil dès l'inscription : c'est lui qui
+    // portera les réponses au questionnaire et les scores d'archétypes.
+    if (type === UserType.PARTICULIER) {
+      await this.profiles.save(this.profiles.create({ userId: user.id }));
+    }
 
     return { utilisateur: this.enUtilisateurConnecte(user), jeton: await this.ouvrirSession(user) };
   }

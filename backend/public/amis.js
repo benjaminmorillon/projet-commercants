@@ -150,7 +150,7 @@ async function loadFriendProfile(friendId) {
         <article class="mission-card">
           <div class="mission-card-header">
             <h3>${escapeHtml(m.titre)}</h3>
-            <span class="reward">+${m.recompenseBase} crédit${m.recompenseBase > 1 ? 's' : ''}</span>
+            <span class="reward">+${m.recompenseBase} jeton${m.recompenseBase > 1 ? 's' : ''}</span>
           </div>
           <p class="hint">${new Date(m.date).toLocaleDateString('fr-FR')}</p>
         </article>

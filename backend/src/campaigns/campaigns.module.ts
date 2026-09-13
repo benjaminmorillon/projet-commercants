@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OwnershipModule } from '../auth/ownership.module';
+import { LedgerModule } from '../ledger/ledger.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BalancingModule } from '../balancing/balancing.module';
@@ -32,6 +33,7 @@ import { InvitationsController } from './invitations.controller';
     BalancingModule,
     PlayerEventsModule,
     NotificationsModule,
+    LedgerModule,
   ],
   controllers: [BusinessCampaignsController, InvitationsController],
   providers: [CampaignsService],

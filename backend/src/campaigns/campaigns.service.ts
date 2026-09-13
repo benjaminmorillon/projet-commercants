@@ -9,6 +9,8 @@ import { In, MoreThanOrEqual, Repository } from 'typeorm';
 import { BalancingService } from '../balancing/balancing.service';
 import { Business } from '../businesses/business.entity';
 import { Event } from '../events/event.entity';
+import { arrondir, soldeSuffisant } from '../ledger/ledger-rules';
+import { LedgerService } from '../ledger/ledger.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
@@ -27,6 +29,8 @@ export interface TargetingPreview {
   coutParCible: number;
   multiplicateur: number;
   creditParJoueur: number;
+  soldeJetons: number;
+  soldeSuffisant: boolean;
   apercu: { pseudo: string; scores: Record<string, number>; missionsReussies: number }[];
 }
 
@@ -59,6 +63,7 @@ export class CampaignsService {
     private readonly balancing: BalancingService,
     private readonly playerEvents: PlayerEventsService,
     private readonly notifications: NotificationsService,
+    private readonly ledger: LedgerService,
   ) {}
 
   private async getBusinessOrThrow(businessId: string): Promise<Business> {
@@ -113,7 +118,7 @@ export class CampaignsService {
     businessId: string,
     criteria: TargetingCriteriaDto & { montantParCible?: number },
   ): Promise<TargetingPreview> {
-    await this.getBusinessOrThrow(businessId);
+    const business = await this.getBusinessOrThrow(businessId);
 
     const { profiles, missionsParJoueur } = await this.findMatchingProfiles(criteria);
     const montant = criteria.montantParCible ?? 0;
@@ -126,12 +131,18 @@ export class CampaignsService {
       : [];
     const pseudoById = new Map(users.map((u) => [u.id, u.pseudo]));
 
+    const coutTotal = arrondir(profiles.length * coutParCible);
+    const soldeJetons = await this.ledger.solde('commercant', business.userId);
+
     return {
       nombreCibles: profiles.length,
-      coutTotal: Math.round(profiles.length * coutParCible * 100) / 100,
+      coutTotal,
       coutParCible,
       multiplicateur,
-      creditParJoueur: Math.round(montant * PART_JOUEUR * 100) / 100,
+      creditParJoueur: arrondir(montant * PART_JOUEUR),
+      // Le commerçant doit savoir avant de cliquer s'il a de quoi payer.
+      soldeJetons,
+      soldeSuffisant: soldeSuffisant(soldeJetons, coutTotal),
       apercu: echantillon.map((p) => ({
         pseudo: pseudoById.get(p.userId) ?? 'Joueur',
         scores: {
@@ -167,6 +178,18 @@ export class CampaignsService {
 
     const multiplicateur = await this.balancing.getMultiplier(businessId);
     const coutParCible = coutFacture(dto.montantParCible, multiplicateur);
+    const coutTotal = arrondir(profiles.length * coutParCible);
+
+    // La campagne est payée avec les jetons du commerçant : on vérifie qu'il
+    // a de quoi AVANT de l'enregistrer, plutôt que de créditer les joueurs
+    // avec des jetons qui n'existent pas.
+    const business = await this.getBusinessOrThrow(businessId);
+    const compteCommercant = await this.ledger.compteCommercant(business.userId);
+    if (!soldeSuffisant(compteCommercant.solde, coutTotal)) {
+      throw new BadRequestException(
+        `Solde insuffisant : cette campagne coûte ${coutTotal} jetons et il t'en reste ${arrondir(compteCommercant.solde)}. Recharge ton compte ou réduis le montant par personne.`,
+      );
+    }
 
     const campaign = await this.campaigns.save(
       this.campaigns.create({
@@ -182,14 +205,13 @@ export class CampaignsService {
         minSocialisateur: dto.minSocialisateur ?? 0,
         minMissionsReussies: dto.minMissionsReussies ?? 0,
         nombreCibles: profiles.length,
-        coutTotal: Math.round(profiles.length * coutParCible * 100) / 100,
+        coutTotal,
       }),
     );
 
     // Le crédit part dès l'envoi : être ciblé suffit, la cible n'a pas
     // besoin d'accepter pour toucher sa part (section 3.4 des specs).
-    const creditJoueur = Math.round(dto.montantParCible * PART_JOUEUR * 100) / 100;
-    const business = await this.businesses.findOne({ where: { id: businessId } });
+    const creditJoueur = arrondir(dto.montantParCible * PART_JOUEUR);
 
     await this.targets.save(
       profiles.map((profile) =>
@@ -201,20 +223,33 @@ export class CampaignsService {
       ),
     );
 
-    await Promise.all(
-      profiles.map(async (profile) => {
-        await this.wallet.applyCredit(
-          profile.userId,
-          creditJoueur,
-          campaign.id,
-          `Ciblage : ${business?.nom ?? 'un établissement'}`,
-        );
-        await this.notifications.prevenir(profile.userId, 'invitation_recue', {
-          lieu: business?.nom,
-          credits: creditJoueur,
-        });
-      }),
-    );
+    // Les jetons sortent vraiment du compte du commerçant : une part vers
+    // chaque joueur ciblé, le reste — la commission — vers la plateforme.
+    let verseAuxJoueurs = 0;
+    for (const profile of profiles) {
+      const compteJoueur = await this.ledger.compteJoueur(profile.userId);
+      await this.ledger.deplacer(compteCommercant, compteJoueur, creditJoueur, {
+        motif: 'ciblage_part_joueur',
+        reference: campaign.id,
+        detail: business.nom,
+      });
+      verseAuxJoueurs = arrondir(verseAuxJoueurs + creditJoueur);
+
+      await this.notifications.prevenir(profile.userId, 'invitation_recue', {
+        lieu: business.nom,
+        credits: creditJoueur,
+      });
+    }
+
+    const commission = arrondir(coutTotal - verseAuxJoueurs);
+    if (commission > 0) {
+      const comptePlateforme = await this.ledger.comptePlateforme();
+      await this.ledger.deplacer(compteCommercant, comptePlateforme, commission, {
+        motif: 'ciblage_commission',
+        reference: campaign.id,
+        detail: business.nom,
+      });
+    }
 
     return campaign;
   }

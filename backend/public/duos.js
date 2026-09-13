@@ -84,7 +84,7 @@ function renderDuo(duo) {
   card.innerHTML = `
     <div class="mission-card-header">
       <h3>${escapeHtml(duo.mission?.titre ?? 'Mission à deux')}</h3>
-      <span class="reward">+${duo.mission?.recompenseBase ?? 0} crédits</span>
+      <span class="reward">+${duo.mission?.recompenseBase ?? 0} jetons</span>
     </div>
     <div class="badges">
       <span class="badge">${MODE_LABELS[duo.typeMatching] ?? duo.typeMatching}</span>

@@ -37,7 +37,7 @@ function openValidationPopup(request, onResolved) {
   overlay.innerHTML = `
     <div class="popup-card">
       <h3>${escapeHtml(request.missionTitre)}</h3>
-      <p><strong>${escapeHtml(request.requesterPseudo)}</strong> affirme avoir accompli cette mission et choisit de <strong>${CHOIX_LABELS[request.choix] || request.choix}</strong> les ${request.missionRecompense} crédit${request.missionRecompense > 1 ? 's' : ''} gagnés.</p>
+      <p><strong>${escapeHtml(request.requesterPseudo)}</strong> affirme avoir accompli cette mission et choisit de <strong>${CHOIX_LABELS[request.choix] || request.choix}</strong> les ${request.missionRecompense} jeton${request.missionRecompense > 1 ? 's' : ''} gagnés.</p>
       <p class="hint">Confirme uniquement si tu as toi-même constaté que la mission a bien été réalisée.</p>
       <p class="popup-error error" hidden></p>
       <div class="popup-actions">
@@ -75,7 +75,7 @@ function renderRequestRow(request, onResolved) {
   row.innerHTML = `
     <div class="mission-card-header">
       <h3>${escapeHtml(request.missionTitre)}</h3>
-      <span class="reward">+${request.missionRecompense} crédit${request.missionRecompense > 1 ? 's' : ''}</span>
+      <span class="reward">+${request.missionRecompense} jeton${request.missionRecompense > 1 ? 's' : ''}</span>
     </div>
     <p class="hint">Demandé par <strong>${escapeHtml(request.requesterPseudo)}</strong></p>
     <button type="button" class="examine-btn">Examiner la demande</button>

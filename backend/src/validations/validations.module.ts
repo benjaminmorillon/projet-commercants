@@ -5,6 +5,7 @@ import { BalancingModule } from '../balancing/balancing.module';
 import { Business } from '../businesses/business.entity';
 import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PlayerEventsModule } from '../player-events/player-events.module';
 import { UnlockingModule } from '../unlocking/unlocking.module';
 import { User } from '../users/user.entity';
@@ -23,6 +24,7 @@ import { ValidationsService } from './validations.service';
     BalancingModule,
     PlayerEventsModule,
     UnlockingModule,
+    NotificationsModule,
   ],
   controllers: [
     PlayerValidationsController,

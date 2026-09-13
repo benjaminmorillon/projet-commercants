@@ -140,6 +140,13 @@
     <section id="compte-section" class="card" hidden>
       <h2>Ton compte</h2>
       <p class="hint" id="compte-identite"></p>
+
+      <h3>Notifications</h3>
+      <p class="hint" id="push-etat">Être prévenu même quand l'appli est fermée : validation attendue, duo proposé, invitation reçue.</p>
+      <button type="button" class="secondary" id="btn-push">Activer les notifications</button>
+      <p id="push-erreur" class="error" hidden></p>
+
+      <h3>Session</h3>
       <button type="button" class="secondary" id="btn-deconnexion">Se déconnecter</button>
     </section>
 
@@ -152,6 +159,7 @@
   </main>
 
   <script src="nav.js"></script>
+  <script src="push.js"></script>
   <script src="utils.js"></script>
   <script src="app.js"></script>
 </body>

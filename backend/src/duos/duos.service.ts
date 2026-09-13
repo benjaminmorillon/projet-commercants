@@ -4,6 +4,7 @@ import { In, Not, Repository } from 'typeorm';
 import { BalancingService } from '../balancing/balancing.service';
 import { Business } from '../businesses/business.entity';
 import { Mission } from '../missions/mission.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { UnlockingService } from '../unlocking/unlocking.service';
@@ -43,6 +44,7 @@ export class DuosService {
     private readonly wallet: WalletService,
     private readonly playerEvents: PlayerEventsService,
     private readonly unlocking: UnlockingService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private async getProfilOrThrow(playerId: string): Promise<PlayerProfile> {
@@ -163,6 +165,13 @@ export class DuosService {
       this.participants.create({ groupMissionId: duo.id, playerId: meilleur.candidat.userId }),
     ]);
 
+    // On prévient le partenaire sans dire qui c'est : la révélation n'a lieu
+    // qu'une fois les deux d'accord.
+    await this.notifications.prevenir(meilleur.candidat.userId, 'duo_propose', {
+      mission: mission.titre,
+      lieu: lieu?.nom,
+    });
+
     return duo;
   }
 
@@ -197,6 +206,34 @@ export class DuosService {
     const briseGlace = candidates.filter((m) => m.phaseRelationnelle === 'brise_glace');
     const pool = briseGlace.length > 0 ? briseGlace : candidates;
     return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // Prévenir tous les participants d'un duo, sauf celui qui vient d'agir.
+  private async previensLesAutres(
+    duo: GroupMission,
+    saufPlayerId: string,
+    type: 'duo_accepte' | 'duo_a_confirmer',
+    extra: { pseudo?: string } = {},
+  ): Promise<void> {
+    const [participants, mission, lieu] = await Promise.all([
+      this.participants.find({ where: { groupMissionId: duo.id } }),
+      this.missions.findOne({ where: { id: duo.missionId } }),
+      duo.businessId
+        ? this.businesses.findOne({ where: { id: duo.businessId } })
+        : Promise.resolve(null),
+    ]);
+
+    await Promise.all(
+      participants
+        .filter((p) => p.playerId !== saufPlayerId)
+        .map((p) =>
+          this.notifications.prevenir(p.playerId, type, {
+            ...extra,
+            mission: mission?.titre,
+            lieu: lieu?.nom,
+          }),
+        ),
+    );
   }
 
   private async choisirLieu(): Promise<Business | null> {
@@ -300,7 +337,9 @@ export class DuosService {
       // Les deux ont dit oui : on révèle qui est en face.
       duo.statut = 'acceptee';
       duo.statutRevelation = 'annoncee';
-      return this.duos.save(duo);
+      await this.duos.save(duo);
+      await this.previensLesAutres(duo, playerId, 'duo_accepte');
+      return duo;
     }
 
     return duo;
@@ -330,6 +369,8 @@ export class DuosService {
 
     const tous = await this.participants.find({ where: { groupMissionId: duoId } });
     if (!tous.every((p) => p.aConfirme)) {
+      const moi = await this.users.findOne({ where: { id: playerId } });
+      await this.previensLesAutres(duo, playerId, 'duo_a_confirmer', { pseudo: moi?.pseudo });
       return { statut: 'en_attente_du_partenaire' as const };
     }
 

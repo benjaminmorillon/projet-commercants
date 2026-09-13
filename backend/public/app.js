@@ -282,7 +282,8 @@ async function loadWallet() {
 
   const wallet = await apiGet(`/players/${playerId}/wallet`);
   walletSection.hidden = false;
-  walletSoldeEl.textContent = `Solde actuel : ${wallet.solde} crédit${wallet.solde > 1 ? 's' : ''}`;
+  // Le solde se lit d'un coup d'œil : le chiffre en grand, l'unité à côté.
+  walletSoldeEl.innerHTML = `${wallet.solde}<span class="wallet-unite">crédit${wallet.solde > 1 ? 's' : ''}</span>`;
   walletHistoryEmpty.hidden = wallet.transactions.length > 0;
 
   walletHistoryEl.innerHTML = wallet.transactions
@@ -365,7 +366,57 @@ accountForm.addEventListener('submit', async (event) => {
   }
 });
 
+// --- Notifications hors de l'appli --------------------------------------
+
+async function rafraichirBoutonPush() {
+  const bouton = document.getElementById('btn-push');
+  const etat = document.getElementById('push-etat');
+  const { supporte, actif, refuse } = await etatPush();
+
+  if (!supporte) {
+    bouton.hidden = true;
+    etat.textContent =
+      "Ce navigateur ne sait pas recevoir de notifications hors de l'appli. Sur iPhone, il faut d'abord ajouter le site à l'écran d'accueil.";
+    return;
+  }
+  if (refuse && !actif) {
+    bouton.hidden = true;
+    etat.textContent =
+      'Les notifications sont bloquées pour ce site. Il faut les réautoriser dans les réglages du navigateur.';
+    return;
+  }
+
+  bouton.hidden = false;
+  bouton.textContent = actif ? 'Désactiver les notifications' : 'Activer les notifications';
+  etat.textContent = actif
+    ? 'Tu es prévenu même quand l’appli est fermée.'
+    : "Être prévenu même quand l'appli est fermée : validation attendue, duo proposé, invitation reçue.";
+}
+
+document.getElementById('btn-push').addEventListener('click', async () => {
+  const bouton = document.getElementById('btn-push');
+  const erreur = document.getElementById('push-erreur');
+  erreur.hidden = true;
+  bouton.disabled = true;
+
+  try {
+    const { actif } = await etatPush();
+    if (actif) {
+      await desactiverPush();
+    } else {
+      await activerPush();
+    }
+  } catch (e) {
+    erreur.textContent = e.message;
+    erreur.hidden = false;
+  } finally {
+    bouton.disabled = false;
+    await rafraichirBoutonPush();
+  }
+});
+
 document.getElementById('btn-deconnexion').addEventListener('click', async () => {
+  await desactiverPush().catch(() => null);
   await apiPost('/auth/deconnexion', {}).catch(() => null);
   localStorage.removeItem('playerId');
   window.location.reload();
@@ -464,6 +515,7 @@ async function initialiser() {
   document.getElementById('compte-section').hidden = false;
   document.getElementById('compte-identite').textContent =
     `Connecté en tant que ${utilisateur.pseudo} (${utilisateur.email}).`;
+  rafraichirBoutonPush();
 
   showStep('questionnaire');
   demarrer();

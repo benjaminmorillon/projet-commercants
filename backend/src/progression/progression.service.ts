@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PlayerEventType } from '../player-events/event-weights';
 import { PlayerEvent } from '../player-events/player-event.entity';
 import { PlayerBadge } from './player-badge.entity';
@@ -28,6 +29,7 @@ export class ProgressionService {
     private readonly badges: Repository<PlayerBadge>,
     @InjectRepository(PlayerEvent)
     private readonly events: Repository<PlayerEvent>,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private async getOrCreate(playerId: string): Promise<PlayerProgression> {
@@ -71,10 +73,18 @@ export class ProgressionService {
    */
   async awardForEvent(playerId: string, type: PlayerEventType): Promise<void> {
     const progression = await this.getOrCreate(playerId);
+    const niveauAvant = progression.niveauActuel;
+
     progression.xpTotal += XP_PAR_EVENEMENT[type] ?? 0;
     progression.niveauActuel = niveauPourXp(progression.xpTotal);
     progression.updatedAt = new Date();
     await this.progressions.save(progression);
+
+    if (progression.niveauActuel > niveauAvant) {
+      await this.notifications.prevenir(playerId, 'niveau_atteint', {
+        niveau: progression.niveauActuel,
+      });
+    }
 
     await this.syncBadges(playerId);
   }
@@ -108,6 +118,13 @@ export class ProgressionService {
 
     await this.badges.save(
       nouveaux.map((badge) => this.badges.create({ playerId, badgeId: badge.id })),
+    );
+
+    // Un badge décroché sans qu'on le dise ne fait plaisir à personne.
+    await Promise.all(
+      nouveaux.map((badge) =>
+        this.notifications.prevenir(playerId, 'badge_obtenu', { badge: badge.nom }),
+      ),
     );
   }
 

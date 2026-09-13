@@ -15,6 +15,7 @@ const ICONES = {
   invitations: '<rect x="3" y="5.5" width="18" height="13" rx="2.2"/><path d="m3.8 7 7.1 5.4a2 2 0 0 0 2.2 0L20.2 7"/>',
   amis: '<circle cx="12" cy="8" r="3.4"/><path d="M5 19.4c.6-3.5 3.4-5.6 7-5.6s6.4 2.1 7 5.6"/>',
   commercant: '<path d="M4 9.5 5.4 4.6h13.2L20 9.5a2.7 2.7 0 0 1-5.3.6 2.7 2.7 0 0 1-5.4 0 2.7 2.7 0 0 1-5.3-.6Z"/><path d="M5.4 11.6v7.8h13.2v-7.8"/>',
+  cloche: '<path d="M18 9.6a6 6 0 1 0-12 0c0 4.6-1.6 6-1.6 6h15.2S18 14.2 18 9.6Z"/><path d="M13.7 19.4a2 2 0 0 1-3.4 0"/>',
 };
 
 function icone(nom) {
@@ -53,7 +54,13 @@ function construireCoquille() {
       <span class="wordmark-dot"></span>
       Projet Commerçant
     </a>
-    <a class="appbar-link${courante === 'commercant.html' ? ' active' : ''}" href="commercant.html">Espace commerçant</a>
+    <div class="appbar-actions">
+      <a class="appbar-link${courante === 'commercant.html' ? ' active' : ''}" href="commercant.html">Espace commerçant</a>
+      <button type="button" class="cloche" id="btn-cloche" aria-label="Notifications">
+        ${icone('cloche')}
+        <span class="cloche-compteur" id="cloche-compteur" hidden></span>
+      </button>
+    </div>
   `;
 
   const tabbar = document.createElement('nav');
@@ -77,6 +84,113 @@ function construireCoquille() {
   document.body.appendChild(tabbar);
 
   document.getElementById('tab-plus').addEventListener('click', () => ouvrirMenu(courante));
+  document.getElementById('btn-cloche').addEventListener('click', ouvrirNotifications);
+
+  rafraichirCompteur();
+}
+
+// ---------------------------------------------------------------------------
+// Notifications : la pastille de la cloche, et le panneau qui les liste
+// ---------------------------------------------------------------------------
+
+async function rafraichirCompteur() {
+  try {
+    const reponse = await fetchOriginal('/notifications/non-lues');
+    if (!reponse.ok) return;
+    const { nonLues } = await reponse.json();
+    const pastille = document.getElementById('cloche-compteur');
+    pastille.textContent = nonLues > 9 ? '9+' : String(nonLues);
+    pastille.hidden = nonLues === 0;
+  } catch {
+    // Hors ligne ou pas connecté : la cloche reste simplement muette.
+  }
+}
+
+function dateRelative(iso) {
+  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (minutes < 1) return "à l'instant";
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const heures = Math.round(minutes / 60);
+  if (heures < 24) return `il y a ${heures} h`;
+  const jours = Math.round(heures / 24);
+  return jours === 1 ? 'hier' : `il y a ${jours} jours`;
+}
+
+async function ouvrirNotifications() {
+  if (document.querySelector('.sheet')) {
+    return;
+  }
+
+  const fond = document.createElement('div');
+  fond.className = 'sheet-fond';
+  const panneau = document.createElement('section');
+  panneau.className = 'sheet sheet-notifications';
+  panneau.innerHTML = '<div class="sheet-poignee"></div><p class="hint">Chargement...</p>';
+
+  const fermer = () => {
+    fond.remove();
+    panneau.remove();
+    document.removeEventListener('keydown', surEchap);
+    rafraichirCompteur();
+  };
+  const surEchap = (event) => {
+    if (event.key === 'Escape') fermer();
+  };
+  fond.addEventListener('click', fermer);
+  document.addEventListener('keydown', surEchap);
+
+  document.body.appendChild(fond);
+  document.body.appendChild(panneau);
+
+  let donnees;
+  try {
+    const reponse = await fetchOriginal('/notifications');
+    if (!reponse.ok) throw new Error('non connecté');
+    donnees = await reponse.json();
+  } catch {
+    panneau.innerHTML =
+      '<div class="sheet-poignee"></div><p class="hint">Connecte-toi pour voir tes notifications.</p>';
+    return;
+  }
+
+  const liste = donnees.notifications;
+  panneau.innerHTML = `
+    <div class="sheet-poignee"></div>
+    <div class="sheet-entete">
+      <strong>Notifications</strong>
+      ${donnees.nonLues > 0 ? '<button type="button" class="lien-discret" id="tout-lu">Tout marquer comme lu</button>' : ''}
+    </div>
+    ${
+      liste.length === 0
+        ? '<p class="hint">Rien de neuf. Les demandes de validation, les duos et les invitations arriveront ici.</p>'
+        : liste
+            .map(
+              (n) => `
+                <a class="notif${n.lueLe ? '' : ' non-lue'}" href="${escapeHtml(n.lien)}" data-id="${escapeHtml(n.id)}">
+                  <span class="notif-point"></span>
+                  <span class="notif-texte">
+                    <strong>${escapeHtml(n.titre)}</strong>
+                    <span>${escapeHtml(n.corps)}</span>
+                    <span class="notif-date">${dateRelative(n.createdAt)}</span>
+                  </span>
+                </a>
+              `,
+            )
+            .join('')
+    }
+  `;
+
+  panneau.querySelectorAll('.notif').forEach((lien) => {
+    lien.addEventListener('click', () => {
+      // Marquer comme lue sans retarder la navigation.
+      fetchOriginal(`/notifications/${lien.dataset.id}/lue`, { method: 'POST' }).catch(() => null);
+    });
+  });
+
+  panneau.querySelector('#tout-lu')?.addEventListener('click', async () => {
+    await fetchOriginal('/notifications/tout-lu', { method: 'POST' }).catch(() => null);
+    fermer();
+  });
 }
 
 function ouvrirMenu(courante) {

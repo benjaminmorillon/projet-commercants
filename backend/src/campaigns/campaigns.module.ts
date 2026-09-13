@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OwnershipModule } from '../auth/ownership.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BalancingModule } from '../balancing/balancing.module';
 import { Business } from '../businesses/business.entity';
@@ -30,6 +31,7 @@ import { InvitationsController } from './invitations.controller';
     WalletModule,
     BalancingModule,
     PlayerEventsModule,
+    NotificationsModule,
   ],
   controllers: [BusinessCampaignsController, InvitationsController],
   providers: [CampaignsService],

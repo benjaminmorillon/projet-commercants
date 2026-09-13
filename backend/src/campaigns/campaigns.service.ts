@@ -9,6 +9,7 @@ import { In, MoreThanOrEqual, Repository } from 'typeorm';
 import { BalancingService } from '../balancing/balancing.service';
 import { Business } from '../businesses/business.entity';
 import { Event } from '../events/event.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { User, UserType } from '../users/user.entity';
@@ -57,6 +58,7 @@ export class CampaignsService {
     private readonly wallet: WalletService,
     private readonly balancing: BalancingService,
     private readonly playerEvents: PlayerEventsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private async getBusinessOrThrow(businessId: string): Promise<Business> {
@@ -200,14 +202,18 @@ export class CampaignsService {
     );
 
     await Promise.all(
-      profiles.map((profile) =>
-        this.wallet.applyCredit(
+      profiles.map(async (profile) => {
+        await this.wallet.applyCredit(
           profile.userId,
           creditJoueur,
           campaign.id,
           `Ciblage : ${business?.nom ?? 'un établissement'}`,
-        ),
-      ),
+        );
+        await this.notifications.prevenir(profile.userId, 'invitation_recue', {
+          lieu: business?.nom,
+          credits: creditJoueur,
+        });
+      }),
     );
 
     return campaign;
@@ -340,11 +346,24 @@ export class CampaignsService {
     target.respondedAt = new Date();
     const saved = await this.targets.save(target);
 
+    const campaign = await this.campaigns.findOne({ where: { id: target.campaignId } });
+
     if (statut === 'acceptee') {
-      const campaign = await this.campaigns.findOne({ where: { id: target.campaignId } });
       await this.playerEvents.record(target.playerId, 'invitation_acceptee', {
         businessId: campaign?.businessId ?? null,
       });
+    }
+
+    // Le commerçant apprend ce que sa cible en a pensé. On ne lui donne pas
+    // le pseudo : le ciblage se fait sur des profils anonymes, la réponse
+    // n'a pas de raison de lever cet anonymat.
+    if (campaign) {
+      const business = await this.businesses.findOne({ where: { id: campaign.businessId } });
+      if (business) {
+        await this.notifications.prevenir(business.userId, 'invitation_repondue', {
+          reponse: statut,
+        });
+      }
     }
 
     return saved;

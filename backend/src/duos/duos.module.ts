@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BalancingModule } from '../balancing/balancing.module';
 import { Business } from '../businesses/business.entity';
 import { Mission } from '../missions/mission.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PlayerEventsModule } from '../player-events/player-events.module';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { User } from '../users/user.entity';
@@ -29,6 +30,7 @@ import { PairingOutcome } from './pairing-outcome.entity';
     WalletModule,
     PlayerEventsModule,
     UnlockingModule,
+    NotificationsModule,
   ],
   controllers: [DuosController],
   providers: [DuosService],

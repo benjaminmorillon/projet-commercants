@@ -11,6 +11,7 @@ import { Business } from '../businesses/business.entity';
 import { CheckIn } from '../checkins/checkin.entity';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventType } from '../player-events/event-weights';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
@@ -52,6 +53,7 @@ export class ValidationsService {
     private readonly balancing: BalancingService,
     private readonly playerEvents: PlayerEventsService,
     private readonly unlocking: UnlockingService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -126,7 +128,7 @@ export class ValidationsService {
       validatorPlayerId = validator.id;
     }
 
-    return this.validations.save(
+    const demande = await this.validations.save(
       this.validations.create({
         missionId,
         playerId,
@@ -136,6 +138,24 @@ export class ValidationsService {
         validatorPlayerId,
       }),
     );
+
+    // Prévenir celui qui doit trancher : sans ça, personne ne sait qu'on
+    // l'attend tant qu'il n'ouvre pas l'onglet Validation.
+    const demandeur = await this.users.findOne({ where: { id: playerId } });
+    const aPrevenir =
+      validatorType === 'joueur'
+        ? validatorPlayerId
+        : (await this.businesses.findOne({ where: { id: validatorBusinessId as string } }))
+            ?.userId ?? null;
+
+    if (aPrevenir) {
+      await this.notifications.prevenir(aPrevenir, 'validation_demandee', {
+        pseudo: demandeur?.pseudo,
+        mission: mission.titre,
+      });
+    }
+
+    return demande;
   }
 
   async listRequestedByPlayer(playerId: string): Promise<MissionValidation[]> {
@@ -193,6 +213,8 @@ export class ValidationsService {
     record.resolvedAt = new Date();
     await this.validations.save(record);
 
+    await this.previensLeDemandeur(record, statut, parUtilisateurId);
+
     if (statut === 'validee') {
       const mission = await this.missions.findOne({ where: { id: record.missionId } });
       if (mission) {
@@ -225,6 +247,34 @@ export class ValidationsService {
     }
 
     return record;
+  }
+
+  // Dire au joueur ce que le validateur a décidé, et ce que ça lui rapporte.
+  private async previensLeDemandeur(
+    record: MissionValidation,
+    statut: ValidationStatut,
+    parUtilisateurId: string,
+  ): Promise<void> {
+    const [mission, validateur] = await Promise.all([
+      this.missions.findOne({ where: { id: record.missionId } }),
+      this.users.findOne({ where: { id: parUtilisateurId } }),
+    ]);
+
+    const multiplicateur = mission
+      ? await this.balancing.getMultiplier(mission.businessId)
+      : 1;
+
+    await this.notifications.prevenir(
+      record.playerId,
+      statut === 'validee' ? 'mission_validee' : 'mission_refusee',
+      {
+        pseudo: validateur?.pseudo,
+        mission: mission?.titre,
+        credits: mission
+          ? Math.round(mission.recompenseBase * multiplicateur * 100) / 100
+          : undefined,
+      },
+    );
   }
 
   private async enrich(rows: MissionValidation[]): Promise<EnrichedValidation[]> {

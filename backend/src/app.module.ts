@@ -39,6 +39,9 @@ import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { Session } from './auth/session.entity';
 import { CollectionModule } from './collection/collection.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { Notification } from './notifications/notification.entity';
+import { PushSubscription } from './notifications/push-subscription.entity';
 import { UnlockingModule } from './unlocking/unlocking.module';
 import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
 
@@ -69,6 +72,8 @@ import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
         PairingOutcome,
         ZoneDecouverte,
         Session,
+        Notification,
+        PushSubscription,
       ],
       synchronize: true,
     }),
@@ -91,6 +96,7 @@ import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
     UnlockingModule,
     CollectionModule,
     AuthModule,
+    NotificationsModule,
   ],
   // Le garde s'applique à TOUTES les routes : une route oubliée est protégée
   // par défaut, plutôt que l'inverse.

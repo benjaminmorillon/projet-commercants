@@ -132,6 +132,63 @@ body {
   font-weight: 600;
 }
 
+.appbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* La cloche et sa pastille de non-lues. */
+.cloche {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cloche:hover:not(:disabled) {
+  background: rgba(21, 22, 26, 0.05);
+  border: none;
+  color: var(--ink);
+}
+
+.cloche svg {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cloche-compteur {
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--paper);
+}
+
 .app {
   max-width: 560px;
   margin: 0 auto;
@@ -307,6 +364,103 @@ body {
 
 .sheet a.active svg {
   color: var(--accent);
+}
+
+/* Panneau des notifications */
+.sheet-notifications {
+  max-height: 76vh;
+  overflow-y: auto;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.sheet-entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px 10px;
+}
+
+.sheet-entete strong {
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.lien-discret {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.lien-discret:hover:not(:disabled) {
+  background: none;
+  border: none;
+  text-decoration: underline;
+}
+
+.notif {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 13px 12px;
+  border-radius: var(--r-md);
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.notif:hover {
+  background: var(--raised);
+  text-decoration: none;
+}
+
+.notif-point {
+  width: 7px;
+  height: 7px;
+  margin-top: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.notif.non-lue .notif-point {
+  background: var(--accent);
+}
+
+.notif-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.notif-texte strong {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.notif:not(.non-lue) .notif-texte strong {
+  color: var(--ink-muted);
+  font-weight: 550;
+}
+
+.notif-texte > span {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--ink-muted);
+}
+
+.notif-date {
+  font-size: 0.72rem !important;
+  color: var(--ink-faint) !important;
+  margin-top: 2px;
 }
 
 .sheet-separateur {
@@ -757,11 +911,22 @@ form button[type='submit'] {
    --------------------------------------------------------------------------- */
 
 .wallet-solde {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   font-size: 2.4rem;
   font-weight: 600;
   letter-spacing: -0.04em;
-  margin: 4px 0 18px;
+  line-height: 1.1;
+  margin: 6px 0 20px;
   font-variant-numeric: tabular-nums;
+}
+
+.wallet-unite {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink-muted);
 }
 
 .wallet-history {

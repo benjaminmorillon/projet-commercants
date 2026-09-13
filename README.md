@@ -19,6 +19,7 @@ Ce dépôt contient, brique par brique, l'implémentation du projet.
 - ✅ **Brique 13 : la carte 3D** — une carte plein écran qu'on parcourt comme un plan Google (on incline, on tourne, on zoome), où les partenaires apparaissent avec leur étiquette et leurs missions en éventail (solo ou duo), et où un clic ouvre la fiche du partenaire avec ses missions, ses avis et le check-in.
 - ✅ **Brique 14 : déblocage progressif** — tutoriel obligatoire en 3 étapes, carte voilée qu'on lève quartier par quartier en allant sur place, nombre de missions limité par jour, et fonctionnalités (profils des autres, duos, don) qui s'ouvrent au fil de la progression.
 - ✅ **Brique 15 : titres et objets de collection** — une étiquette gagnée par le comportement, que le joueur choisit d'afficher sur son profil, et deux séries d'objets souvenirs à compléter (un par type de lieu poussé, un par thème de mission mené jusqu'au bout).
+- ✅ **Brique 18 : notifications** — une cloche avec le nombre de choses en attente, un centre de notifications dans l'appli, et des notifications push pour être prévenu même quand l'appli est fermée.
 - ✅ **Brique 17 : comptes, mots de passe et sessions** — une vraie connexion, et surtout un serveur qui vérifie à chaque requête que vous n'agissez que pour votre propre compte.
 - ✅ **Brique 16 : l'habillage visuel** — un système de design minimaliste appliqué à toutes les pages : une seule couleur d'accent, beaucoup de blanc, la typographie Inter embarquée, et une vraie coquille d'application (barre du haut, barre d'onglets en bas).
 
@@ -221,6 +222,35 @@ Chaque lieu propose ses propres missions (postées par le commerçant, validées
 
 > **Note sur les bâtiments en 3D** : le fond de plan vient d'OpenStreetMap sous forme d'images, qui ne contiennent pas la hauteur des immeubles. Le bouton 🏢 va donc chercher les contours et les hauteurs réelles des bâtiments visibles auprès d'un service public d'OpenStreetMap (Overpass), puis les dresse en volume. C'est volontairement sur demande : la requête peut prendre quelques secondes et ce service est parfois saturé. Si ça échoue, la carte reste utilisable et un message le dit — rien n'est cassé. Une carte avec les bâtiments déjà en 3D d'origine existe (fonds vectoriels type MapTiler) mais demande une clé d'API payante au-delà d'un certain volume : à rediscuter quand le projet passera en production.
 
+### Les notifications
+
+Jusqu'ici, si quelqu'un attendait votre validation, **personne ne le savait** tant qu'il n'ouvrait pas l'onglet. Tout le jeu repose sur des allers-retours entre joueurs — une validation, un duo, une invitation — et rien ne prévenait que c'était à vous de jouer.
+
+**La cloche, en haut à droite**, porte une pastille verte avec le nombre de choses non lues. Un clic ouvre le centre de notifications : chaque ligne dit qui, quoi, et quand ; les non-lues ont un point de couleur ; cliquer dessus emmène directement au bon endroit et marque la notification comme lue. Un bouton « Tout marquer comme lu » vide la pastille d'un coup.
+
+**Douze moments déclenchent une notification** :
+
+| Ce qui se passe | Qui est prévenu |
+| --- | --- |
+| Quelqu'un demande la validation d'une mission | Le validateur désigné (joueur ou commerçant) |
+| La mission est validée / refusée | Le joueur qui l'avait demandée, avec le montant gagné |
+| Une demande d'ami arrive / est acceptée | Le destinataire, puis l'expéditeur |
+| Un duo est proposé | Le binôme — **sans révéler qui c'est**, la surprise fait partie du jeu |
+| Le binôme accepte / confirme la mission faite | L'autre participant |
+| Un commerçant cible un joueur | Le joueur, avec le crédit déjà versé |
+| Le joueur répond à l'invitation | Le commerçant — **sans le pseudo** : le ciblage est anonyme, la réponse n'a pas à lever cet anonymat |
+| Le joueur monte d'un niveau / décroche un badge | Le joueur |
+
+Le texte de chaque notification est écrit **une seule fois**, dans `notification-rules.ts` : le titre, la phrase et la page vers laquelle elle emmène. Et il est figé au moment où la notification naît — elle raconte ce qui s'est passé ce jour-là, même si la mission est renommée depuis.
+
+**Les notifications push**, pour être prévenu quand l'appli est fermée, s'activent depuis « Ton compte » sur la page profil. Techniquement : le serveur génère une paire de clés VAPID au premier démarrage, le navigateur s'abonne et envoie son adresse, et un petit programme (un *service worker*) reste en veille pour afficher les messages reçus — même téléphone verrouillé. Un même compte peut avoir plusieurs navigateurs abonnés (téléphone **et** ordinateur) ; un abonnement qui ne répond plus est nettoyé automatiquement.
+
+Point important : **une notification arrive toujours dans l'appli, même si le push échoue**. Les deux sont indépendants — un téléphone hors ligne ne fait pas disparaître la notification, elle attend simplement dans la cloche.
+
+> **Pour les essayer** : sur `localhost`, les notifications push fonctionnent directement. En ligne, elles exigent **HTTPS** (c'est une règle des navigateurs, pas un choix du projet). Sur iPhone, il faut d'abord ajouter le site à l'écran d'accueil — Safari ne les autorise pas autrement. Si le navigateur ne sait pas faire ou si vous avez refusé, la page vous le dit en clair au lieu d'afficher un bouton qui ne marche pas.
+
+> **Ce qui reste à faire côté envoi** : un rappel par email pour ceux qui n'activent pas le push, et un regroupement des notifications (« 3 validations t'attendent » plutôt que trois lignes) si le volume le justifie un jour.
+
 ### Les comptes et la sécurité
 
 Jusqu'ici il n'y avait ni mot de passe ni session : la page retenait un identifiant de joueur, et **n'importe qui pouvait agir au nom de n'importe qui** en changeant cet identifiant dans l'URL. C'était le blocage n°1 avant toute mise en ligne.
@@ -348,7 +378,7 @@ cd backend
 npm test
 ```
 
-Tout doit passer en vert (`82 passed`).
+Tout doit passer en vert (`88 passed`).
 
 ---
 
@@ -429,16 +459,22 @@ projet-commercants/
     │   ├── collection/           Titres et objets de collection
     │   │   ├── collection-rules.ts / .spec.ts     ← catalogue des titres et des deux séries d'objets
     │   │   └── collection.service.ts      ← recalcule tout depuis les actions du joueur, équipe un titre
-    │   └── auth/                 Comptes, mots de passe et sessions
+    │   ├── auth/                 Comptes, mots de passe et sessions
     │       ├── password.ts / .spec.ts             ← empreinte scrypt et jetons de session
     │       ├── cookies.ts / .spec.ts              ← lecture du cookie de session
     │       ├── session.entity.ts                  ← les connexions ouvertes
     │       ├── auth.service.ts            ← inscription, connexion, déconnexion
-    │       ├── auth.guard.ts              ← être connecté, et n'agir que pour soi
-    │       └── business-owner.guard.ts    ← l'établissement visé est bien le sien
+    │   │   ├── auth.guard.ts              ← être connecté, et n'agir que pour soi
+    │   │   └── business-owner.guard.ts    ← l'établissement visé est bien le sien
+    │   └── notifications/        Cloche, centre de notifications et push
+    │       ├── notification-rules.ts / .spec.ts   ← le texte de chaque notification
+    │       ├── notification.entity.ts / push-subscription.entity.ts
+    │       ├── notifications.service.ts   ← prévenir quelqu'un, lister, marquer lu
+    │       └── push.service.ts            ← clés VAPID et envoi vers les navigateurs
     └── public/                    La page web (HTML/CSS/JS) servie au joueur
         ├── style.css                      ← le système de design (couleurs, typographie, composants)
-        ├── nav.js                         ← la coquille : barre du haut et barre d'onglets
+        ├── nav.js                         ← la coquille : barre du haut, onglets et cloche
+        ├── push.js / sw.js                ← activation du push et affichage hors de l'appli
         ├── utils.js                       ← échappement du texte affiché (sécurité)
         ├── index.html / app.js            ← profil joueur + portefeuille
         ├── missions.html / missions.js    ← consultation des missions, demande de validation
@@ -459,4 +495,3 @@ Les grandes briques fonctionnelles des specs sont désormais toutes implémenté
 
 - **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
 - **Les vraies transactions** — "dépenser" et "donner" sont pour l'instant symboliques, tracés comme un comportement, sans paiement réel.
-- **Les notifications push** — les validations et invitations s'affichent quand on ouvre l'onglet, pas en temps réel sur le téléphone.

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Mission } from '../missions/mission.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PlayerEventsModule } from '../player-events/player-events.module';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { User } from '../users/user.entity';
@@ -18,6 +19,7 @@ import { PlayerFriendsController } from './player-friends.controller';
     PlayerEventsModule,
     UnlockingModule,
     CollectionModule,
+    NotificationsModule,
   ],
   controllers: [PlayerFriendsController, FriendRequestsController],
   providers: [FriendsService],

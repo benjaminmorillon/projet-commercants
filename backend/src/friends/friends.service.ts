@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, Repository } from 'typeorm';
 import { Mission } from '../missions/mission.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { CollectionService } from '../collection/collection.service';
@@ -44,6 +45,7 @@ export class FriendsService {
     private readonly playerEvents: PlayerEventsService,
     private readonly unlocking: UnlockingService,
     private readonly collection: CollectionService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -87,13 +89,20 @@ export class FriendsService {
       );
     }
 
-    return this.friendships.save(
+    const demande = await this.friendships.save(
       this.friendships.create({
         requesterId: playerId,
         receiverId: target.id,
         statut: 'en_attente',
       }),
     );
+
+    const demandeur = await this.users.findOne({ where: { id: playerId } });
+    await this.notifications.prevenir(target.id, 'ami_demande', {
+      pseudo: demandeur?.pseudo,
+    });
+
+    return demande;
   }
 
   async listReceived(playerId: string): Promise<EnrichedFriendRequest[]> {
@@ -137,6 +146,12 @@ export class FriendsService {
     if (statut === 'acceptee') {
       await this.playerEvents.record(record.requesterId, 'ami_ajoute');
       await this.playerEvents.record(record.receiverId, 'ami_ajoute');
+
+      // Celui qui avait envoyé la demande apprend qu'elle est acceptée.
+      const receveur = await this.users.findOne({ where: { id: record.receiverId } });
+      await this.notifications.prevenir(record.requesterId, 'ami_accepte', {
+        pseudo: receveur?.pseudo,
+      });
     }
 
     return saved;

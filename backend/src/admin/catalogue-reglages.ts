@@ -40,6 +40,12 @@ export const GROUPES = [
     resume: 'Combien un joueur peut faire par jour, et à quelle vitesse il progresse.',
   },
   {
+    id: 'arbre',
+    titre: "L'arbre des missions",
+    resume:
+      "La forme de l'arbre : la taille des paliers, la vitesse à laquelle les voies s'ouvrent, et la prime accordée aux missions les plus engageantes.",
+  },
+  {
     id: 'xp',
     titre: "Les points d'expérience",
     resume: "Ce que rapporte chaque action. C'est le levier principal pour orienter les comportements.",
@@ -129,6 +135,66 @@ export const CATALOGUE: DefinitionReglage[] = [
     min: 1,
     max: 100,
     unite: '/jour',
+  },
+
+  // --- L'arbre des missions ----------------------------------------------
+  {
+    cle: 'arbre.taillePalier',
+    groupe: 'arbre',
+    libelle: "Missions par palier",
+    explication:
+      "Un palier est une rangée de l'arbre. Plus il est large, plus le joueur a de choix devant lui à un instant donné, mais plus il lui faut de temps pour atteindre la rangée suivante.",
+    type: 'entier',
+    defaut: 3,
+    min: 1,
+    max: 10,
+    unite: 'missions',
+  },
+  {
+    cle: 'arbre.missionsRequisesParPalier',
+    groupe: 'arbre',
+    libelle: 'Missions à accomplir pour passer au palier suivant',
+    explication:
+      "Combien de missions d'une rangée il faut accomplir pour ouvrir la suivante. En dessous de la taille du palier, le joueur peut laisser de côté une mission qui ne lui plaît pas sans rester bloqué. À égalité, il doit toutes les faire.",
+    type: 'entier',
+    defaut: 2,
+    min: 1,
+    max: 10,
+    unite: 'missions',
+  },
+  {
+    cle: 'arbre.niveauParVoie',
+    groupe: 'arbre',
+    libelle: "Niveaux entre deux voies qui s'ouvrent",
+    explication:
+      "La voie qui correspond au style dominant du joueur est ouverte tout de suite. Les trois autres s'ouvrent ensuite, une par tranche de niveaux. À 0, tout est ouvert dès le premier jour.",
+    type: 'entier',
+    defaut: 1,
+    min: 0,
+    max: 20,
+    unite: 'niveaux',
+  },
+  {
+    cle: 'arbre.bonusParPalier',
+    groupe: 'arbre',
+    libelle: 'Prime par palier franchi',
+    explication:
+      "Ce qu'une mission rapporte en plus, par rangée de profondeur dans sa voie. 0,15 signifie +15 % au deuxième palier, +30 % au troisième. C'est ce qui rend l'effort supplémentaire visible dans le portefeuille.",
+    type: 'nombre',
+    defaut: 0.15,
+    min: 0,
+    max: 1,
+  },
+  {
+    cle: 'arbre.bonusMaximum',
+    groupe: 'arbre',
+    libelle: 'Plafond de cette prime',
+    explication:
+      "Au-delà, une mission très profonde dans une voie ne rapporte plus davantage. 0,75 veut dire qu'aucune mission ne peut rapporter plus de 1,75 fois sa récompense de base.",
+    type: 'nombre',
+    defaut: 0.75,
+    min: 0,
+    max: 5,
   },
 
   // --- L'expérience ------------------------------------------------------

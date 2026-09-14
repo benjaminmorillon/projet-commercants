@@ -1,11 +1,17 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
+import { UtilisateurConnecte } from '../auth/auth.service';
+import { Utilisateur } from '../auth/utilisateur.decorator';
+import { ArbreService } from './arbre.service';
 import { MissionsService } from './missions.service';
 import { VOCABULAIRE } from './vocabulaire';
 
 @Controller('missions')
 export class MissionsController {
-  constructor(private readonly missions: MissionsService) {}
+  constructor(
+    private readonly missions: MissionsService,
+    private readonly arbre: ArbreService,
+  ) {}
 
   @Public()
   @Get()
@@ -33,6 +39,20 @@ export class MissionsController {
   @Get('vocabulaire')
   vocabulaire() {
     return VOCABULAIRE;
+  }
+
+  /**
+   * L'arbre des missions du joueur connecté : ses voies, ses paliers, ce
+   * qui est ouvert et ce qui ne l'est pas encore.
+   *
+   * Déclarée AVANT `:id` pour la même raison que « vocabulaire ».
+   *
+   * Pas de `@Public()` ici : un arbre n'a de sens que pour quelqu'un. Sans
+   * profil ni niveau, il n'y a rien à dessiner.
+   */
+  @Get('arbre')
+  arbreDuJoueur(@Utilisateur() utilisateur: UtilisateurConnecte) {
+    return this.arbre.pourLeJoueur(utilisateur.id);
   }
 
   @Public()

@@ -11,14 +11,36 @@
 
     <header>
       <h1>Missions</h1>
-      <p class="subtitle">Le catalogue de missions disponibles dans les lieux partenaires.</p>
+      <p class="subtitle">Ton arbre de missions : cinq voies, des paliers de plus en plus exigeants, et des récompenses qui suivent.</p>
     </header>
 
     <p id="wallet-banner" class="wallet-banner"></p>
     <p id="quota-banner" class="hint" hidden></p>
 
-    <section class="card">
-      <h2>Filtrer</h2>
+    <p id="arbre-connexion" class="verrou" hidden>
+      <a href="index.html">Crée ton profil joueur</a> pour ouvrir ton arbre de missions.
+    </p>
+
+    <section class="card arbre" id="arbre" hidden>
+      <div class="arbre-entete">
+        <h2>Ton arbre</h2>
+        <p class="hint" id="arbre-resume"></p>
+      </div>
+
+      <!-- Les voies, comme les branches d'un arbre de compétences : une
+           couleur chacune, et l'ordre suit le profil du joueur. -->
+      <div class="voies" id="voies" role="tablist"></div>
+
+      <div class="arbre-corps">
+        <div class="paliers" id="paliers"></div>
+        <aside class="noeud-detail" id="noeud-detail"></aside>
+      </div>
+    </section>
+
+    <details class="card catalogue">
+      <summary>Voir tout le catalogue, sans l'arbre</summary>
+      <p class="hint">La liste brute de toutes les missions existantes. Utile pour chercher une mission précise ; c'est l'arbre qui dit lesquelles tu peux lancer.</p>
+
       <form id="filters-form" class="filters">
         <label>
           Archétype
@@ -67,13 +89,11 @@
           </select>
         </label>
       </form>
-    </section>
 
-    <section class="card">
-      <h2 id="missions-count">Missions</h2>
+      <h3 id="missions-count">Missions</h3>
       <div id="missions-list" class="missions-list"></div>
       <p id="missions-empty" class="hint" hidden>Aucune mission ne correspond à ces filtres.</p>
-    </section>
+    </details>
   </main>
 
   <script src="nav.js"></script>

@@ -9,6 +9,7 @@ import { ILike, In, Repository } from 'typeorm';
 import { BalancingService } from '../balancing/balancing.service';
 import { Business } from '../businesses/business.entity';
 import { CheckIn } from '../checkins/checkin.entity';
+import { ArbreService } from '../missions/arbre.service';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventType } from '../player-events/event-weights';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -49,6 +50,7 @@ export class ValidationsService {
     private readonly checkIns: Repository<CheckIn>,
     @InjectRepository(Business)
     private readonly businesses: Repository<Business>,
+    private readonly arbre: ArbreService,
     private readonly wallet: WalletService,
     private readonly balancing: BalancingService,
     private readonly playerEvents: PlayerEventsService,
@@ -82,6 +84,9 @@ export class ValidationsService {
     if (!mission) {
       throw new NotFoundException('Mission introuvable.');
     }
+
+    // L'arbre des missions : on ne peut lancer que ce qu'il a ouvert.
+    await this.arbre.assertMissionOuverte(playerId, missionId);
 
     const existing = await this.validations.findOne({
       where: { playerId, missionId, statut: In(['en_attente', 'validee']) },
@@ -218,10 +223,7 @@ export class ValidationsService {
     if (statut === 'validee') {
       const mission = await this.missions.findOne({ where: { id: record.missionId } });
       if (mission) {
-        // Récompense finale = récompense de base × multiplicateur du lieu
-        // (section 4 : on booste les lieux qualitatifs sous-fréquentés).
-        const multiplicateur = await this.balancing.getMultiplier(mission.businessId);
-        const recompenseFinale = Math.round(mission.recompenseBase * multiplicateur * 100) / 100;
+        const recompenseFinale = await this.recompenseFinale(mission);
 
         await this.wallet.applyMissionReward(
           record.playerId,
@@ -249,6 +251,27 @@ export class ValidationsService {
     return record;
   }
 
+  /**
+   * Ce qu'une mission validée rapporte vraiment.
+   *
+   * Deux coups de pouce se multiplient à la récompense de base :
+   *   - celui du LIEU (section 4) : un commerce de qualité mais peu fréquenté
+   *     rapporte davantage, pour rééquilibrer les flux ;
+   *   - celui du PALIER (l'arbre des missions) : plus la mission est haut
+   *     dans sa voie, plus elle a demandé d'investissement, plus elle paie.
+   *
+   * Le calcul vit ici, en un seul endroit, parce qu'il sert à la fois à
+   * créditer le portefeuille et à annoncer le montant au joueur. Deux copies
+   * finiraient par annoncer un chiffre et en verser un autre.
+   */
+  private async recompenseFinale(mission: Mission): Promise<number> {
+    const [lieu, palier] = await Promise.all([
+      this.balancing.getMultiplier(mission.businessId),
+      this.arbre.primeDePalier(mission.id),
+    ]);
+    return Math.round(mission.recompenseBase * lieu * palier * 100) / 100;
+  }
+
   // Dire au joueur ce que le validateur a décidé, et ce que ça lui rapporte.
   private async previensLeDemandeur(
     record: MissionValidation,
@@ -260,19 +283,13 @@ export class ValidationsService {
       this.users.findOne({ where: { id: parUtilisateurId } }),
     ]);
 
-    const multiplicateur = mission
-      ? await this.balancing.getMultiplier(mission.businessId)
-      : 1;
-
     await this.notifications.prevenir(
       record.playerId,
       statut === 'validee' ? 'mission_validee' : 'mission_refusee',
       {
         pseudo: validateur?.pseudo,
         mission: mission?.titre,
-        credits: mission
-          ? Math.round(mission.recompenseBase * multiplicateur * 100) / 100
-          : undefined,
+        credits: mission ? await this.recompenseFinale(mission) : undefined,
       },
     );
   }
@@ -285,19 +302,31 @@ export class ValidationsService {
     const missionIds = [...new Set(rows.map((r) => r.missionId))];
     const playerIds = [...new Set(rows.map((r) => r.playerId))];
 
-    const [missions, players] = await Promise.all([
+    const [missions, players, primes] = await Promise.all([
       this.missions.find({ where: { id: In(missionIds) } }),
       this.users.find({ where: { id: In(playerIds) } }),
+      this.arbre.primesDePalier(missionIds),
     ]);
 
     const missionById = new Map(missions.map((m) => [m.id, m]));
     const playerById = new Map(players.map((p) => [p.id, p]));
 
-    return rows.map((row) => ({
-      ...row,
-      missionTitre: missionById.get(row.missionId)?.titre ?? 'Mission',
-      missionRecompense: missionById.get(row.missionId)?.recompenseBase ?? 0,
-      requesterPseudo: playerById.get(row.playerId)?.pseudo ?? 'Joueur',
-    }));
+    return rows.map((row) => {
+      const mission = missionById.get(row.missionId);
+      // La récompense annoncée au validateur inclut la prime de palier,
+      // comme celle affichée au joueur dans son arbre. Le multiplicateur du
+      // lieu, lui, dépend de la fréquentation au moment du crédit : il n'a
+      // pas sa place dans une liste d'attente.
+      const prime = primes.get(row.missionId) ?? 1;
+
+      return {
+        ...row,
+        missionTitre: mission?.titre ?? 'Mission',
+        missionRecompense: mission
+          ? Math.round(mission.recompenseBase * prime * 100) / 100
+          : 0,
+        requesterPseudo: playerById.get(row.playerId)?.pseudo ?? 'Joueur',
+      };
+    });
   }
 }

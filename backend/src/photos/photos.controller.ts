@@ -50,8 +50,15 @@ export class PhotosController {
     return this.servir('commerce', businessId, reponse);
   }
 
+  /** L'image d'une offre : publique comme la devanture qu'elle représente. */
+  @Public()
+  @Get('publicite/:publiciteId')
+  async photoPublicite(@Param('publiciteId') publiciteId: string, @Res() reponse: Response) {
+    return this.servir('publicite', publiciteId, reponse);
+  }
+
   private async servir(
-    sujet: 'joueur' | 'commerce',
+    sujet: 'joueur' | 'commerce' | 'publicite',
     id: string,
     reponse: Response,
   ): Promise<void> {
@@ -62,7 +69,7 @@ export class PhotosController {
     // entreprise, par exemple) ne doit pas servir le portrait de quelqu'un à
     // quelqu'un d'autre. Une devanture de commerce, elle, peut être mise en
     // cache par tout le monde.
-    const partage = sujet === 'commerce' ? 'public' : 'private';
+    const partage = sujet === 'joueur' ? 'private' : 'public';
     reponse.setHeader('Cache-Control', `${partage}, max-age=${CACHE_SECONDES}`);
     reponse.end(photo.donnees);
   }

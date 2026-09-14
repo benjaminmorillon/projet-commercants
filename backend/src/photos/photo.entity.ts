@@ -1,6 +1,6 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
-export type SujetPhoto = 'joueur' | 'commerce';
+export type SujetPhoto = 'joueur' | 'commerce' | 'publicite';
 
 /**
  * Une photo de profil.

@@ -1048,6 +1048,85 @@ mobile/
         └── composants.tsx          ← bouton, champ, carte, badge, pastille
 ```
 
+## Les offres des commerçants
+
+Un commerçant publie une offre — une image, un titre, ce qu'il propose, et les
+mots par lesquels on doit le trouver. Elle vit pendant la période qu'il a
+fixée. Un joueur cherche « brunch » ou « coupe de cheveux », la trouve, et
+**l'ouvrir le paie**.
+
+C'est ce qui distingue le service d'une publicité ordinaire : ici, celui qui
+regarde est payé, en jetons dépensables chez le commerçant qui a payé. L'argent
+tourne dans le quartier au lieu d'en sortir.
+
+Et l'offre ouverte devient un **bon de réduction** chez ce commerçant.
+
+### Un commerçant ne doit jamais payer pour une fausse vue
+
+C'est le principe qui gouverne tout le reste. Le jour où il paie pour des
+robots, il s'en va — et il a raison.
+
+D'où une règle de conduite : **une offre s'affiche toujours** (rien ne justifie
+de la cacher), mais l'argent ne bouge que si l'ouverture est crédible. Quand
+elle ne l'est pas, personne n'est payé, personne n'est facturé, et le joueur
+lit pourquoi.
+
+Cinq conditions, toutes réglables depuis le back-office :
+
+| Ce qui bloque le paiement | Ce que le joueur lit |
+| --- | --- |
+| L'offre est terminée ou suspendue | « Cette offre n'est plus en cours : elle reste consultable, mais ne rapporte plus rien. » |
+| Le budget est épuisé | « Le budget de cette offre est épuisé pour le moment. » |
+| C'est sa propre offre | « C'est ta propre offre : elle ne te rapporte rien. » |
+| Il a déjà été payé pour elle | « Tu as déjà été payé pour cette offre. Elle reste valable comme bon de réduction. » |
+| **Il n'est pas sorti récemment** | « Les offres ne paient que les joueurs qui sortent : valide ta venue dans un commerce partenaire, et elles se mettront à rapporter. » |
+| Il a atteint son plafond du jour | « Tu as atteint tes 10 offres payées du jour. Demain le compteur repart. » |
+
+**La cinquième est le cœur du dispositif.** Pour être payé, il faut avoir
+validé sa venue dans un vrai commerce depuis moins de 30 jours — ce qui
+suppose de s'y être physiquement rendu, GPS à l'appui, à moins de 150 m.
+
+C'est ce qui rend la fraude coûteuse : fabriquer mille comptes ne coûte rien,
+les faire *marcher* jusqu'à mille commerces, si. Et un compte créé puis laissé
+dormir pour encaisser de la publicité ne rapporte rien à son propriétaire.
+
+Le jeu fournit gratuitement cette preuve : elle est déjà au cœur de son
+fonctionnement.
+
+### La recherche
+
+Elle compare des **mots**, pas des caractères. « creperie » trouve
+« Crêperie », « pizz » trouve « pizzeria », « cheveu » trouve « cheveux ». Les
+accents sont ignorés — personne ne va chercher un circonflexe sur un
+téléphone.
+
+Quatre champs, par ordre de poids : les **mots-clés** du commerçant d'abord
+(c'est le champ fait pour être cherché), puis le titre, puis le nom du
+commerce, puis la description.
+
+**Une recherche sans réponse rend une liste vide**, jamais des résultats hors
+sujet. C'est ce qui fait qu'on garde confiance dans une recherche : « plomberie »
+ne doit pas remonter un brunch.
+
+### Où va l'argent
+
+Le commerçant paie à chaque ouverture crédible, et rien d'autre : une offre
+affichée mais jamais ouverte ne coûte rien. Sur ce qu'il paie, 80 % vont au
+joueur et 20 % à la plateforme — les deux parts réglables.
+
+Ce sont deux mouvements du registre, comme tout le reste : rien n'est créé,
+l'argent se déplace. Vérifié après plusieurs ouvertures : le total en
+circulation n'a pas bougé d'un centime, et le contrôle de cohérence reste au
+vert.
+
+### Ce qui reste à faire
+
+Le socle est là — entités, règles, recherche, paiement, bons, réglages, et les
+routes. Ce qui manque : les **écrans** (créer une offre côté commerçant, les
+chercher et les ouvrir côté joueur, le bandeau d'accueil), sur le site comme
+dans l'application, et **l'application automatique du bon** au moment de payer
+chez le commerçant.
+
 ## Et après ?
 
 Les grandes briques fonctionnelles des specs sont implémentées, et le site se
@@ -1055,5 +1134,6 @@ pilote entièrement depuis l'espace d'administration, sans toucher au code. Ce
 qui reste, c'est le passage du prototype à un vrai produit :
 
 - **Les écrans qui manquent à l'application mobile** — la carte, les missions, les duos, les amis.
-- **La publicité des commerçants** — un commerçant crée une publicité (une image et quelques informations) que les joueurs retrouvent dans un espace dédié et sur un bandeau d'accueil. Les fondations existent déjà : les campagnes savent porter une image et un type « publicité », et les joueurs ont un onglet Invitations où les recevoir.
+- **Les écrans des offres** — créer une offre côté commerçant, la chercher et l'ouvrir côté joueur, le bandeau d'accueil ; sur le site et dans l'application. Le socle est fait.
+- **Le bon appliqué automatiquement** au moment de payer chez le commerçant.
 - **Les vrais paiements** — la mécanique des jetons est prête et attend un prestataire ; le brancher suppose un statut juridique, des vérifications d'identité et la conservation des justificatifs.

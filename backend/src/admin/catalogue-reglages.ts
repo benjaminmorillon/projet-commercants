@@ -55,6 +55,12 @@ export const GROUPES = [
     resume: "Les montants, et le partage entre le joueur et la plateforme.",
   },
   {
+    id: 'publicite',
+    titre: 'Les offres des commerçants',
+    resume:
+      "Ce que rapporte une offre ouverte par un joueur, et ce qui empêche de payer pour de fausses vues.",
+  },
+  {
     id: 'securite',
     titre: 'La sécurité des comptes',
     resume: 'La protection contre les tentatives de connexion en rafale.',
@@ -326,6 +332,67 @@ export const CATALOGUE: DefinitionReglage[] = [
     defaut: 0.8,
     min: 0,
     max: 1,
+  },
+
+  // --- Les offres des commerçants ----------------------------------------
+  {
+    cle: 'publicite.partJoueur',
+    groupe: 'publicite',
+    libelle: 'Part reversée au joueur qui ouvre une offre',
+    explication:
+      "Sur ce que paie un commerçant pour une ouverture, la fraction qui revient au joueur. Le reste est la marge de la plateforme. C'est ce qui distingue le service d'une publicité ordinaire : ici, celui qui regarde est payé.",
+    type: 'nombre',
+    defaut: 0.8,
+    min: 0,
+    max: 1,
+  },
+  {
+    cle: 'publicite.coutParOuvertureParDefaut',
+    groupe: 'publicite',
+    libelle: "Ce que coûte une ouverture, par défaut",
+    explication:
+      "Ce qu'un commerçant paie chaque fois qu'un joueur ouvre son offre, quand il ne fixe pas lui-même le montant. C'est la seule chose qu'il paie : une offre affichée mais jamais ouverte ne coûte rien.",
+    type: 'nombre',
+    defaut: 0.3,
+    min: 0.01,
+    max: 100,
+    unite: 'jetons',
+  },
+  {
+    cle: 'publicite.ouverturesPayeesParJour',
+    groupe: 'publicite',
+    libelle: 'Offres payées par jour et par joueur',
+    explication:
+      "Au-delà, les offres restent consultables mais ne rapportent plus rien jusqu'au lendemain. Empêche quelqu'un de vider le budget d'un commerçant en une séance, et rend inutile d'enchaîner les ouvertures.",
+    type: 'entier',
+    defaut: 10,
+    min: 1,
+    max: 200,
+    unite: '/jour',
+  },
+  {
+    cle: 'publicite.ancienneteVisiteJours',
+    groupe: 'publicite',
+    libelle: 'Ancienneté maximale de la dernière venue',
+    explication:
+      "Pour être payé, un joueur doit avoir validé sa venue dans un commerce depuis moins longtemps que ça. C'est la protection principale contre les comptes dormants et les faux comptes : fabriquer mille comptes ne coûte rien, les faire marcher jusqu'à mille commerces, si. Monter cette valeur ouvre les vannes, la baisser exige des joueurs plus actifs.",
+    type: 'entier',
+    defaut: 30,
+    min: 1,
+    max: 365,
+    unite: 'jours',
+  },
+  {
+    cle: 'publicite.dureeMaximaleJours',
+    groupe: 'publicite',
+    libelle: "Durée maximale d'une offre",
+    explication:
+      "Au-delà, un commerçant ne peut pas programmer son offre. Évite les annonces oubliées qui traînent des mois et qui décrédibilisent la recherche.",
+    type: 'entier',
+    defaut: 90,
+    min: 1,
+    max: 730,
+    unite: 'jours',
   },
 
   // --- La sécurité -------------------------------------------------------

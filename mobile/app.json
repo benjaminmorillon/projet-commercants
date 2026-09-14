@@ -28,7 +28,13 @@
     "newArchEnabled": true,
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Projet Commerçant se sert de ta position pour te montrer les commerces autour de toi et vérifier que tu y es vraiment quand tu valides ta venue."
+        }
+      ]
     ],
     "extra": {
       "apiUrl": ""

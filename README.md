@@ -970,15 +970,40 @@ public — l'application livrée est native.
 ### Ce qu'il y a pour l'instant
 
 - l'écran de connexion et d'inscription ;
-- l'écran « Mon profil » : photo ou initiales, progression et niveau, solde de
+- l'écran **Mon profil** : photo ou initiales, progression et niveau, solde de
   jetons, les quatre scores de style de jeu ;
+- l'écran **Autour de toi** : les commerces classés par distance réelle, avec
+  validation de sa venue sur place ;
 - le système de design repris de l'identité du site, à l'identique.
+
+### « Autour de toi » : le cœur du jeu
+
+C'est l'écran qui n'a de sens que sur un téléphone. Il demande la position,
+classe les commerces du plus proche au plus loin, et permet de valider sa
+venue — ce qui rapporte de l'XP et dévoile le quartier sur la carte.
+
+Trois principes y sont tenus :
+
+**La position peut manquer, et l'écran doit rester utile.** Refusée, ou
+simplement introuvable (en intérieur, c'est fréquent), la liste s'affiche
+quand même : on explique ce qui manque et on propose de réessayer. Un écran
+vide avec un message d'erreur serait la pire réponse.
+
+**C'est le serveur qui tranche, jamais le téléphone.** L'application calcule
+une distance pour l'afficher et pour rendre le bouton discret quand on est
+visiblement trop loin — mais elle ne l'interdit jamais. Un GPS imprécis en
+intérieur ferait autrement rater une venue parfaitement légitime. Le serveur
+refait le calcul de son côté, avec le rayon réglé dans le back-office, et
+répond par exemple : « Tu es à 431 m du lieu (max 150 m). »
+
+**On ne demande la précision maximale au GPS qu'en cas de besoin.** Le rayon
+est de 150 m : une position « équilibrée » suffit, et elle arrive plus vite en
+usant moins la batterie.
 
 ### Ce qu'il n'y a pas encore
 
-La carte, les missions, les duos, les amis, le check-in. C'est la suite : les
-routes du serveur existent déjà et sont utilisées par le site, il ne reste que
-les écrans à écrire.
+La carte, les missions, les duos, les amis. Les routes du serveur existent
+déjà et sont utilisées par le site : il ne reste que les écrans à écrire.
 
 ### Où sont les choses
 
@@ -989,11 +1014,13 @@ mobile/
 │   ├── connexion.tsx               ← connexion et inscription
 │   └── (onglets)/                  ← la barre d'onglets du bas
 │       ├── _layout.tsx
-│       └── index.tsx               ← Mon profil
+│       ├── index.tsx               ← Mon profil
+│       └── lieux.tsx               ← Autour de toi, et le check-in
 └── src/
     ├── api/
     │   ├── client.ts               ← le SEUL endroit qui parle au serveur
     │   ├── coffre.ts               ← où ranger le jeton, selon la plateforme
+    │   ├── position.ts             ← le GPS, et les trois cas où il manque
     │   └── session.tsx             ← qui est connecté, et comment ça change
     └── design/
         ├── theme.ts                ← les couleurs, reprises du site
@@ -1006,5 +1033,6 @@ Les grandes briques fonctionnelles des specs sont implémentées, et le site se
 pilote entièrement depuis l'espace d'administration, sans toucher au code. Ce
 qui reste, c'est le passage du prototype à un vrai produit :
 
-- **Les écrans qui manquent à l'application mobile** — la carte, les missions, les duos, les amis, le check-in.
+- **Les écrans qui manquent à l'application mobile** — la carte, les missions, les duos, les amis.
+- **La publicité des commerçants** — un commerçant crée une publicité (une image et quelques informations) que les joueurs retrouvent dans un espace dédié et sur un bandeau d'accueil. Les fondations existent déjà : les campagnes savent porter une image et un type « publicité », et les joueurs ont un onglet Invitations où les recevoir.
 - **Les vrais paiements** — la mécanique des jetons est prête et attend un prestataire ; le brancher suppose un statut juridique, des vérifications d'identité et la conservation des justificatifs.

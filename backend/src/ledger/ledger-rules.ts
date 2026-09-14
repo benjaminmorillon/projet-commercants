@@ -15,7 +15,11 @@ export type MotifMouvement =
   | 'ciblage_commission'
   | 'depense_chez_partenaire'
   | 'don_a_une_cause'
-  | 'rechargement';
+  | 'rechargement'
+  // Une correction faite depuis l'espace d'administration. C'est un mouvement
+  // comme les autres, avec ses deux extrémités et sa trace : on ne retouche
+  // JAMAIS un solde en direct, sinon le registre cesse de faire foi.
+  | 'correction_administrative';
 
 // Un jeton vaut un centime d'euro : on arrondit tout au centime pour qu'un
 // solde ne parte jamais en décimales infinies.
@@ -78,6 +82,10 @@ const LIBELLES: Record<MotifMouvement, { sortie: string; entree: string }> = {
   depense_chez_partenaire: { sortie: 'Dépense chez un partenaire', entree: 'Paiement d’un client' },
   don_a_une_cause: { sortie: 'Don à une cause', entree: 'Don reçu' },
   rechargement: { sortie: 'Rechargement', entree: 'Rechargement du compte' },
+  correction_administrative: {
+    sortie: 'Correction (retrait)',
+    entree: 'Correction (crédit)',
+  },
 };
 
 export function libelleMouvement(motif: MotifMouvement, sens: 'entree' | 'sortie'): string {

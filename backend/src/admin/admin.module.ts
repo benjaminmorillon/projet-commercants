@@ -1,6 +1,10 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Business } from '../businesses/business.entity';
+import { Compte } from '../ledger/compte.entity';
+import { LedgerModule } from '../ledger/ledger.module';
+import { PlayerProfile } from '../players/player-profile.entity';
+import { PlayerProgression } from '../progression/player-progression.entity';
 import { Campaign } from '../campaigns/campaign.entity';
 import { CheckIn } from '../checkins/checkin.entity';
 import { GroupMission } from '../duos/group-mission.entity';
@@ -11,6 +15,9 @@ import { MissionValidation } from '../validations/mission-validation.entity';
 import { AdminController } from './admin.controller';
 import { ContenusController } from './contenus.controller';
 import { ContenusService } from './contenus.service';
+import { ComptesController } from './comptes.controller';
+import { ComptesService } from './comptes.service';
+import { RegistreService } from './registre.service';
 import { GeocodageService } from './geocodage/geocodage.service';
 import { AdminGuard } from './admin.guard';
 import { JournalAdmin } from './journal-admin.entity';
@@ -38,10 +45,23 @@ import { ReglagesService } from './reglages.service';
       GroupMission,
       Campaign,
       CheckIn,
+      // Pour l'administration des comptes et du registre de jetons.
+      PlayerProfile,
+      PlayerProgression,
+      Compte,
     ]),
+    LedgerModule,
   ],
-  controllers: [AdminController, ContenusController],
-  providers: [ReglagesService, JournalService, ContenusService, GeocodageService, AdminGuard],
+  controllers: [AdminController, ContenusController, ComptesController],
+  providers: [
+    ReglagesService,
+    JournalService,
+    ContenusService,
+    GeocodageService,
+    ComptesService,
+    RegistreService,
+    AdminGuard,
+  ],
   exports: [ReglagesService, JournalService],
 })
 export class AdminModule {}

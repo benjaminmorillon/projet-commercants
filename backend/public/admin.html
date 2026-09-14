@@ -41,6 +41,8 @@
       <a href="#commerces" data-section="commerces">Commerces</a>
       <a href="#missions" data-section="missions">Missions</a>
       <a href="#evenements" data-section="evenements">Événements</a>
+      <a href="#comptes" data-section="comptes">Comptes</a>
+      <a href="#jetons" data-section="jetons">Jetons</a>
       <a href="#reglages" data-section="reglages">Réglages du jeu</a>
       <a href="#journal" data-section="journal">Journal des modifications</a>
       <div class="pied">
@@ -144,6 +146,38 @@
           <span class="compte" id="compte-evenements"></span>
         </div>
         <div id="liste-evenements"></div>
+      </section>
+
+      <section id="section-comptes" hidden>
+        <h1>Comptes</h1>
+        <p class="chapeau">
+          Les joueurs et les commerçants inscrits. Cliquez sur un compte pour voir
+          son profil, son activité et ses jetons.
+        </p>
+        <div class="barre-outils">
+          <input type="search" id="recherche-comptes" placeholder="Chercher un pseudo ou un email…" />
+          <select id="filtre-comptes" class="filtre">
+            <option value="">Tous les comptes</option>
+            <option value="particulier">Joueurs</option>
+            <option value="commercant">Commerçants</option>
+            <option value="administrateur">Administrateurs</option>
+          </select>
+          <span class="compte" id="compte-comptes"></span>
+        </div>
+        <div id="liste-comptes"></div>
+      </section>
+
+      <section id="section-jetons" hidden>
+        <h1>Jetons</h1>
+        <p class="chapeau">
+          Où sont les jetons, et comment corriger une erreur. Une correction n'est
+          jamais une retouche de solde : c'est un mouvement, avec sa raison écrite
+          et sa trace — c'est ce qui permet de toujours recalculer chaque solde à
+          partir de l'historique.
+        </p>
+        <div class="admin-compteurs" id="totaux-jetons"></div>
+        <p class="verdict-registre" id="verdict-registre"></p>
+        <div id="liste-registre"></div>
       </section>
 
       <section id="section-reglages" hidden>

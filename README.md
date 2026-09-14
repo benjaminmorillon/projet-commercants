@@ -552,6 +552,8 @@ projet-commercants/
     │   ├── reglages.service.ts        ← lecture en mémoire, écriture en base
     │   ├── contenus.service.ts        ← commerces, missions, événements
     │   ├── geocodage/                 ← trouver un point à partir d'une adresse
+    │   ├── comptes.service.ts         ← joueurs, commerçants, droits d'administration
+    │   ├── registre.service.ts        ← état des jetons et corrections
     │   ├── diff.ts / diff.spec.ts     ← ce qui a changé, et comment le raconter
     │   ├── admin.guard.ts             ← le droit d'administrer
     │   ├── journal-admin.entity.ts    ← le journal des modifications
@@ -700,6 +702,54 @@ rien. Les champs que le formulaire ne propose pas (un identifiant, une date de
 création, le propriétaire d'un commerce) sont ignorés même s'ils arrivent dans
 la requête.
 
+### Les comptes
+
+Tous les inscrits, joueurs et commerçants, avec une recherche par pseudo ou par
+email et un filtre. Chaque fiche s'ouvre sur ce qu'on veut réellement savoir
+quand quelqu'un écrit pour signaler un problème : son profil de joueur (les
+quatre barres), sa progression, son activité, son solde et **l'historique
+complet de ses jetons**.
+
+C'est aussi d'ici qu'on nomme un administrateur. Deux verrous empêchent la même
+catastrophe — se retrouver devant un back-office dont plus personne n'a la
+clé :
+
+- vous ne pouvez pas retirer vos propres droits (vous seriez aussitôt mis
+  dehors) ;
+- on ne peut pas retirer les droits du dernier administrateur.
+
+### Les jetons
+
+Où sont les jetons, en cinq chiffres : chez les joueurs, chez les commerçants,
+à la plateforme, reversés aux causes, et le total en circulation. Sous les
+chiffres, une phrase dit si le registre est cohérent — c'est-à-dire si chaque
+solde correspond exactement à la somme de ses mouvements. Tant qu'elle est
+verte, la comptabilité tient.
+
+Chaque compte s'ouvre sur son historique et sur un formulaire de correction.
+
+**Une correction n'est jamais une retouche de solde.** C'est un mouvement, avec
+ses deux extrémités, son montant et sa raison écrite — exactement comme une
+récompense de mission ou un paiement au comptoir. C'est ce qui permet de
+toujours recalculer chaque solde à partir de l'historique : une retouche
+directe ferait diverger le contrôle de cohérence dès la seconde suivante.
+
+Créditer, c'est la plateforme qui émet les jetons qu'elle aurait dû verser.
+Retirer, c'est les faire revenir vers le compte de la plateforme — et c'est
+refusé si le compte ne les a pas, parce qu'on ne peut pas reprendre ce qui
+n'est plus là.
+
+Trois refus, avec le message qui dit quoi corriger :
+
+| Ce qu'on tente | Ce que le site répond |
+| --- | --- |
+| Une correction sans raison écrite | « Écrivez la raison de la correction : elle restera au journal. » |
+| Un montant nul ou négatif | « Indiquez un montant positif, et choisissez le sens. » |
+| Retirer plus que le solde | « Solde insuffisant : 15,6 jeton(s) disponible(s) pour 9999. » |
+
+La correction est tracée deux fois : dans le registre (le mouvement, qui fait
+foi) et dans le journal d'administration (qui l'a décidée, et pourquoi).
+
 ### Le journal des modifications
 
 Chaque changement laisse une trace : qui, quand, quoi, et la valeur d'avant.
@@ -738,8 +788,9 @@ déroulantes du back-office : les deux ne peuvent plus diverger.
 
 ## Et après ?
 
-Les grandes briques fonctionnelles des specs sont désormais toutes implémentées. Ce qui reste, c'est le passage du prototype à un vrai produit :
+Les grandes briques fonctionnelles des specs sont implémentées, et le site se
+pilote entièrement depuis l'espace d'administration, sans toucher au code. Ce
+qui reste, c'est le passage du prototype à un vrai produit :
 
 - **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
 - **Les vrais paiements** — la mécanique des jetons est prête et attend un prestataire ; le brancher suppose un statut juridique, des vérifications d'identité et la conservation des justificatifs.
-- **L'administration des comptes et des jetons** — la brique suivante : consulter les comptes joueurs et commerçants depuis le back-office, suivre les mouvements de jetons compte par compte, et corriger une erreur de crédit. Les fondations (compte administrateur, garde d'accès, journal, fiches modifiables) sont déjà là.

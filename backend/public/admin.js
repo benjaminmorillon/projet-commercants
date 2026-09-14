@@ -11,7 +11,16 @@
 // le fait apparaître ici tout seul.
 // ---------------------------------------------------------------------------
 
-const SECTIONS = ['tableau-de-bord', 'commerces', 'missions', 'evenements', 'reglages', 'journal'];
+const SECTIONS = [
+  'tableau-de-bord',
+  'commerces',
+  'missions',
+  'evenements',
+  'comptes',
+  'jetons',
+  'reglages',
+  'journal',
+];
 
 async function api(chemin, options = {}) {
   const reponse = await fetch(chemin, {
@@ -95,6 +104,8 @@ function afficherSection(nom) {
   if (nom === 'commerces') chargerCommerces();
   if (nom === 'missions') remplirFormulaireCreation().then(chargerMissions);
   if (nom === 'evenements') chargerEvenements();
+  if (nom === 'comptes') chargerComptes();
+  if (nom === 'jetons') chargerJetons();
   if (nom === 'reglages') chargerReglages();
   if (nom === 'journal') chargerJournal();
 }
@@ -853,7 +864,369 @@ brancherListe('liste-evenements', {
   nomPourConfirmation: (fiche) => `l'événement « ${fiche.querySelector('.nom').textContent.trim()} »`,
 });
 
+
+// ===========================================================================
+// Les comptes.
+// ===========================================================================
+
+const ETIQUETTES_TYPE = {
+  particulier: 'Joueur',
+  commercant: 'Commerçant',
+};
+
+function scoresProfil(profil) {
+  if (!profil || !profil.questionnaireFait) {
+    return '<p class="note-fiche">Questionnaire pas encore rempli : ce compte n\'a pas de profil de joueur.</p>';
+  }
+
+  const barres = [
+    ['Explorateur', profil.explorateur],
+    ['Accomplisseur', profil.accomplisseur],
+    ['Compétiteur', profil.competiteur],
+    ['Socialisateur', profil.socialisateur],
+  ];
+
+  return `
+    <div class="profil-barres">
+      ${barres
+        .map(
+          ([nom, valeur]) => `
+        <div class="profil-barre">
+          <span class="profil-nom">${escapeHtml(nom)}</span>
+          <span class="profil-piste"><span class="profil-jauge" style="width:${Math.max(0, Math.min(100, valeur))}%"></span></span>
+          <span class="profil-valeur">${Math.round(valeur)}</span>
+        </div>`,
+        )
+        .join('')}
+    </div>`;
+}
+
+function tableauMouvements(mouvements) {
+  if (!mouvements || mouvements.length === 0) {
+    return '<p class="note-fiche">Aucun mouvement de jetons.</p>';
+  }
+
+  return `
+    <div class="enveloppe-table">
+      <table class="table-journal">
+        <thead><tr><th>Quand</th><th>Quoi</th><th class="a-droite">Montant</th></tr></thead>
+        <tbody>
+          ${mouvements
+            .map(
+              (m) => `
+            <tr>
+              <td class="quand">${escapeHtml(quand(m.createdAt))}</td>
+              <td>
+                ${escapeHtml(m.libelle)}
+                ${m.detail ? `<span class="detail-mouvement">${escapeHtml(m.detail)}</span>` : ''}
+              </td>
+              <td class="a-droite montant ${m.sens === 'entree' ? 'entree' : 'sortie'}">
+                ${m.sens === 'entree' ? '+' : '−'}${m.montant}
+              </td>
+            </tr>`,
+            )
+            .join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function ouvrirCompte(fiche) {
+  const corps = fiche.querySelector('.fiche-corps');
+  if (corps.dataset.charge === 'oui') return;
+  corps.dataset.charge = 'oui';
+  corps.innerHTML = '<p class="note-fiche">Chargement…</p>';
+
+  try {
+    const d = await api(`/admin/comptes/${encodeURIComponent(fiche.dataset.id)}`);
+    const joueur = d.compte.type === 'particulier';
+
+    corps.innerHTML = `
+      <div class="colonnes-fiche">
+        <div>
+          <h3>Le compte</h3>
+          <dl class="details">
+            <dt>Email</dt><dd>${escapeHtml(d.compte.email)}</dd>
+            <dt>Type</dt><dd>${escapeHtml(ETIQUETTES_TYPE[d.compte.type] || d.compte.type)}</dd>
+            <dt>Inscrit le</dt><dd>${escapeHtml(quand(d.compte.createdAt))}</dd>
+            ${d.etablissement ? `<dt>Établissement</dt><dd>${escapeHtml(d.etablissement.nom)}</dd>` : ''}
+            ${
+              joueur
+                ? `<dt>Activité</dt><dd>${d.activite.visites} visite(s), ${d.activite.validations} mission(s) soumise(s)</dd>`
+                : ''
+            }
+            ${
+              d.progression
+                ? `<dt>Progression</dt><dd>niveau ${d.progression.niveau}, ${d.progression.xpTotal} XP</dd>`
+                : ''
+            }
+          </dl>
+
+          <h3>Administration</h3>
+          <p class="note-fiche">
+            ${
+              d.compte.administrateur
+                ? 'Ce compte a accès à cet espace et peut tout y modifier.'
+                : "Ce compte n'a pas accès à cet espace."
+            }
+          </p>
+          <button type="button" class="bouton-discret ${d.compte.administrateur ? 'bouton-danger' : ''}"
+                  data-administration="${d.compte.administrateur ? 'retirer' : 'accorder'}">
+            ${d.compte.administrateur ? "Retirer les droits d'administration" : 'Nommer administrateur'}
+          </button>
+          <span class="message" data-role="message-admin"></span>
+        </div>
+
+        <div>
+          ${joueur ? '<h3>Profil de joueur</h3>' + scoresProfil(d.profil) : ''}
+          <h3>Jetons — solde ${d.jetons.solde}</h3>
+          ${tableauMouvements(d.jetons.mouvements)}
+        </div>
+      </div>`;
+  } catch (erreur) {
+    corps.dataset.charge = 'non';
+    corps.innerHTML = `<p class="note-fiche ko">${escapeHtml(erreur.message)}</p>`;
+  }
+}
+
+async function chargerComptes() {
+  const recherche = document.getElementById('recherche-comptes').value.trim();
+  const filtre = document.getElementById('filtre-comptes').value;
+
+  const parametres = new URLSearchParams();
+  if (recherche) parametres.set('recherche', recherche);
+  if (filtre) parametres.set('type', filtre);
+
+  const comptes = await api(`/admin/comptes${parametres.toString() ? `?${parametres}` : ''}`);
+  document.getElementById('compte-comptes').textContent =
+    `${comptes.length} compte${comptes.length > 1 ? 's' : ''}`;
+
+  document.getElementById('liste-comptes').innerHTML = comptes
+    .map((c) => {
+      const marque = c.administrateur ? '<span class="pastille-admin">administrateur</span>' : '';
+      const detail =
+        c.type === 'commercant'
+          ? escapeHtml(c.etablissement || '—')
+          : `niveau ${c.niveau} · ${c.xpTotal} XP`;
+
+      return `
+        <details class="fiche" data-id="${escapeHtml(c.id)}">
+          <summary class="fiche-entete">
+            <span class="nom">${escapeHtml(c.pseudo)} ${marque}</span>
+            <span class="meta">${escapeHtml(ETIQUETTES_TYPE[c.type] || c.type)} · ${detail} · ${c.soldeJetons} jetons</span>
+            <span class="chevron">▾</span>
+          </summary>
+          <div class="fiche-corps"></div>
+        </details>`;
+    })
+    .join('');
+}
+
+document.getElementById('recherche-comptes').addEventListener('input', () => {
+  window.clearTimeout(chargerComptes.minuteur);
+  chargerComptes.minuteur = window.setTimeout(chargerComptes, 250);
+});
+document.getElementById('filtre-comptes').addEventListener('change', chargerComptes);
+
+document.getElementById('liste-comptes').addEventListener(
+  'toggle',
+  (evenement) => {
+    if (evenement.target.matches('.fiche') && evenement.target.open) {
+      ouvrirCompte(evenement.target);
+    }
+  },
+  true,
+);
+
+document.getElementById('liste-comptes').addEventListener('click', async (evenement) => {
+  const bouton = evenement.target.closest('[data-administration]');
+  if (!bouton) return;
+
+  const fiche = bouton.closest('.fiche');
+  const accorder = bouton.dataset.administration === 'accorder';
+  const zone = fiche.querySelector('[data-role="message-admin"]');
+
+  const qui = fiche.querySelector('.nom').textContent.trim();
+  if (
+    !window.confirm(
+      accorder
+        ? `Donner à ${qui} accès à tout cet espace d'administration ?`
+        : `Retirer à ${qui} l'accès à cet espace ?`,
+    )
+  ) {
+    return;
+  }
+
+  try {
+    await api(`/admin/comptes/${encodeURIComponent(fiche.dataset.id)}/administrateur`, {
+      method: 'POST',
+      body: JSON.stringify({ accorder }),
+    });
+    await chargerComptes();
+  } catch (erreur) {
+    zone.textContent = erreur.message;
+    zone.className = 'message ko';
+  }
+});
+
+// ===========================================================================
+// Le registre de jetons.
+// ===========================================================================
+
+// Les comptes du registre tels qu'on les nomme à l'écran. « commercant » est
+// une valeur technique ; elle n'a rien à faire sous les yeux de quelqu'un.
+const ETIQUETTES_COMPTE = {
+  joueur: 'Joueur',
+  commercant: 'Commerçant',
+  plateforme: 'Compte de la plateforme',
+  cause: 'Compte des causes',
+};
+
+const ETIQUETTES_TOTAUX = {
+  joueurs: 'chez les joueurs',
+  commercants: 'chez les commerçants',
+  plateforme: 'à la plateforme',
+  causes: 'reversés aux causes',
+  enCirculation: 'en circulation',
+};
+
+function formulaireCorrection(ligne) {
+  return `
+    <form class="correction" data-compte="${escapeHtml(ligne.id)}">
+      <div class="champs">
+        <label>
+          Sens
+          <select name="sens">
+            <option value="crediter">Créditer ce compte</option>
+            <option value="retirer">Retirer de ce compte</option>
+          </select>
+        </label>
+        <label>
+          Montant (jetons)
+          <input type="number" name="montant" min="0.01" step="0.01" required />
+        </label>
+        <label class="pleine-largeur">
+          Raison de la correction
+          <input type="text" name="raison" required minlength="5"
+                 placeholder="Ex : invitation du 12 mars non créditée" />
+        </label>
+      </div>
+      <div class="actions-fiche">
+        <button type="submit">Enregistrer la correction</button>
+        <span class="message" data-role="message"></span>
+      </div>
+    </form>`;
+}
+
+async function ouvrirCompteRegistre(fiche) {
+  const corps = fiche.querySelector('.fiche-corps');
+  if (corps.dataset.charge === 'oui') return;
+  corps.dataset.charge = 'oui';
+  corps.innerHTML = '<p class="note-fiche">Chargement…</p>';
+
+  try {
+    const d = await api(`/admin/registre/${encodeURIComponent(fiche.dataset.id)}/mouvements`);
+    corps.innerHTML = `
+      <h3>Corriger ce solde</h3>
+      <p class="note-fiche">
+        La correction s'écrit comme un mouvement : elle apparaîtra dans l'historique
+        ci-dessous et dans le journal, avec votre nom et la raison que vous donnez.
+      </p>
+      ${formulaireCorrection({ id: fiche.dataset.id })}
+      <h3>Historique</h3>
+      ${tableauMouvements(d.mouvements)}`;
+  } catch (erreur) {
+    corps.dataset.charge = 'non';
+    corps.innerHTML = `<p class="note-fiche ko">${escapeHtml(erreur.message)}</p>`;
+  }
+}
+
+async function chargerJetons() {
+  const e = await api('/admin/registre');
+
+  document.getElementById('totaux-jetons').innerHTML = Object.entries(ETIQUETTES_TOTAUX)
+    .map(
+      ([cle, etiquette]) => `
+      <div>
+        <span class="valeur">${e.totaux[cle]}</span>
+        <span class="etiquette">${escapeHtml(etiquette)}</span>
+      </div>`,
+    )
+    .join('');
+
+  const verdict = document.getElementById('verdict-registre');
+  if (e.coherence.coherent) {
+    verdict.textContent =
+      'Registre cohérent : chaque solde correspond exactement à la somme de ses mouvements.';
+    verdict.className = 'verdict-registre ok';
+  } else {
+    verdict.textContent = `Écart détecté sur ${e.coherence.ecarts.length} compte(s). Un solde ne correspond plus à ses mouvements — à examiner avant toute autre opération.`;
+    verdict.className = 'verdict-registre ko';
+  }
+
+  document.getElementById('liste-registre').innerHTML = e.lignes
+    .map(
+      (l) => `
+      <details class="fiche" data-id="${escapeHtml(l.id)}">
+        <summary class="fiche-entete">
+          <span class="nom">${escapeHtml(l.nom)}</span>
+          <span class="meta">${escapeHtml(ETIQUETTES_COMPTE[l.type] || l.type)} · ${l.solde} jetons</span>
+          <span class="chevron">▾</span>
+        </summary>
+        <div class="fiche-corps"></div>
+      </details>`,
+    )
+    .join('');
+}
+
+document.getElementById('liste-registre').addEventListener(
+  'toggle',
+  (evenement) => {
+    if (evenement.target.matches('.fiche') && evenement.target.open) {
+      ouvrirCompteRegistre(evenement.target);
+    }
+  },
+  true,
+);
+
+document.getElementById('liste-registre').addEventListener('submit', async (evenement) => {
+  evenement.preventDefault();
+  const formulaire = evenement.target;
+  if (!formulaire.matches('.correction')) return;
+
+  const valeurs = valeursDuFormulaire(formulaire);
+  const zone = formulaire.querySelector('[data-role="message"]');
+
+  // Toucher à l'argent de quelqu'un mérite une confirmation qui nomme ce
+  // qu'on s'apprête à faire, pas un « êtes-vous sûr ? ».
+  const verbe = valeurs.sens === 'retirer' ? 'Retirer' : 'Créditer';
+  const nom = formulaire.closest('.fiche').querySelector('.nom').textContent.trim();
+  if (!window.confirm(`${verbe} ${valeurs.montant} jeton(s) sur « ${nom} » ?`)) {
+    return;
+  }
+
+  try {
+    const resultat = await api('/admin/registre/correction', {
+      method: 'POST',
+      body: JSON.stringify({
+        compteId: formulaire.dataset.compte,
+        sens: valeurs.sens,
+        montant: Number(valeurs.montant),
+        raison: valeurs.raison,
+      }),
+    });
+    zone.textContent = `Fait. Nouveau solde : ${resultat.solde} jetons.`;
+    zone.className = 'message ok';
+    formulaire.reset();
+    await chargerJetons();
+  } catch (erreur) {
+    zone.textContent = erreur.message;
+    zone.className = 'message ko';
+  }
+});
+
 // --- Démarrage -------------------------------------------------------------
+
 
 
 async function demarrer() {

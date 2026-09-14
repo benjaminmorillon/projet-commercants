@@ -786,3 +786,191 @@ body.admin {
 .carte-position .leaflet-control-attribution {
   font-size: 10px;
 }
+
+/* --- Comptes et registre de jetons --------------------------------------- */
+
+.filtre {
+  /* style.css impose `width: 100%` à tous les <select> — utile dans un
+     formulaire, mais ici le filtre doit tenir à côté du champ de recherche. */
+  width: auto;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 32px 8px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--ink);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%236c7077' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 11px;
+  cursor: pointer;
+  flex: none;
+}
+
+.colonnes-fiche {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.colonnes-fiche h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.colonnes-fiche h3:not(:first-child) {
+  margin-top: 24px;
+}
+
+.details {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+
+.details dt {
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.note-fiche {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+.note-fiche.ko {
+  color: var(--negative);
+}
+
+/* Les quatre barres du profil de joueur : mêmes proportions que sur la page
+   du joueur, en plus compact. */
+.profil-barres {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 4px;
+}
+
+.profil-barre {
+  display: grid;
+  grid-template-columns: 96px 1fr 28px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.profil-nom {
+  color: var(--ink-muted);
+}
+
+.profil-piste {
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.profil-jauge {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--r-full);
+}
+
+.profil-valeur {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+.table-journal .a-droite {
+  text-align: right;
+}
+
+.table-journal .montant {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.table-journal .montant.entree {
+  color: var(--positive);
+}
+
+.table-journal .montant.sortie {
+  color: var(--ink);
+}
+
+.detail-mouvement {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+.pastille-admin {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: var(--r-full);
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.verdict-registre {
+  margin: -20px 0 24px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 72ch;
+}
+
+.verdict-registre.ok {
+  color: var(--positive);
+}
+
+.verdict-registre.ko {
+  color: var(--negative);
+  font-weight: 500;
+}
+
+.correction {
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.correction .champs {
+  margin-bottom: 14px;
+}
+
+@media (max-width: 800px) {
+  .colonnes-fiche {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .profil-barre {
+    grid-template-columns: 88px 1fr 26px;
+  }
+}

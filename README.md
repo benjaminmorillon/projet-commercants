@@ -974,6 +974,8 @@ public — l'application livrée est native.
   jetons, les quatre scores de style de jeu ;
 - l'écran **Autour de toi** : les commerces classés par distance réelle, avec
   validation de sa venue sur place ;
+- l'écran **Missions** : le catalogue filtrable par thème, le quota du jour, et
+  la demande de validation ;
 - le système de design repris de l'identité du site, à l'identique.
 
 ### « Autour de toi » : le cœur du jeu
@@ -1000,10 +1002,28 @@ répond par exemple : « Tu es à 431 m du lieu (max 150 m). »
 est de 150 m : une position « équilibrée » suffit, et elle arrive plus vite en
 usant moins la batterie.
 
+### « Missions » : trouver, et dire qu'on l'a faite
+
+Le catalogue, filtrable par thème d'un geste, avec en tête le nombre de
+missions qu'il reste à lancer aujourd'hui.
+
+Chaque mission dit **où elle se joue**. C'est ce qui manquait le plus : sans le
+nom du commerce, une mission n'est qu'un titre hors sol, et on ne découvre
+qu'il fallait y aller qu'au moment où le serveur refuse la demande.
+
+Dire qu'on a terminé n'est pas immédiat, et ça ne doit pas l'être : il faut
+choisir ce qu'on veut de la récompense (dépenser chez un partenaire, donner à
+une cause, accumuler), et quelqu'un doit confirmer — le commerçant si la
+mission est rattachée à un lieu, un autre joueur sinon. Tout se fait dans une
+feuille qui monte, sans quitter la liste.
+
+Une mission déjà soumise n'affiche plus de bouton mais son état : « en attente
+de validation » ou « mission accomplie ».
+
 ### Ce qu'il n'y a pas encore
 
-La carte, les missions, les duos, les amis. Les routes du serveur existent
-déjà et sont utilisées par le site : il ne reste que les écrans à écrire.
+La carte, les duos, les amis. Les routes du serveur existent déjà et sont
+utilisées par le site : il ne reste que les écrans à écrire.
 
 ### Où sont les choses
 
@@ -1015,6 +1035,7 @@ mobile/
 │   └── (onglets)/                  ← la barre d'onglets du bas
 │       ├── _layout.tsx
 │       ├── index.tsx               ← Mon profil
+│       ├── missions.tsx            ← le catalogue et la demande de validation
 │       └── lieux.tsx               ← Autour de toi, et le check-in
 └── src/
     ├── api/

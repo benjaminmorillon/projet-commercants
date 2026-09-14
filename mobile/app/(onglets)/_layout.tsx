@@ -42,6 +42,13 @@ export default function Onglets() {
         }}
       />
       <Tabs.Screen
+        name="missions"
+        options={{
+          title: 'Missions',
+          tabBarIcon: ({ color }) => <Icone symbole="◆" couleur={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="lieux"
         options={{
           title: 'Lieux',

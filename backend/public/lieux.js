@@ -56,11 +56,16 @@ function renderPlace(place) {
   const card = document.createElement('article');
   card.className = 'card place-card';
   card.innerHTML = `
-    <div class="mission-card-header">
-      <h3>${escapeHtml(place.nom)} ${bonusBadge(place)}</h3>
-      <span class="reward">${ratingLabel(place)}</span>
+    <div class="ligne-avec-avatar en-haut">
+      ${pastilleAvatar(place.nom, urlPhoto('commerce', place.id, place.photoVersion))}
+      <div class="corps">
+        <div class="mission-card-header">
+          <h3>${escapeHtml(place.nom)} ${bonusBadge(place)}</h3>
+          <span class="reward">${ratingLabel(place)}</span>
+        </div>
+        <p class="hint">${escapeHtml(place.typeEtablissement)} — ${escapeHtml(place.adresse)}</p>
+      </div>
     </div>
-    <p class="hint">${escapeHtml(place.typeEtablissement)} — ${escapeHtml(place.adresse)}</p>
     <button type="button" class="checkin-btn">Check-in ici</button>
     <p class="checkin-status hint" hidden></p>
     <form class="review-form" hidden>

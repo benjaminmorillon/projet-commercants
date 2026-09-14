@@ -7,6 +7,7 @@ import { CheckIn } from '../checkins/checkin.entity';
 import { GroupMission } from '../duos/group-mission.entity';
 import { Event } from '../events/event.entity';
 import { Mission } from '../missions/mission.entity';
+import { PhotosService } from '../photos/photos.service';
 import { User } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
 import { changements, Changement, fusionnerPosition, Libelles, resumer } from './diff';
@@ -57,6 +58,7 @@ export class ContenusService {
     @InjectRepository(GroupMission) private readonly groupes: Repository<GroupMission>,
     @InjectRepository(Campaign) private readonly campagnes: Repository<Campaign>,
     @InjectRepository(CheckIn) private readonly checkIns: Repository<CheckIn>,
+    private readonly photos: PhotosService,
   ) {}
 
   // --- Commerces ---------------------------------------------------------
@@ -68,10 +70,11 @@ export class ContenusService {
     }
 
     const ids = commerces.map((c) => c.id);
-    const [proprietaires, missions, visites] = await Promise.all([
+    const [proprietaires, missions, visites, photos] = await Promise.all([
       this.users.find({ where: { id: In(commerces.map((c) => c.userId)) } }),
       this.missions.find({ where: { businessId: In(ids) } }),
       this.checkIns.find({ where: { businessId: In(ids) }, select: { businessId: true } }),
+      this.photos.versions('commerce', ids),
     ]);
 
     const emailParUser = new Map(proprietaires.map((u) => [u.id, u.email]));
@@ -89,6 +92,7 @@ export class ContenusService {
       proprietaireEmail: emailParUser.get(commerce.userId) ?? '(compte supprimé)',
       nombreMissions: missionsPar.get(commerce.id) ?? 0,
       nombreVisites: visitesPar.get(commerce.id) ?? 0,
+      photoVersion: photos.get(commerce.id) ?? null,
     }));
   }
 

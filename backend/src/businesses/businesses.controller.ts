@@ -9,6 +9,7 @@ import { CreateMissionDto } from '../missions/dto/create-mission.dto';
 import { MissionsService } from '../missions/missions.service';
 import { BusinessesService } from './businesses.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
+import { PhotosService } from '../photos/photos.service';
 
 @Controller('businesses')
 export class BusinessesController {
@@ -17,6 +18,7 @@ export class BusinessesController {
     private readonly missions: MissionsService,
     private readonly checkins: CheckinsService,
     private readonly balancing: BalancingService,
+    private readonly photos: PhotosService,
   ) {}
 
   @Post()
@@ -32,11 +34,14 @@ export class BusinessesController {
     const businesses = await this.businesses.findAll();
     const ids = businesses.map((b) => b.id);
 
-    const [ratings, missionCounts, visitCounts, balancing] = await Promise.all([
+    const [ratings, missionCounts, visitCounts, balancing, photos] = await Promise.all([
       this.checkins.getRatingsSummary(ids),
       this.missions.countByBusiness(ids),
       this.checkins.getVisitsSummary(ids),
       this.balancing.getForBusinesses(ids),
+      // Seulement QUI a une photo et de quand elle date : aucune image n'est
+      // chargée ici, la page ira les chercher une par une si elle les affiche.
+      this.photos.versions('commerce', ids),
     ]);
 
     return businesses.map((business) => ({
@@ -47,13 +52,15 @@ export class BusinessesController {
       nombreCheckins: visitCounts.get(business.id) ?? 0,
       multiplicateur: balancing.get(business.id)?.multiplicateur ?? 1,
       tauxOccupation: balancing.get(business.id)?.tauxOccupation ?? 0,
+      photoVersion: photos.get(business.id) ?? null,
     }));
   }
 
   @Public()
   @Get(':id')
-  getOne(@Param('id') id: string) {
-    return this.businesses.getBusiness(id);
+  async getOne(@Param('id') id: string) {
+    const business = await this.businesses.getBusiness(id);
+    return { ...business, photoVersion: await this.photos.version('commerce', id) };
   }
 
   @UseGuards(BusinessOwnerGuard)

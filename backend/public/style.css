@@ -1836,3 +1836,130 @@ textarea:user-invalid {
   flex-shrink: 0;
   min-width: 104px;
 }
+
+/* ===========================================================================
+   Les pastilles de profil.
+
+   Une photo, ou les initiales sur un fond coloré. La couleur est calculée à
+   partir du nom, donc toujours la même pour la même personne : on reconnaît
+   les têtes d'une page à l'autre même quand personne n'a mis de photo.
+   =========================================================================== */
+
+.avatar {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: var(--r-full);
+  overflow: hidden;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+.avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* L'image se pose PAR-DESSUS les initiales. Si elle ne charge pas, elle se
+     retire d'elle-même et les initiales réapparaissent — sans clignotement,
+     puisqu'elles étaient déjà dessous. */
+  z-index: 1;
+}
+
+.avatar-petit {
+  width: 30px;
+  height: 30px;
+  font-size: 11px;
+}
+
+.avatar-moyen {
+  width: 42px;
+  height: 42px;
+  font-size: 14px;
+}
+
+.avatar-grand {
+  width: 88px;
+  height: 88px;
+  font-size: 28px;
+}
+
+.avatar[data-teinte='0'] { background: #e8efec; color: #1f5f50; }
+.avatar[data-teinte='1'] { background: #f0ece4; color: #7a5a1e; }
+.avatar[data-teinte='2'] { background: #ece9f0; color: #4a3a6b; }
+.avatar[data-teinte='3'] { background: #f0e9e9; color: #7a3a3a; }
+.avatar[data-teinte='4'] { background: #e6eef2; color: #245063; }
+.avatar[data-teinte='5'] { background: #eaf0e6; color: #3f5a26; }
+
+/* La pastille du haut de « Mon profil », avec son bouton de changement. */
+.bloc-avatar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.bloc-avatar .actions-avatar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.bloc-avatar .actions-avatar .hint {
+  margin: 0;
+}
+
+.bouton-photo {
+  background: none;
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  border-radius: var(--r-sm);
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.bouton-photo:hover {
+  background: var(--raised);
+}
+
+.bouton-photo.retirer {
+  border: none;
+  padding: 0;
+  color: var(--ink-muted);
+  text-decoration: underline;
+  font-size: 0.78rem;
+}
+
+.bouton-photo.retirer:hover {
+  background: none;
+  color: var(--negative);
+}
+
+/* Une ligne de liste qui porte une pastille : amis, duos, validations. */
+.ligne-avec-avatar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Quand le texte à côté fait plusieurs lignes (un nom, un badge, une
+   adresse), centrer la pastille la fait flotter au milieu du bloc. On
+   l'aligne sur la première ligne, là où se trouve le nom. */
+.ligne-avec-avatar.en-haut {
+  align-items: flex-start;
+}
+
+.ligne-avec-avatar > .corps {
+  min-width: 0;
+  flex: 1 1 auto;
+}

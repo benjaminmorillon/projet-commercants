@@ -6,6 +6,7 @@ import { CheckIn } from '../checkins/checkin.entity';
 import { LedgerService } from '../ledger/ledger.service';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { PlayerProgression } from '../progression/player-progression.entity';
+import { PhotosService } from '../photos/photos.service';
 import { User, UserType } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
 
@@ -23,6 +24,7 @@ export interface LigneCompte {
   questionnaireFait: boolean;
   /** Commerçants seulement. */
   etablissement: string | null;
+  photoVersion: number | null;
 }
 
 @Injectable()
@@ -37,6 +39,7 @@ export class ComptesService {
     @InjectRepository(MissionValidation)
     private readonly validations: Repository<MissionValidation>,
     private readonly ledger: LedgerService,
+    private readonly photos: PhotosService,
   ) {}
 
   async lister(recherche?: string, type?: string): Promise<LigneCompte[]> {
@@ -58,10 +61,11 @@ export class ComptesService {
     }
 
     const ids = filtres.map((u) => u.id);
-    const [profils, progressions, etablissements] = await Promise.all([
+    const [profils, progressions, etablissements, photos] = await Promise.all([
       this.profiles.find({ where: { userId: In(ids) } }),
       this.progressions.find({ where: { playerId: In(ids) } }),
       this.businesses.find({ where: { userId: In(ids) } }),
+      this.photos.versions('joueur', ids),
     ]);
 
     const profilPar = new Map(profils.map((p) => [p.userId, p]));
@@ -88,6 +92,7 @@ export class ComptesService {
         xpTotal: joueur ? progression?.xpTotal ?? 0 : null,
         questionnaireFait: Boolean(profilPar.get(user.id)?.questionnaireCompletedAt),
         etablissement: etablissementPar.get(user.id)?.nom ?? null,
+        photoVersion: photos.get(user.id) ?? null,
       };
     });
   }

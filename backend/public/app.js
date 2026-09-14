@@ -64,6 +64,15 @@ async function apiPut(path, body) {
   return data;
 }
 
+async function apiDelete(path) {
+  const response = await fetch(path, { method: 'DELETE' });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.message || 'Une erreur est survenue.');
+  }
+  return data;
+}
+
 async function apiGet(path) {
   const response = await fetch(path);
   const data = await response.json().catch(() => ({}));
@@ -505,6 +514,65 @@ function reinitialiserAffichage() {
   showStep('account');
 }
 
+
+// ---------------------------------------------------------------------------
+// Ma photo de profil.
+// ---------------------------------------------------------------------------
+
+let moi = null;
+
+function afficherMonAvatar() {
+  if (!moi) return;
+
+  const url = urlPhoto('joueur', moi.id, moi.photoVersion);
+  document.getElementById('mon-avatar').innerHTML = pastilleAvatar(moi.pseudo, url, 'grand');
+  document.getElementById('btn-photo').textContent = url ? 'Changer ma photo' : 'Ajouter une photo';
+  document.getElementById('btn-retirer-photo').hidden = !url;
+}
+
+function direPhoto(texte, erreur = false) {
+  const zone = document.getElementById('photo-aide');
+  zone.textContent = texte;
+  zone.className = erreur ? 'error' : 'hint';
+}
+
+document.getElementById('btn-photo').addEventListener('click', () => {
+  document.getElementById('fichier-photo').click();
+});
+
+document.getElementById('fichier-photo').addEventListener('change', async (evenement) => {
+  const fichier = evenement.target.files?.[0];
+  // Le champ est remis à zéro tout de suite : sans ça, rechoisir le même
+  // fichier après une erreur ne déclencherait rien.
+  evenement.target.value = '';
+  if (!fichier) return;
+
+  direPhoto('Préparation de la photo…');
+
+  try {
+    const image = await reduireImage(fichier);
+    const { version } = await apiPut(`/photos/joueur/${moi.id}`, { image });
+    moi.photoVersion = version;
+    afficherMonAvatar();
+    direPhoto('Photo enregistrée.');
+  } catch (erreur) {
+    direPhoto(erreur.message, true);
+  }
+});
+
+document.getElementById('btn-retirer-photo').addEventListener('click', async () => {
+  if (!window.confirm('Retirer ta photo de profil ?')) return;
+
+  try {
+    await apiDelete(`/photos/joueur/${moi.id}`);
+    moi.photoVersion = null;
+    afficherMonAvatar();
+    direPhoto('Photo retirée. Tes initiales reprennent sa place.');
+  } catch (erreur) {
+    direPhoto(erreur.message, true);
+  }
+});
+
 function demarrer() {
   loadParcours();
   loadProgression();
@@ -527,9 +595,11 @@ async function initialiser() {
   }
 
   playerId = utilisateur.id;
+  moi = utilisateur;
   localStorage.setItem('playerId', playerId);
 
   document.getElementById('compte-section').hidden = false;
+  afficherMonAvatar();
   document.getElementById('compte-identite').textContent =
     `Connecté en tant que ${utilisateur.pseudo} (${utilisateur.email}).`;
   rafraichirBoutonPush();

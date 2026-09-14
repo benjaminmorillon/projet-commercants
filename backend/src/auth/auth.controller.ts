@@ -7,12 +7,16 @@ import { InscriptionDto } from './dto/inscription.dto';
 import { MotDePasseOublieDto, ReinitialiserDto } from './dto/mot-de-passe.dto';
 import { Public } from './public.decorator';
 import { Utilisateur } from './utilisateur.decorator';
+import { PhotosService } from '../photos/photos.service';
 
 const TRENTE_JOURS_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly photos: PhotosService,
+  ) {}
 
   // Le jeton part dans un cookie `httpOnly` : le JavaScript de la page ne
   // peut pas le lire, donc un script injecté ne peut pas le voler.
@@ -84,7 +88,10 @@ export class AuthController {
 
   // Qui suis-je ? La page s'en sert au chargement pour savoir quoi afficher.
   @Get('moi')
-  moi(@Utilisateur() utilisateur: UtilisateurConnecte) {
-    return utilisateur;
+  async moi(@Utilisateur() utilisateur: UtilisateurConnecte) {
+    return {
+      ...utilisateur,
+      photoVersion: await this.photos.version('joueur', utilisateur.id),
+    };
   }
 }

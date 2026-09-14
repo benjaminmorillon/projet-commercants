@@ -48,6 +48,8 @@ import { PushSubscription } from './notifications/push-subscription.entity';
 import { UnlockingModule } from './unlocking/unlocking.module';
 import { ZoneDecouverte } from './unlocking/zone-decouverte.entity';
 import { AdminModule } from './admin/admin.module';
+import { PhotosModule } from './photos/photos.module';
+import { Photo } from './photos/photo.entity';
 import { Reglage } from './admin/reglage.entity';
 import { JournalAdmin } from './admin/journal-admin.entity';
 
@@ -84,6 +86,7 @@ import { JournalAdmin } from './admin/journal-admin.entity';
         Rechargement,
         Reglage,
         JournalAdmin,
+        Photo,
       ],
       synchronize: true,
     }),
@@ -109,6 +112,7 @@ import { JournalAdmin } from './admin/journal-admin.entity';
     NotificationsModule,
     LedgerModule,
     AdminModule,
+    PhotosModule,
   ],
   // Le garde s'applique à TOUTES les routes : une route oubliée est protégée
   // par défaut, plutôt que l'inverse.

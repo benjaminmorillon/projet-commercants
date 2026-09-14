@@ -11,6 +11,7 @@ const friendsList = document.getElementById('friends-list');
 const friendsEmpty = document.getElementById('friends-empty');
 const friendProfileSection = document.getElementById('friend-profile-section');
 const friendProfileTitle = document.getElementById('friend-profile-title');
+const friendProfileAvatar = document.getElementById('friend-profile-avatar');
 const friendProfileScores = document.getElementById('friend-profile-scores');
 const friendProfileMissions = document.getElementById('friend-profile-missions');
 const friendProfileMissionsEmpty = document.getElementById('friend-profile-missions-empty');
@@ -67,7 +68,10 @@ function renderReceived(requests) {
     const row = document.createElement('article');
     row.className = 'card friend-row';
     row.innerHTML = `
-      <p><strong>${escapeHtml(req.otherPseudo)}</strong> veut être ton ami.</p>
+      <div class="ligne-avec-avatar">
+        ${pastilleAvatar(req.otherPseudo, urlPhoto('joueur', req.otherId, req.otherPhotoVersion))}
+        <p class="corps"><strong>${escapeHtml(req.otherPseudo)}</strong> veut être ton ami.</p>
+      </div>
       <div class="choix-buttons">
         <button type="button" class="refuse-btn">Refuser</button>
         <button type="button" class="accept-btn">Accepter</button>
@@ -105,7 +109,10 @@ function renderFriends(friends) {
     const row = document.createElement('article');
     row.className = 'card friend-row';
     row.innerHTML = `
-      <p><strong>${escapeHtml(friend.pseudo)}</strong></p>
+      <div class="ligne-avec-avatar">
+        ${pastilleAvatar(friend.pseudo, urlPhoto('joueur', friend.id, friend.photoVersion))}
+        <p class="corps"><strong>${escapeHtml(friend.pseudo)}</strong></p>
+      </div>
       <button type="button" class="view-profile-btn">Voir le profil</button>
     `;
     row.querySelector('.view-profile-btn').addEventListener('click', () => {
@@ -119,6 +126,11 @@ async function loadFriendProfile(friendId) {
   const data = await apiCall('GET', `/players/${playerId}/friends/${friendId}`);
   friendProfileSection.hidden = false;
   // Le titre que l'ami a choisi d'afficher s'affiche à côté de son pseudo.
+  friendProfileAvatar.innerHTML = pastilleAvatar(
+    data.friend.pseudo,
+    urlPhoto('joueur', data.friend.id, data.friend.photoVersion),
+    'grand',
+  );
   friendProfileTitle.innerHTML = `Profil de ${escapeHtml(data.friend.pseudo)}${
     data.titre ? `<span class="titre-joueur">${escapeHtml(data.titre)}</span>` : ''
   }`;

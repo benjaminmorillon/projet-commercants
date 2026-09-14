@@ -612,7 +612,12 @@ function ouvrirFiche(lieu, missionCiblee) {
   const solos = missions.filter((m) => !m.estDuo);
   const duos = missions.filter((m) => m.estDuo);
 
+  // La photo du lieu en bandeau, quand il y en a une : c'est ce qui donne
+  // envie d'y aller, bien plus qu'une ligne de statistiques.
+  const photo = urlPhoto('commerce', lieu.id, lieu.photoVersion);
+
   ficheContenuEl.innerHTML = `
+    ${photo ? `<div class="fiche-photo"><img src="${escapeHtml(photo)}" alt="" onerror="this.closest('.fiche-photo').remove()" /></div>` : ''}
     <h2>${iconeLieu(lieu.typeEtablissement)} ${escapeHtml(lieu.nom)}</h2>
     <p class="hint">${escapeHtml(lieu.typeEtablissement)} — ${escapeHtml(lieu.adresse)}</p>
 

@@ -68,6 +68,21 @@
       <!-- ONGLET 1 : ACTIVITE -->
       <section class="tab-panel" data-panel="activite">
         <section class="card">
+          <h2>Ma vitrine</h2>
+          <p class="hint">La photo de ton établissement s'affiche sur la carte, dans la liste des lieux et sur ta fiche partenaire. C'est la première chose qu'un joueur voit de toi.</p>
+
+          <div class="bloc-avatar">
+            <div id="avatar-etablissement"></div>
+            <div class="actions-avatar">
+              <button type="button" class="bouton-photo" id="btn-photo-lieu">Ajouter une photo</button>
+              <button type="button" class="bouton-photo retirer" id="btn-retirer-photo-lieu" hidden>Retirer la photo</button>
+              <p class="hint" id="photo-lieu-aide">Une devanture, une salle, un plat : ce qui donne envie d'entrer.</p>
+            </div>
+            <input type="file" id="fichier-photo-lieu" accept="image/jpeg,image/png,image/webp" hidden />
+          </div>
+        </section>
+
+        <section class="card">
           <h2>Mon compte de jetons</h2>
           <p class="hint">Les jetons servent à payer tes campagnes de ciblage. Tes clients peuvent aussi régler chez toi avec les leurs — ils reviennent alors sur ce compte.</p>
 

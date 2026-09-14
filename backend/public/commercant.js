@@ -165,6 +165,69 @@ async function retrouverMonEtablissement() {
   showDashboard();
 }
 
+/* ---------- La photo de l'établissement ---------- */
+
+let photoVersionLieu = null;
+
+function afficherAvatarEtablissement(nom) {
+  const url = urlPhoto('commerce', businessId, photoVersionLieu);
+  document.getElementById('avatar-etablissement').innerHTML =
+    pastilleAvatar(nom || 'Mon établissement', url, 'grand');
+  document.getElementById('btn-photo-lieu').textContent = url
+    ? 'Changer la photo'
+    : 'Ajouter une photo';
+  document.getElementById('btn-retirer-photo-lieu').hidden = !url;
+}
+
+function direPhotoLieu(texte, erreur = false) {
+  const zone = document.getElementById('photo-lieu-aide');
+  zone.textContent = texte;
+  zone.className = erreur ? 'error' : 'hint';
+}
+
+async function chargerPhotoEtablissement() {
+  const fiche = await apiCall('GET', `/businesses/${businessId}`).catch(() => null);
+  photoVersionLieu = fiche?.photoVersion ?? null;
+  afficherAvatarEtablissement(fiche?.nom);
+}
+
+document.getElementById('btn-photo-lieu').addEventListener('click', () => {
+  document.getElementById('fichier-photo-lieu').click();
+});
+
+document.getElementById('fichier-photo-lieu').addEventListener('change', async (evenement) => {
+  const fichier = evenement.target.files?.[0];
+  evenement.target.value = '';
+  if (!fichier) return;
+
+  direPhotoLieu('Préparation de la photo…');
+
+  try {
+    // Un peu plus grande que pour un joueur : une devanture s'affiche aussi
+    // en bandeau sur la fiche partenaire, pas seulement en pastille.
+    const image = await reduireImage(fichier, 720);
+    const { version } = await apiCall('PUT', `/photos/commerce/${businessId}`, { image });
+    photoVersionLieu = version;
+    await chargerPhotoEtablissement();
+    direPhotoLieu('Photo enregistrée.');
+  } catch (erreur) {
+    direPhotoLieu(erreur.message, true);
+  }
+});
+
+document.getElementById('btn-retirer-photo-lieu').addEventListener('click', async () => {
+  if (!window.confirm("Retirer la photo de l'établissement ?")) return;
+
+  try {
+    await apiCall('DELETE', `/photos/commerce/${businessId}`);
+    photoVersionLieu = null;
+    await chargerPhotoEtablissement();
+    direPhotoLieu('Photo retirée.');
+  } catch (erreur) {
+    direPhotoLieu(erreur.message, true);
+  }
+});
+
 /* ---------- Compte de jetons ---------- */
 
 async function loadJetons() {
@@ -620,6 +683,7 @@ document.getElementById('concurrence-filters').addEventListener('change', loadCo
 function showDashboard() {
   stepAccount.hidden = true;
   dashboard.hidden = false;
+  chargerPhotoEtablissement();
   loadJetons();
   loadEvents();
   loadMissions();

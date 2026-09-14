@@ -10,6 +10,7 @@ import { UnlockingService } from '../unlocking/unlocking.service';
 import { MissionValidation } from '../validations/mission-validation.entity';
 import { choisirMissionsTypes } from './missions-types';
 import { ReglagesService } from '../admin/reglages.service';
+import { PhotosService } from '../photos/photos.service';
 
 export type StatutMissionJoueur = 'disponible' | 'en_attente' | 'accomplie';
 
@@ -26,6 +27,7 @@ export class MapService {
     private readonly checkins: CheckinsService,
     private readonly unlocking: UnlockingService,
     private readonly reglages: ReglagesService,
+    private readonly photos: PhotosService,
   ) {}
 
   async getMap(playerId?: string, position?: { latitude: number; longitude: number }) {
@@ -36,10 +38,11 @@ export class MapService {
     ]);
 
     const ids = lieux.map((l) => l.id);
-    const [balancing, ratings, visites] = await Promise.all([
+    const [balancing, ratings, visites, photos] = await Promise.all([
       this.balancing.getForBusinesses(ids),
       this.checkins.getRatingsSummary(ids),
       this.checkins.getVisitsSummary(ids),
+      this.photos.versions('commerce', ids),
     ]);
 
     // Carte voilée (section 2.9) : sans joueur identifié on montre tout (mode
@@ -121,6 +124,7 @@ export class MapService {
           nombreCheckins: visites.get(lieu.id) ?? 0,
           multiplicateur: balancing.get(lieu.id)?.multiplicateur ?? 1,
           tauxOccupation: balancing.get(lieu.id)?.tauxOccupation ?? 0,
+          photoVersion: photos.get(lieu.id) ?? null,
           missions: [
             ...propres.map((m) => enMission(m, false)),
             ...types.map((m) => enMission(m, true)),

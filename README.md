@@ -546,6 +546,11 @@ projet-commercants/
     │       ├── jetons.service.ts          ← recharger, payer chez un partenaire, donner
     │       ├── prestataire-paiement.ts    ← le contrat qu'un vrai prestataire devra remplir
     │       └── prestataire-simule.ts      ← l'implémentation de démonstration
+    ├── photos/                    Les photos de profil
+    │   ├── photo-rules.ts             ← lire une image envoyée, et refuser le reste
+    │   ├── photo-rules.spec.ts        ← ses tests
+    │   ├── photo.entity.ts            ← la table à part, et pourquoi
+    │   └── photos.controller.ts       ← déposer, retirer, servir
     ├── admin/                     L'espace administrateur
     │   ├── catalogue-reglages.ts      ← LA liste des réglages : libellés, bornes, valeurs d'origine
     │   ├── catalogue-reglages.spec.ts ← ses tests
@@ -785,6 +790,74 @@ Enfin, le vocabulaire des missions (archétypes, durées, thèmes, modes) vit
 maintenant dans un seul fichier, `backend/src/missions/vocabulaire.ts`. Il sert
 à la fois à valider ce qu'un commerçant envoie et à remplir les listes
 déroulantes du back-office : les deux ne peuvent plus diverger.
+
+## Les photos de profil
+
+Un joueur peut mettre son portrait, un commerçant la photo de son
+établissement. Les deux se déposent au même endroit : sur « Mon profil » pour
+un joueur, dans « Ma vitrine » de l'espace commerçant pour un lieu.
+
+Elles apparaissent ensuite partout où on parle de quelqu'un : la liste d'amis,
+les demandes reçues, la liste des lieux, la fiche partenaire sur la carte (en
+bandeau) et le back-office.
+
+### Quand il n'y a pas de photo
+
+La plupart des gens n'en mettront jamais. Une pastille vide ferait une liste
+triste et illisible, donc **le site affiche les initiales sur un fond coloré**,
+et la couleur est calculée à partir du nom : toujours la même pour la même
+personne. On reconnaît donc les têtes d'une page à l'autre même quand personne
+n'a mis de photo.
+
+### Pourquoi une table à part
+
+Les images d'événements sont stockées directement sur la fiche de
+l'événement. Les photos de profil, non : elles ont leur propre table.
+
+La raison est concrète. Le site liste des joueurs et des commerces en
+permanence — la carte, les amis, les duos, le back-office — et ces listes
+n'affichent que des noms. Si la photo était une colonne de la fiche, chacune
+de ces listes traînerait toutes les images avec elle sans jamais les montrer.
+
+Ici, une liste ne charge jamais une image : elle sait seulement **qui** a une
+photo et **de quand** elle date. L'image part au navigateur par une adresse à
+elle (`/photos/joueur/<identifiant>`), servie comme une vraie image, que le
+navigateur met en cache une semaine. La date sert de numéro de version dans
+l'adresse : quelqu'un qui change sa photo la voit changer tout de suite, sans
+quoi le cache continuerait d'afficher l'ancienne.
+
+### Ce que le site refuse, et pourquoi
+
+L'image arrive encodée en texte dans du JSON. C'est donc du texte fourni par
+l'extérieur, qu'il faut vérifier avant d'en faire quoi que ce soit :
+
+| Ce qu'on envoie | Ce que le site répond |
+| --- | --- |
+| Un SVG | « Formats acceptés : JPEG, PNG ou WebP. » |
+| Un PDF renommé en PNG | « Ce fichier ne ressemble pas à l'image qu'il prétend être. » |
+| Une image de 490 Ko | « Image trop lourde (488 Ko, maximum 400 Ko). » |
+| Du texte quelconque | « Ce fichier n'est pas une image que le site sait lire. » |
+
+Le refus du **SVG** n'est pas un caprice : un SVG est un document qui peut
+contenir du script. Le servir depuis notre propre domaine reviendrait à
+laisser n'importe qui déposer du code sur le site.
+
+Le contrôle de **l'en-tête du fichier** non plus : sans lui, il suffirait
+d'écrire « data:image/png » devant n'importe quoi pour le faire servir comme
+une image par notre domaine.
+
+Côté accès : on ne peut changer que sa propre photo (le garde global s'en
+charge) ou celle de son propre établissement (le garde de propriété). La photo
+d'un commerce est publique — c'est une devanture, faite pour être vue. Le
+visage d'un joueur demande d'être connecté.
+
+### Ce qui se passe dans le navigateur
+
+Une photo de téléphone pèse plusieurs mégaoctets, pour finir dans une pastille
+de 42 pixels. La page la réduit avant de l'envoyer : recadrage au carré centré
+(une pastille ronde sur une photo en longueur couperait les visages n'importe
+où), 512 pixels de côté pour un joueur, 720 pour un commerce dont la photo
+s'affiche aussi en bandeau. L'envoi est instantané et la base reste légère.
 
 ## Et après ?
 

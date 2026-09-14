@@ -687,7 +687,7 @@ async function chargerCommerces() {
     .map((commerce) =>
       fiche({
         id: commerce.id,
-        nom: escapeHtml(commerce.nom),
+        nom: `<span class="ligne-avec-avatar">${pastilleAvatar(commerce.nom, urlPhoto('commerce', commerce.id, commerce.photoVersion), 'petit')}<span class="corps">${escapeHtml(commerce.nom)}</span></span>`,
         meta: `${commerce.nombreVisites} visite${commerce.nombreVisites > 1 ? 's' : ''} · ${escapeHtml(commerce.proprietaireEmail)}`,
         champs: [
           champTexte('nom', 'Nom', commerce.nom, { large: true, requis: true }),
@@ -1012,7 +1012,12 @@ async function chargerComptes() {
       return `
         <details class="fiche" data-id="${escapeHtml(c.id)}">
           <summary class="fiche-entete">
-            <span class="nom">${escapeHtml(c.pseudo)} ${marque}</span>
+            <span class="nom">
+              <span class="ligne-avec-avatar">
+                ${pastilleAvatar(c.pseudo, urlPhoto('joueur', c.id, c.photoVersion), 'petit')}
+                <span class="corps">${escapeHtml(c.pseudo)} ${marque}</span>
+              </span>
+            </span>
             <span class="meta">${escapeHtml(ETIQUETTES_TYPE[c.type] || c.type)} · ${detail} · ${c.soldeJetons} jetons</span>
             <span class="chevron">▾</span>
           </summary>

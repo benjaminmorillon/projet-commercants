@@ -11,14 +11,20 @@ import { User, UserType } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
 import { SendFriendRequestDto } from './dto/send-friend-request.dto';
 import { Friendship, FriendshipStatut } from './friendship.entity';
+import { PhotosService } from '../photos/photos.service';
 
 export interface FriendSummary {
   id: string;
   pseudo: string;
+  // Date de la dernière photo, ou null s'il n'y en a pas. L'image elle-même
+  // n'est jamais transportée ici : la page ira la chercher à son adresse.
+  photoVersion: number | null;
 }
 
 export interface EnrichedFriendRequest extends Friendship {
   otherPseudo: string;
+  otherId: string;
+  otherPhotoVersion: number | null;
 }
 
 export interface FriendProfile {
@@ -46,6 +52,7 @@ export class FriendsService {
     private readonly unlocking: UnlockingService,
     private readonly collection: CollectionService,
     private readonly notifications: NotificationsService,
+    private readonly photos: PhotosService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -170,8 +177,15 @@ export class FriendsService {
     if (otherIds.length === 0) {
       return [];
     }
-    const others = await this.users.find({ where: { id: In(otherIds) } });
-    return others.map((u) => ({ id: u.id, pseudo: u.pseudo }));
+    const [others, photos] = await Promise.all([
+      this.users.find({ where: { id: In(otherIds) } }),
+      this.photos.versions('joueur', otherIds),
+    ]);
+    return others.map((u) => ({
+      id: u.id,
+      pseudo: u.pseudo,
+      photoVersion: photos.get(u.id) ?? null,
+    }));
   }
 
   async getFriendProfile(playerId: string, friendId: string): Promise<FriendProfile> {
@@ -200,7 +214,11 @@ export class FriendsService {
     const titres = await this.collection.getTitresEquipes([friendId]);
 
     return {
-      friend: { id: friend.id, pseudo: friend.pseudo },
+      friend: {
+        id: friend.id,
+        pseudo: friend.pseudo,
+        photoVersion: await this.photos.version('joueur', friend.id),
+      },
       titre: titres.get(friendId) ?? null,
       profile: profile ?? null,
       missionsAccomplies: validated.map((v) => ({
@@ -219,11 +237,16 @@ export class FriendsService {
       return [];
     }
     const otherIds = [...new Set(rows.map(otherIdOf))];
-    const others = await this.users.find({ where: { id: In(otherIds) } });
+    const [others, photos] = await Promise.all([
+      this.users.find({ where: { id: In(otherIds) } }),
+      this.photos.versions('joueur', otherIds),
+    ]);
     const byId = new Map(others.map((u) => [u.id, u.pseudo]));
     return rows.map((row) => ({
       ...row,
+      otherId: otherIdOf(row),
       otherPseudo: byId.get(otherIdOf(row)) ?? 'Joueur',
+      otherPhotoVersion: photos.get(otherIdOf(row)) ?? null,
     }));
   }
 }

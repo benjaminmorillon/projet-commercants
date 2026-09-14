@@ -143,6 +143,17 @@
 
     <section id="compte-section" class="card" hidden>
       <h2>Ton compte</h2>
+
+      <div class="bloc-avatar">
+        <div id="mon-avatar"></div>
+        <div class="actions-avatar">
+          <button type="button" class="bouton-photo" id="btn-photo">Ajouter une photo</button>
+          <button type="button" class="bouton-photo retirer" id="btn-retirer-photo" hidden>Retirer ma photo</button>
+          <p class="hint" id="photo-aide">Elle apparaîtra sur ton profil et auprès de tes amis.</p>
+        </div>
+        <input type="file" id="fichier-photo" accept="image/jpeg,image/png,image/webp" hidden />
+      </div>
+
       <p class="hint" id="compte-identite"></p>
 
       <h3>Notifications</h3>

@@ -14,6 +14,8 @@ import { CreateMissionDto } from '../missions/dto/create-mission.dto';
 import { VOCABULAIRE } from '../missions/vocabulaire';
 import { Admin } from './admin.guard';
 import { ContenusService, Modification } from './contenus.service';
+import { abreger } from './geocodage/reponse-nominatim';
+import { GeocodageService } from './geocodage/geocodage.service';
 import { JournalService } from './journal.service';
 
 interface RequeteAdmin {
@@ -26,7 +28,23 @@ export class ContenusController {
   constructor(
     private readonly contenus: ContenusService,
     private readonly journal: JournalService,
+    private readonly geocodage: GeocodageService,
   ) {}
+
+  /**
+   * Cherche une adresse et rend les points correspondants.
+   *
+   * C'est ce qui remplace la saisie de coordonnées : on tape une adresse,
+   * on choisit dans la liste, le point est placé. Personne n'a à savoir ce
+   * qu'est une longitude.
+   */
+  @Get('adresses')
+  async chercherAdresse(@Query('q') q?: string) {
+    const adresses = await this.geocodage.chercher(q ?? '');
+    return {
+      adresses: adresses.map((a) => ({ ...a, resume: abreger(a.libelle) })),
+    };
+  }
 
   /** Les listes déroulantes du formulaire de mission. */
   @Get('vocabulaire')

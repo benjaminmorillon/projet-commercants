@@ -685,3 +685,104 @@ body.admin {
   padding: 1px 7px;
   white-space: nowrap;
 }
+
+/* --- La position d'un commerce, sans coordonnées ------------------------- */
+
+.ligne-adresse {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.ligne-adresse input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ligne-adresse button {
+  flex: none;
+}
+
+.propositions {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 8px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+.proposition {
+  background: var(--card);
+  border: none;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  padding: 9px 12px;
+  cursor: pointer;
+}
+
+.proposition:hover {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.propositions-etat {
+  background: var(--card);
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+.propositions-etat.ko {
+  color: var(--negative);
+}
+
+.bloc-position .etiquette-position {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  letter-spacing: 0.01em;
+  margin-bottom: 4px;
+}
+
+.bloc-position .aide-position {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+/* La carte a besoin d'une hauteur explicite : Leaflet ne s'installe pas dans
+   un conteneur de hauteur nulle. */
+.carte-position {
+  height: 240px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--raised);
+}
+
+.etat-position {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+.etat-position.modifie {
+  color: var(--warn);
+  font-weight: 500;
+}
+
+/* Leaflet pose son propre fond blanc sur les commandes : on les aligne sur
+   le reste du back-office sans les redessiner. */
+.carte-position .leaflet-control-attribution {
+  font-size: 10px;
+}

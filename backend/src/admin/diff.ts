@@ -10,6 +10,8 @@
 // Aucune base de données, donc faciles à tester.
 // ---------------------------------------------------------------------------
 
+import { distanceInMeters } from '../checkins/geo';
+
 export interface Changement {
   champ: string;
   /** Le nom lisible du champ, tel qu'il apparaît dans le journal. */
@@ -99,4 +101,50 @@ export function resumer(sujet: string, liste: Changement[]): string {
     .join(' ; ');
 
   return `${sujet} — ${details}`;
+}
+
+/**
+ * Remplace un déplacement de latitude/longitude par une phrase en mètres.
+ *
+ * Le journal est lu par la même personne que l'interface, et l'interface ne
+ * parle jamais de coordonnées. « position : déplacée de 1145 m » dit tout ce
+ * qu'il y a à savoir ; « latitude : 48.8531 → 48.8601 » ne dit rien à
+ * personne, pas même à qui l'a écrit.
+ *
+ * `actuelle` est la position AVANT modification : elle fournit le côté qui
+ * manque quand une seule des deux coordonnées a bougé — ce qui arrive dès
+ * qu'on glisse le point plein nord.
+ *
+ * Les coordonnées restent celles qu'on enregistre : c'est seulement leur
+ * récit qui change.
+ */
+export function fusionnerPosition(
+  liste: Changement[],
+  actuelle: { latitude: number; longitude: number },
+): Changement[] {
+  const lat = liste.find((c) => c.champ === 'latitude');
+  const lon = liste.find((c) => c.champ === 'longitude');
+
+  if (!lat && !lon) {
+    return liste;
+  }
+
+  const metres = Math.round(
+    distanceInMeters(
+      actuelle.latitude,
+      actuelle.longitude,
+      lat ? Number(lat.apres) : actuelle.latitude,
+      lon ? Number(lon.apres) : actuelle.longitude,
+    ),
+  );
+
+  return [
+    ...liste.filter((c) => c.champ !== 'latitude' && c.champ !== 'longitude'),
+    {
+      champ: 'position',
+      libelle: 'position',
+      avant: 'point précédent',
+      apres: `déplacée de ${metres} m`,
+    },
+  ];
 }

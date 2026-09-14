@@ -1,4 +1,4 @@
-import { changements, resumer } from './diff';
+import { changements, fusionnerPosition, resumer } from './diff';
 
 const LIBELLES = {
   nom: 'nom',
@@ -120,5 +120,69 @@ describe('affichage des dates dans le journal', () => {
       { champ: 'titre', libelle: 'titre', avant: 'a', apres: 'Soirée du 24-12-2026' },
     ]);
     expect(phrase).toContain('Soirée du 24-12-2026');
+  });
+});
+
+describe('fusionnerPosition', () => {
+  const actuelle = { latitude: 48.8531, longitude: 2.3755 };
+
+  it('remplace latitude et longitude par une distance en mètres', () => {
+    const liste = fusionnerPosition(
+      [
+        { champ: 'latitude', libelle: 'latitude', avant: 48.8531, apres: 48.8601163 },
+        { champ: 'longitude', libelle: 'longitude', avant: 2.3755, apres: 2.3640449 },
+      ],
+      actuelle,
+    );
+
+    expect(liste).toHaveLength(1);
+    expect(liste[0].champ).toBe('position');
+    expect(String(liste[0].apres)).toMatch(/^déplacée de \d+ m$/);
+  });
+
+  // Glisser le point plein nord ne change que la latitude : la longitude
+  // manquante doit être reprise de la position actuelle, pas mise à zéro —
+  // sinon la distance annoncée serait celle d'un voyage jusqu'en Afrique.
+  it('reprend la coordonnée qui n’a pas bougé au lieu de l’oublier', () => {
+    const liste = fusionnerPosition(
+      [{ champ: 'latitude', libelle: 'latitude', avant: 48.8531, apres: 48.8540 }],
+      actuelle,
+    );
+
+    const metres = Number(/(\d+)/.exec(String(liste[0].apres))![1]);
+    // 0,0009° de latitude ≈ 100 m. Si la longitude avait été mise à zéro, on
+    // lirait des centaines de kilomètres.
+    expect(metres).toBeGreaterThan(80);
+    expect(metres).toBeLessThan(120);
+  });
+
+  it('laisse les autres changements intacts', () => {
+    const liste = fusionnerPosition(
+      [
+        { champ: 'nom', libelle: 'nom', avant: 'A', apres: 'B' },
+        { champ: 'latitude', libelle: 'latitude', avant: 48.8531, apres: 48.854 },
+      ],
+      actuelle,
+    );
+
+    expect(liste.map((c) => c.champ)).toEqual(['nom', 'position']);
+  });
+
+  it('ne touche à rien quand la position n’a pas bougé', () => {
+    const liste = [{ champ: 'nom', libelle: 'nom', avant: 'A', apres: 'B' }];
+    expect(fusionnerPosition(liste, actuelle)).toBe(liste);
+  });
+
+  it('produit une phrase lisible dans le journal', () => {
+    const liste = fusionnerPosition(
+      [
+        { champ: 'latitude', libelle: 'latitude', avant: 48.8531, apres: 48.8601163 },
+        { champ: 'longitude', libelle: 'longitude', avant: 2.3755, apres: 2.3640449 },
+      ],
+      actuelle,
+    );
+    expect(resumer('Bar Le Comptoir', liste)).toMatch(
+      /^Bar Le Comptoir — position : point précédent → déplacée de \d+ m$/,
+    );
   });
 });

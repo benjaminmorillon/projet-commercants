@@ -551,6 +551,7 @@ projet-commercants/
     │   ├── catalogue-reglages.spec.ts ← ses tests
     │   ├── reglages.service.ts        ← lecture en mémoire, écriture en base
     │   ├── contenus.service.ts        ← commerces, missions, événements
+    │   ├── geocodage/                 ← trouver un point à partir d'une adresse
     │   ├── diff.ts / diff.spec.ts     ← ce qui a changé, et comment le raconter
     │   ├── admin.guard.ts             ← le droit d'administrer
     │   ├── journal-admin.entity.ts    ← le journal des modifications
@@ -643,12 +644,31 @@ Trois choses à savoir :
 Trois pages de plus, qui partagent le même geste : une fiche repliée montre
 l'essentiel, un clic la déplie en formulaire.
 
-**Commerces.** Nom, adresse, type, capacité, note Google et surtout les
-coordonnées GPS — c'est sur elles que le site vérifie qu'un joueur est
-physiquement sur place. Une latitude ou une longitude hors du monde est
-refusée : elle déplacerait le lieu au milieu de nulle part, la carte
-s'afficherait encore mais plus aucun check-in ne serait possible, et personne
-ne comprendrait pourquoi.
+**Commerces.** Nom, adresse, type, capacité, note Google, et la position.
+
+**La position ne se saisit jamais en chiffres.** Personne ne sait ce qu'est une
+longitude, et personne ne devrait avoir à l'apprendre pour corriger une fiche.
+Deux façons de placer le point, qui couvrent tous les cas :
+
+1. **écrire l'adresse et cliquer sur « Chercher »** — le site interroge le
+   service d'adresses d'OpenStreetMap et propose ce qu'il a trouvé, en clair
+   (« 12, Rue de Turenne — 75003 Paris ») ; on clique sur la bonne, le point se
+   place ;
+2. **déplacer le point à la main sur la carte** — pour l'entrée de service au
+   fond de la cour, que le service d'adresses ne connaît pas.
+
+Le site dit ensuite ce qu'il a compris, en français : « Point déplacé sur
+l'adresse choisie, à 1145 m de l'ancien. Enregistrez pour valider. » Et le
+journal écrit « position : déplacée de 100 m », pas « latitude : 48,8531 →
+48,8540 » — le journal est lu par la même personne que l'interface.
+
+Les coordonnées existent toujours en base : c'est ce qui fait marcher la
+vérification de présence. Elles ne sont simplement jamais montrées comme des
+nombres à comprendre.
+
+Côté commerçant, rien à faire : la page d'inscription demandait déjà la
+position au navigateur, le commerçant étant par définition sur place quand il
+crée sa fiche.
 
 Un commerce ne se supprime pas depuis cet écran, et l'interface le dit au lieu
 de proposer un bouton qui échouerait : ses visites, ses missions, ses

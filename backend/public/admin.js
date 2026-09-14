@@ -472,7 +472,200 @@ function brancherListe(conteneurId, { chemin, recharger, nomPourConfirmation }) 
   });
 }
 
+
+// ---------------------------------------------------------------------------
+// La position d'un commerce, sans jamais parler de coordonnées.
+//
+// Personne ne sait ce qu'est une longitude, et personne ne devrait avoir à
+// l'apprendre pour corriger une fiche. Deux façons de placer le point, qui
+// couvrent tous les cas :
+//
+//   1. écrire l'adresse et cliquer sur « Chercher » — le site propose les
+//      adresses trouvées, on choisit la bonne ;
+//   2. déplacer le point à la main sur la carte, pour l'entrée de service au
+//      fond de la cour que le service d'adresses ne connaît pas.
+//
+// Les coordonnées existent toujours en base — c'est ce qui fait marcher la
+// vérification de présence — mais elles ne sont ni saisies ni affichées comme
+// des nombres à comprendre. On dit « à 30 m de l'adresse », pas « 48,8601 ».
+// ---------------------------------------------------------------------------
+
+function champAdresse(commerce) {
+  return `
+    <label class="pleine-largeur bloc-adresse">
+      Adresse
+      <div class="ligne-adresse">
+        <input type="text" name="adresse" value="${escapeHtml(commerce.adresse ?? '')}" required />
+        <button type="button" class="bouton-discret" data-chercher-adresse>Chercher</button>
+      </div>
+      <div class="propositions" data-role="propositions" hidden></div>
+    </label>`;
+}
+
+function champPosition(commerce) {
+  return `
+    <div class="pleine-largeur bloc-position">
+      <span class="etiquette-position">Emplacement exact</span>
+      <p class="aide-position">
+        Déplacez le point si l'entrée n'est pas exactement à l'adresse postale.
+        C'est de ce point que part le rayon dans lequel un joueur peut valider sa venue.
+      </p>
+      <div class="carte-position" data-role="carte"
+           data-latitude="${commerce.latitude}" data-longitude="${commerce.longitude}"></div>
+      <p class="etat-position" data-role="etat-position"></p>
+      <input type="hidden" name="latitude" value="${commerce.latitude}" />
+      <input type="hidden" name="longitude" value="${commerce.longitude}" />
+    </div>`;
+}
+
+/** Distance à vol d'oiseau entre deux points, en mètres (formule de Haversine). */
+function distanceEnMetres(lat1, lon1, lat2, lon2) {
+  const RAYON_TERRE = 6371000;
+  const rad = (d) => (d * Math.PI) / 180;
+  const dLat = rad(lat2 - lat1);
+  const dLon = rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return RAYON_TERRE * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Installe la carte d'une fiche, une seule fois, au moment où on la déplie.
+ *
+ * Construire cinq cartes au chargement de la page pour cinq commerces dont on
+ * n'en ouvrira qu'un serait du gâchis — et Leaflet a besoin que son conteneur
+ * soit visible pour se dimensionner correctement.
+ */
+function installerCarte(fiche) {
+  const conteneur = fiche.querySelector('[data-role="carte"]');
+  if (!conteneur || conteneur.dataset.prete === 'oui') {
+    return;
+  }
+  conteneur.dataset.prete = 'oui';
+
+  const depart = [Number(conteneur.dataset.latitude), Number(conteneur.dataset.longitude)];
+  const carte = L.map(conteneur).setView(depart, 17);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap',
+  }).addTo(carte);
+
+  const point = L.marker(depart, { draggable: true }).addTo(carte);
+  point.bindTooltip('Glissez-moi', { permanent: false });
+
+  const posent = (lat, lon, origine) => {
+    point.setLatLng([lat, lon]);
+    carte.setView([lat, lon], Math.max(carte.getZoom(), 17));
+    fiche.querySelector('input[name="latitude"]').value = lat;
+    fiche.querySelector('input[name="longitude"]').value = lon;
+    direPosition(fiche, origine);
+  };
+
+  point.on('dragend', () => {
+    const { lat, lng } = point.getLatLng();
+    posent(lat, lng, 'deplace');
+  });
+
+  // Le conteneur vient d'apparaître : Leaflet doit remesurer sa taille.
+  window.setTimeout(() => carte.invalidateSize(), 60);
+
+  fiche.dataset.carteInstallee = 'oui';
+  fiche.__posent = posent;
+  fiche.__depart = depart;
+  direPosition(fiche, 'initial');
+}
+
+/** Dit où en est le point, en français et sans chiffre technique. */
+function direPosition(fiche, origine) {
+  const zone = fiche.querySelector('[data-role="etat-position"]');
+  if (!zone) return;
+
+  const depart = fiche.__depart;
+  const lat = Number(fiche.querySelector('input[name="latitude"]').value);
+  const lon = Number(fiche.querySelector('input[name="longitude"]').value);
+  const ecart = Math.round(distanceEnMetres(depart[0], depart[1], lat, lon));
+
+  if (origine === 'initial' || ecart === 0) {
+    zone.textContent = 'Point enregistré actuellement.';
+    zone.className = 'etat-position';
+    return;
+  }
+
+  zone.textContent =
+    origine === 'adresse'
+      ? `Point déplacé sur l'adresse choisie, à ${ecart} m de l'ancien. Enregistrez pour valider.`
+      : `Point déplacé à la main, à ${ecart} m de l'ancien. Enregistrez pour valider.`;
+  zone.className = 'etat-position modifie';
+}
+
+/** Cherche l'adresse saisie et propose les résultats. */
+async function chercherAdresse(fiche) {
+  const zone = fiche.querySelector('[data-role="propositions"]');
+  const adresse = fiche.querySelector('input[name="adresse"]').value.trim();
+
+  zone.hidden = false;
+  zone.innerHTML = '<span class="propositions-etat">Recherche…</span>';
+
+  try {
+    const { adresses } = await api(`/admin/adresses?q=${encodeURIComponent(adresse)}`);
+
+    if (adresses.length === 0) {
+      zone.innerHTML =
+        '<span class="propositions-etat">Aucune adresse trouvée. Essayez une écriture plus complète, ou placez le point à la main sur la carte.</span>';
+      return;
+    }
+
+    zone.innerHTML = adresses
+      .map(
+        (a) => `
+        <button type="button" class="proposition"
+                data-latitude="${a.latitude}" data-longitude="${a.longitude}">
+          ${escapeHtml(a.resume)}
+        </button>`,
+      )
+      .join('');
+  } catch (erreur) {
+    zone.innerHTML = `<span class="propositions-etat ko">${escapeHtml(erreur.message)}</span>`;
+  }
+}
+
+// Un seul écouteur pour toute la liste : les fiches sont reconstruites à
+// chaque rechargement, des écouteurs posés sur chacune s'accumuleraient.
+document.getElementById('liste-commerces').addEventListener('click', async (evenement) => {
+  const fiche = evenement.target.closest('.fiche');
+  if (!fiche) return;
+
+  if (evenement.target.closest('[data-chercher-adresse]')) {
+    await chercherAdresse(fiche);
+    return;
+  }
+
+  const proposition = evenement.target.closest('.proposition');
+  if (proposition && fiche.__posent) {
+    fiche.__posent(
+      Number(proposition.dataset.latitude),
+      Number(proposition.dataset.longitude),
+      'adresse',
+    );
+    fiche.querySelector('[data-role="propositions"]').hidden = true;
+  }
+});
+
+// La carte se construit quand la fiche s'ouvre, pas avant.
+document.getElementById('liste-commerces').addEventListener(
+  'toggle',
+  (evenement) => {
+    if (evenement.target.matches('.fiche') && evenement.target.open) {
+      installerCarte(evenement.target);
+    }
+  },
+  true,
+);
+
 // --- Commerces -------------------------------------------------------------
+
 
 async function chargerCommerces() {
   const commerces = await api('/admin/commerces');
@@ -487,23 +680,11 @@ async function chargerCommerces() {
         meta: `${commerce.nombreVisites} visite${commerce.nombreVisites > 1 ? 's' : ''} · ${escapeHtml(commerce.proprietaireEmail)}`,
         champs: [
           champTexte('nom', 'Nom', commerce.nom, { large: true, requis: true }),
-          champTexte('adresse', 'Adresse', commerce.adresse, { large: true, requis: true }),
+          champAdresse(commerce),
           champTexte('typeEtablissement', "Type d'établissement", commerce.typeEtablissement),
           champTexte('capaciteEstimee', 'Capacité estimée', commerce.capaciteEstimee, {
             type: 'number',
             min: 1,
-          }),
-          champTexte('latitude', 'Latitude', commerce.latitude, {
-            type: 'number',
-            step: 'any',
-            min: -90,
-            max: 90,
-          }),
-          champTexte('longitude', 'Longitude', commerce.longitude, {
-            type: 'number',
-            step: 'any',
-            min: -180,
-            max: 180,
           }),
           champTexte('noteGoogle', 'Note Google (sur 5)', commerce.noteGoogle, {
             type: 'number',
@@ -511,6 +692,7 @@ async function chargerCommerces() {
             min: 0,
             max: 5,
           }),
+          champPosition(commerce),
         ].join(''),
         // On ne supprime pas un commerce depuis ici : ses visites, ses
         // missions, ses événements et ses mouvements de jetons y renvoient.

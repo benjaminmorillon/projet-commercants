@@ -9,7 +9,7 @@ import { Event } from '../events/event.entity';
 import { Mission } from '../missions/mission.entity';
 import { User } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
-import { changements, Changement, Libelles, resumer } from './diff';
+import { changements, Changement, fusionnerPosition, Libelles, resumer } from './diff';
 
 // Les champs qu'on accepte de modifier, et leur nom dans le journal. Ce qui
 // n'est pas dans ces tables n'est pas modifiable — un identifiant ou une date
@@ -105,7 +105,14 @@ export class ContenusService {
       await this.businesses.update({ id }, this.patch(liste));
     }
 
-    return { changements: liste, resume: resumer(commerce.nom, liste) };
+    // Ce qu'on enregistre, ce sont bien les coordonnées. Ce qu'on RACONTE au
+    // journal, c'est un déplacement en mètres : personne ne lit une latitude.
+    const pourLeJournal = fusionnerPosition(liste, {
+      latitude: commerce.latitude,
+      longitude: commerce.longitude,
+    });
+
+    return { changements: pourLeJournal, resume: resumer(commerce.nom, pourLeJournal) };
   }
 
   // --- Missions ----------------------------------------------------------

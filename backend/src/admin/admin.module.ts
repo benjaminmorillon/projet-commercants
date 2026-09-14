@@ -11,6 +11,7 @@ import { MissionValidation } from '../validations/mission-validation.entity';
 import { AdminController } from './admin.controller';
 import { ContenusController } from './contenus.controller';
 import { ContenusService } from './contenus.service';
+import { GeocodageService } from './geocodage/geocodage.service';
 import { AdminGuard } from './admin.guard';
 import { JournalAdmin } from './journal-admin.entity';
 import { JournalService } from './journal.service';
@@ -40,7 +41,7 @@ import { ReglagesService } from './reglages.service';
     ]),
   ],
   controllers: [AdminController, ContenusController],
-  providers: [ReglagesService, JournalService, ContenusService, AdminGuard],
+  providers: [ReglagesService, JournalService, ContenusService, GeocodageService, AdminGuard],
   exports: [ReglagesService, JournalService],
 })
 export class AdminModule {}

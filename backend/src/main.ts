@@ -33,6 +33,27 @@ async function bootstrap() {
     app.set('trust proxy', 1);
   }
 
+  // ---------------------------------------------------------------------
+  // Requêtes venues d'une autre adresse (CORS).
+  //
+  // L'application mobile native n'en a pas besoin : un téléphone n'applique
+  // pas la règle de même origine. Mais pendant le développement, l'aperçu web
+  // de l'application (`npm run web` dans mobile/) tourne sur le port 8081 et
+  // appelle le serveur sur le 3000 — deux origines différentes, que le
+  // navigateur refuse de faire communiquer sans autorisation explicite.
+  //
+  // Uniquement HORS PRODUCTION, et sans `credentials` : le jeton du mobile
+  // voyage dans un en-tête, jamais dans un cookie. Le site web, lui, est
+  // servi par ce même serveur — il est donc de même origine et n'a rien à
+  // voir avec ceci.
+  if (!enProduction()) {
+    app.enableCors({
+      origin: true,
+      credentials: false,
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Client'],
+    });
+  }
+
   app.use(json({ limit: TAILLE_MAXIMALE_REQUETE }));
   app.use(urlencoded({ extended: true, limit: TAILLE_MAXIMALE_REQUETE }));
   app.use(entetesDeSecurite);

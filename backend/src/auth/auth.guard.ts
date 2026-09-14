@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthService } from './auth.service';
-import { lireCookie, NOM_COOKIE_SESSION } from './cookies';
+import { jetonDeLaRequete } from './cookies';
 import { CLE_ADMIN } from '../admin/admin.decorator';
 import { CLE_AUTRE_JOUEUR, CLE_PUBLIC } from './public.decorator';
 
@@ -35,7 +35,9 @@ export class AuthGuard implements CanActivate {
     }
 
     const requete = contexte.switchToHttp().getRequest();
-    const jeton = lireCookie(requete.headers?.cookie, NOM_COOKIE_SESSION);
+    // Cookie pour le navigateur, en-tête Authorization pour le téléphone :
+    // le garde ne fait pas la différence, il lui faut juste un jeton.
+    const jeton = jetonDeLaRequete(requete.headers ?? {});
     const utilisateur = await this.auth.utilisateurDuJeton(jeton);
 
     if (!utilisateur) {

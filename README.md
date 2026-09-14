@@ -911,11 +911,100 @@ héritée par la cloche et par les onglets, qui n'ont pas de fond violet pour la
 porter. Elle est maintenant retirée explicitement sur chaque variante — une
 lueur appartient au fond qui la justifie.
 
+## L'application mobile
+
+Le dossier `mobile/` contient l'application iOS et Android, en React Native
+avec Expo. Elle parle au **même serveur** que le site : toute la logique du
+jeu — missions, jetons, check-in, rééquilibrage, réglages — est déjà écrite et
+n'a pas été réécrite une deuxième fois.
+
+### La lancer
+
+Deux terminaux. Dans le premier, le serveur :
+
+```bash
+cd backend
+npm start
+```
+
+Dans le second, l'application :
+
+```bash
+cd mobile
+npm install       # la première fois seulement
+npm start         # puis scanner le QR code avec Expo Go sur votre téléphone
+```
+
+Pour la voir **sans téléphone**, dans un navigateur :
+
+```bash
+cd mobile
+npm run web
+```
+
+Le téléphone et l'ordinateur doivent être sur le même réseau Wi-Fi :
+l'application trouve toute seule l'adresse du serveur à partir de celle
+d'Expo, donc il n'y a rien à configurer.
+
+### Le jeton, et pourquoi ce n'est pas un cookie
+
+Sur le site, la session voyage dans un cookie `httpOnly` : le JavaScript de la
+page ne peut pas le lire, donc un script injecté ne peut pas le voler.
+
+Sur un téléphone, il n'y a pas de navigateur pour porter un cookie, ni de page
+web dans laquelle un script étranger pourrait s'injecter. Le serveur remet
+donc le jeton à l'application, qui le range **dans le coffre du téléphone**
+(Keychain sur iOS, Keystore sur Android — chiffré par le système) et le
+renvoie dans l'en-tête `Authorization` à chaque requête.
+
+C'est le client qui annonce ce qu'il est, par un en-tête `X-Client: mobile`.
+Le navigateur, lui, ne le demande pas : ses réponses ne contiennent donc jamais
+le jeton, et rien n'a changé pour le site.
+
+**Une réserve à connaître sur l'aperçu web** : un navigateur n'a ni Keychain
+ni Keystore. En mode `npm run web`, le jeton va dans le stockage local du
+navigateur, qui n'est pas un coffre. C'est une commodité pour regarder
+l'application sans téléphone, pas une façon de la mettre entre les mains du
+public — l'application livrée est native.
+
+### Ce qu'il y a pour l'instant
+
+- l'écran de connexion et d'inscription ;
+- l'écran « Mon profil » : photo ou initiales, progression et niveau, solde de
+  jetons, les quatre scores de style de jeu ;
+- le système de design repris de l'identité du site, à l'identique.
+
+### Ce qu'il n'y a pas encore
+
+La carte, les missions, les duos, les amis, le check-in. C'est la suite : les
+routes du serveur existent déjà et sont utilisées par le site, il ne reste que
+les écrans à écrire.
+
+### Où sont les choses
+
+```
+mobile/
+├── app/                        Les écrans (un fichier = un écran)
+│   ├── _layout.tsx                 ← la racine : qui est connecté, où l'on va
+│   ├── connexion.tsx               ← connexion et inscription
+│   └── (onglets)/                  ← la barre d'onglets du bas
+│       ├── _layout.tsx
+│       └── index.tsx               ← Mon profil
+└── src/
+    ├── api/
+    │   ├── client.ts               ← le SEUL endroit qui parle au serveur
+    │   ├── coffre.ts               ← où ranger le jeton, selon la plateforme
+    │   └── session.tsx             ← qui est connecté, et comment ça change
+    └── design/
+        ├── theme.ts                ← les couleurs, reprises du site
+        └── composants.tsx          ← bouton, champ, carte, badge, pastille
+```
+
 ## Et après ?
 
 Les grandes briques fonctionnelles des specs sont implémentées, et le site se
 pilote entièrement depuis l'espace d'administration, sans toucher au code. Ce
 qui reste, c'est le passage du prototype à un vrai produit :
 
-- **L'appli mobile** (React Native) — toute la logique est déjà côté serveur et réutilisable telle quelle ; il reste à refaire l'interface.
+- **Les écrans qui manquent à l'application mobile** — la carte, les missions, les duos, les amis, le check-in.
 - **Les vrais paiements** — la mécanique des jetons est prête et attend un prestataire ; le brancher suppose un statut juridique, des vérifications d'identité et la conservation des justificatifs.

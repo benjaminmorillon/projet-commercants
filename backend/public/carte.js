@@ -173,8 +173,27 @@ const STYLE_PLAN = {
     },
   },
   layers: [
-    { id: 'fond-couleur', type: 'background', paint: { 'background-color': '#e9e7e2' } },
-    { id: 'osm', type: 'raster', source: 'osm' },
+    // Le fond bleu-nuit de l'interface, posé SOUS les tuiles.
+    { id: 'fond-couleur', type: 'background', paint: { 'background-color': '#0b0913' } },
+    {
+      id: 'osm',
+      type: 'raster',
+      source: 'osm',
+      // OpenStreetMap ne fournit que des tuiles claires. Plutôt que d'aller
+      // chercher un autre fournisseur, on les assombrit ici : MapLibre sait
+      // le faire nativement sur une couche raster, sans toucher à nos
+      // propres marqueurs qui, eux, doivent rester lumineux.
+      //
+      // Le résultat : les rues se devinent en gris violacé sur le noir, et
+      // ce sont les lieux et les missions qui ressortent — ce qu'on veut
+      // regarder sur une carte de jeu.
+      paint: {
+        'raster-opacity': 0.6,
+        'raster-saturation': -0.7,
+        'raster-brightness-max': 0.55,
+        'raster-contrast': 0.08,
+      },
+    },
   ],
 };
 

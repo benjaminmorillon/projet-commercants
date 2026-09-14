@@ -1,53 +1,87 @@
 /* ===========================================================================
    Projet Commerçant — système de design
-   Parti pris : peu de couleur, beaucoup de blanc, une typographie qui porte
-   la hiérarchie. La couleur vient du contenu (la carte, les objets, les
-   icônes), pas de l'interface.
+
+   Parti pris : la nuit.
+
+   Le jeu se joue le soir, dehors, en ville. L'interface prend le même parti :
+   un fond bleu-nuit très sombre, des surfaces à peine plus claires posées
+   dessus, et UNE couleur vive — un violet — réservée à ce sur quoi on agit.
+   Tout le reste est en nuances de gris violacé.
+
+   Trois règles qui tiennent tout :
+
+   1. la couleur vive ne sert qu'à l'action (un bouton, un onglet actif, une
+      pastille sélectionnée). Si tout est violet, plus rien ne ressort ;
+   2. la hiérarchie se fait par la LUMIÈRE, pas par le trait : plus un élément
+      est proche de l'utilisateur, plus sa surface est claire ;
+   3. le vert, le rouge et l'orange sont réservés au sens (réussi, refusé,
+      attention). Jamais pour décorer.
    =========================================================================== */
 
 @import url('vendor/inter/inter.css');
 
 :root {
-  color-scheme: light;
+  /* Indique au navigateur de dessiner ses propres éléments (barres de
+     défilement, sélecteurs de date, cases à cocher) en sombre. Sans ça, on
+     obtient des rectangles blancs éblouissants au milieu de la page. */
+  color-scheme: dark;
 
-  /* Surfaces — des gris chauds plutôt que des gris bleutés. */
-  --paper: #f4f3f0;
-  --card: #ffffff;
-  --raised: #faf9f7;
+  /* --- Surfaces -----------------------------------------------------------
+     Du plus profond au plus proche. Un bleu-violet très désaturé plutôt
+     qu'un gris neutre : c'est ce qui donne à l'ensemble sa couleur de nuit
+     au lieu d'un noir d'écran éteint. */
+  --nuit: #0b0913;
+  --paper: #100d1b;
+  --card: #171327;
+  --raised: #1e1932;
+  --haut: #282141;
 
-  /* Encres */
-  --ink: #15161a;
-  --ink-muted: #6c7077;
-  --ink-faint: #9ca0a7;
+  /* --- Encres ------------------------------------------------------------- */
+  --ink: #f3f1fa;
+  --ink-muted: #a49dbe;
+  --ink-faint: #6f6789;
   --ink-invert: #ffffff;
 
-  /* Traits */
-  --line: #e7e5e0;
-  --line-strong: #d7d4cd;
+  /* --- Traits -------------------------------------------------------------
+     Très discrets : sur fond sombre, un trait franc découpe l'interface en
+     morceaux au lieu de la structurer. C'est la différence de surface qui
+     sépare, le trait ne fait que la souligner. */
+  --line: #241e3a;
+  --line-strong: #342c52;
 
-  /* Une seule couleur d'accent dans toute l'interface. */
-  --accent: #1f5f50;
-  --accent-soft: #eaf1ee;
-  --accent-ink: #17463c;
+  /* --- L'accent -----------------------------------------------------------
+     Un violet lumineux, la seule couleur vive de l'interface. */
+  --accent: #7c5cff;
+  --accent-clair: #9d85ff;
+  --accent-fonce: #6344e8;
+  --accent-soft: rgba(124, 92, 255, 0.14);
+  --accent-ink: #c3b2ff;
 
-  /* Sémantique, uniquement là où le sens l'exige. */
-  --positive: #1f7a4d;
-  --negative: #b42318;
-  --warn: #9a5b0b;
-  --warn-soft: #fdf6ec;
+  /* --- Sémantique, uniquement là où le sens l'exige ----------------------- */
+  --positive: #34d399;
+  --positive-soft: rgba(52, 211, 153, 0.14);
+  --negative: #fb7185;
+  --negative-soft: rgba(251, 113, 133, 0.14);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.13);
 
-  /* Rythme */
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 18px;
+  /* --- Rythme -------------------------------------------------------------
+     Des arrondis plus généreux qu'en clair : sur fond sombre, un angle vif
+     accroche l'œil et durcit l'ensemble. */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
   --r-full: 999px;
 
-  --shadow-sm: 0 1px 2px rgba(21, 22, 26, 0.04);
-  --shadow-md: 0 4px 16px rgba(21, 22, 26, 0.07);
-  --shadow-lg: 0 18px 48px rgba(21, 22, 26, 0.16);
+  /* Sur fond sombre une ombre portée ne se voit pas : ce qui donne le relief,
+     c'est un liseré clair sur le bord haut, comme une lumière rasante. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
+  --lueur-accent: 0 6px 22px rgba(124, 92, 255, 0.32);
 
-  --appbar-h: 52px;
-  --tabbar-h: 60px;
+  --appbar-h: 54px;
+  --tabbar-h: 62px;
 }
 
 * {
@@ -90,8 +124,8 @@ body {
   justify-content: space-between;
   gap: 12px;
   padding: 0 20px;
-  background: rgba(244, 243, 240, 0.97);
-  backdrop-filter: saturate(180%) blur(14px);
+  background: rgba(16, 13, 27, 0.88);
+  backdrop-filter: saturate(160%) blur(16px);
   border-bottom: 1px solid var(--line);
 }
 
@@ -156,7 +190,7 @@ body {
 }
 
 .cloche:hover:not(:disabled) {
-  background: rgba(21, 22, 26, 0.05);
+  background: var(--raised);
   border: none;
   color: var(--ink);
 }
@@ -180,7 +214,7 @@ body {
   padding: 0 4px;
   border-radius: var(--r-full);
   background: var(--accent);
-  color: #fff;
+  color: var(--ink-invert);
   font-size: 0.6rem;
   font-weight: 700;
   line-height: 16px;
@@ -230,8 +264,8 @@ body {
   padding-left: max(0px, calc((100% - 560px) / 2));
   padding-right: max(0px, calc((100% - 560px) / 2));
   display: flex;
-  background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: saturate(180%) blur(16px);
+  background: rgba(23, 19, 39, 0.92);
+  backdrop-filter: saturate(160%) blur(18px);
   border-top: 1px solid var(--line);
 }
 
@@ -289,7 +323,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(21, 22, 26, 0.28);
+  background: rgba(0, 0, 0, 0.50);
   backdrop-filter: blur(2px);
 }
 
@@ -480,7 +514,10 @@ h4 {
 }
 
 .card {
-  background: var(--card);
+  /* Un dégradé imperceptible du haut vers le bas : c'est ce qui donne
+     l'impression qu'une lumière tombe sur la carte, et qui décolle chaque
+     bloc du fond sans avoir à cerner quoi que ce soit d'un trait franc. */
+  background: linear-gradient(180deg, var(--raised) 0%, var(--card) 58%);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   padding: 24px 22px;
@@ -572,7 +609,10 @@ textarea {
   padding: 12px 14px;
   border: 1px solid var(--line-strong);
   border-radius: var(--r-md);
-  background: var(--card);
+  /* Un champ est CREUSÉ dans la carte : sa surface est plus sombre qu'elle,
+     là où un bouton est posé dessus et donc plus clair. C'est ce qui fait
+     comprendre au premier coup d'œil ce qui se remplit et ce qui se clique. */
+  background: var(--nuit);
   color: var(--ink);
   font-family: inherit;
   font-size: 0.95rem;
@@ -662,21 +702,24 @@ input[type='range'] {
 button {
   font-family: inherit;
   font-size: 0.93rem;
-  font-weight: 550;
+  font-weight: 600;
   letter-spacing: -0.005em;
   color: var(--ink-invert);
-  background: var(--ink);
-  border: 1px solid var(--ink);
+  background: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: var(--r-md);
   padding: 12px 18px;
   cursor: pointer;
+  /* Une ombre violette plutôt qu'une ombre noire : sur fond sombre, seule
+     une lueur colorée décolle le bouton du fond. */
+  box-shadow: var(--lueur-accent);
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease,
-    opacity 0.15s ease;
+    box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 button:hover:not(:disabled) {
-  background: #2c2e34;
-  border-color: #2c2e34;
+  background: var(--accent-clair);
+  border-color: var(--accent-clair);
 }
 
 button:active:not(:disabled) {
@@ -687,7 +730,34 @@ button:disabled {
   background: var(--raised);
   border-color: var(--line);
   color: var(--ink-faint);
+  box-shadow: none;
   cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------------------
+   La lueur violette appartient au FOND violet : elle sert à décoller le
+   bouton principal de la nuit. Toute variante qui se redonne un autre fond
+   doit donc la retirer, sinon elle traîne un halo sans rien pour le porter —
+   ce qui se voyait sur la cloche et sur les onglets.
+   --------------------------------------------------------------------------- */
+
+button.secondary,
+.toggle-reviews-btn,
+.examine-btn,
+button#restart,
+.cloche,
+.tab-btn,
+.lien-discret,
+.reaction-btn,
+.choix-buttons button,
+.chip,
+.outil,
+.tabbar a,
+.tabbar button,
+.sheet a,
+.sheet button,
+input[type='file']::file-selector-button {
+  box-shadow: none;
 }
 
 button.secondary,
@@ -805,7 +875,7 @@ form button[type='submit'] {
 .score-bar-fill {
   height: 100%;
   border-radius: var(--r-full);
-  background: var(--ink);
+  background: linear-gradient(90deg, var(--accent-fonce), var(--accent-clair));
   transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -820,7 +890,7 @@ form button[type='submit'] {
 .niveau-badge {
   display: inline-flex;
   align-items: center;
-  background: var(--ink);
+  background: var(--accent);
   color: var(--ink-invert);
   border-radius: var(--r-full);
   padding: 4px 12px;
@@ -1084,9 +1154,9 @@ form button[type='submit'] {
 }
 
 .choix-buttons button:hover:not(:disabled) {
-  background: var(--ink);
+  background: var(--accent);
   color: var(--ink-invert);
-  border-color: var(--ink);
+  border-color: var(--accent);
 }
 
 .mission-actions {
@@ -1219,11 +1289,11 @@ form button[type='submit'] {
 
 .tab-bar {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  background: var(--raised);
+  gap: 4px;
+  padding: 4px;
+  background: var(--nuit);
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border-radius: var(--r-full);
   margin-bottom: 4px;
 }
 
@@ -1233,21 +1303,22 @@ form button[type='submit'] {
   background: transparent;
   color: var(--ink-muted);
   border: none;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-full);
+  box-shadow: none;
   font-size: 0.845rem;
   font-weight: 550;
 }
 
 .tab-btn:hover:not(:disabled) {
-  background: transparent;
+  background: var(--raised);
   color: var(--ink);
   border-color: transparent;
 }
 
 .tab-btn.active {
-  background: var(--card);
-  color: var(--ink);
-  box-shadow: var(--shadow-sm);
+  background: var(--accent);
+  color: var(--ink-invert);
+  box-shadow: var(--lueur-accent);
 }
 
 .image-preview {
@@ -1329,8 +1400,8 @@ form button[type='submit'] {
 }
 
 .reaction-btn.selected {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--accent);
+  border-color: var(--accent);
   color: var(--ink-invert);
 }
 
@@ -1339,8 +1410,8 @@ form button[type='submit'] {
 .accepter-duo,
 .confirmer-duo,
 .popup-valider {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--accent);
+  border-color: var(--accent);
   color: var(--ink-invert);
 }
 
@@ -1393,7 +1464,7 @@ form button[type='submit'] {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(21, 22, 26, 0.42);
+  background: rgba(0, 0, 0, 0.76);
   backdrop-filter: blur(3px);
 }
 
@@ -1524,9 +1595,9 @@ form button[type='submit'] {
 }
 
 .etape.faite .etape-puce {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--ink-invert);
+  background: var(--positive);
+  border-color: var(--positive);
+  color: var(--nuit);
 }
 
 .etape.faite strong {
@@ -1594,7 +1665,7 @@ form button[type='submit'] {
 
 .verrou {
   background: var(--warn-soft);
-  border: 1px solid #f2e2c9;
+  border: 1px solid rgba(251, 191, 36, 0.3);
   color: var(--warn);
   border-radius: var(--r-md);
   padding: 14px 16px;
@@ -1889,12 +1960,15 @@ textarea:user-invalid {
   font-size: 28px;
 }
 
-.avatar[data-teinte='0'] { background: #e8efec; color: #1f5f50; }
-.avatar[data-teinte='1'] { background: #f0ece4; color: #7a5a1e; }
-.avatar[data-teinte='2'] { background: #ece9f0; color: #4a3a6b; }
-.avatar[data-teinte='3'] { background: #f0e9e9; color: #7a3a3a; }
-.avatar[data-teinte='4'] { background: #e6eef2; color: #245063; }
-.avatar[data-teinte='5'] { background: #eaf0e6; color: #3f5a26; }
+/* Six teintes sourdes, assez proches les unes des autres pour ne pas
+   transformer une liste en arc-en-ciel, assez distinctes pour qu'on
+   reconnaisse quelqu'un au premier coup d'œil. */
+.avatar[data-teinte='0'] { background: rgba(124, 92, 255, 0.18); color: #c3b2ff; }
+.avatar[data-teinte='1'] { background: rgba(52, 211, 153, 0.16); color: #7ee3bd; }
+.avatar[data-teinte='2'] { background: rgba(96, 165, 250, 0.17); color: #a5c9ff; }
+.avatar[data-teinte='3'] { background: rgba(251, 113, 133, 0.16); color: #ffa9b7; }
+.avatar[data-teinte='4'] { background: rgba(251, 191, 36, 0.15); color: #f5cf6e; }
+.avatar[data-teinte='5'] { background: rgba(45, 212, 191, 0.16); color: #7adfd4; }
 
 /* La pastille du haut de « Mon profil », avec son bouton de changement. */
 .bloc-avatar {
@@ -1962,4 +2036,48 @@ textarea:user-invalid {
 .ligne-avec-avatar > .corps {
   min-width: 0;
   flex: 1 1 auto;
+}
+
+/* ===========================================================================
+   Les fonds de carte.
+
+   OpenStreetMap ne fournit que des tuiles claires. La carte 3D les assombrit
+   côté MapLibre ; les petites cartes Leaflet (page Lieux, back-office) n'ont
+   pas cet outil, on passe donc par un filtre appliqué aux seules tuiles.
+
+   Le filtre ne touche QUE le calque des tuiles : les marqueurs, les
+   étiquettes et les commandes posés par-dessus gardent leurs couleurs.
+   =========================================================================== */
+
+.leaflet-container {
+  background: var(--nuit) !important;
+}
+
+.leaflet-tile-pane {
+  filter: grayscale(0.85) brightness(0.52) contrast(1.08);
+}
+
+/* Les commandes de Leaflet sont dessinées en clair par sa propre feuille de
+   style : on les ramène dans la palette. */
+.leaflet-control-zoom a,
+.leaflet-control-attribution {
+  background: var(--raised) !important;
+  color: var(--ink-muted) !important;
+  border-color: var(--line) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--haut) !important;
+  color: var(--ink) !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--accent-ink) !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--haut) !important;
+  color: var(--ink) !important;
+  box-shadow: var(--shadow-md) !important;
 }

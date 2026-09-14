@@ -12,7 +12,9 @@
 #carte {
   position: fixed;
   inset: 0;
-  background: #e9e7e2;
+  /* Le fond visible avant l'arrivée des tuiles. Sombre, sinon la carte
+     éclate en blanc à chaque chargement. */
+  background: var(--nuit);
 }
 
 /* ---------- Interface flottante du haut ---------- */
@@ -52,8 +54,8 @@
   font-weight: 550;
   letter-spacing: -0.005em;
   color: var(--ink-muted);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: saturate(180%) blur(12px);
+  background: rgba(23, 19, 39, 0.86);
+  backdrop-filter: saturate(160%) blur(12px);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   width: auto;
@@ -62,13 +64,13 @@
 
 .chip:hover:not(.active) {
   color: var(--ink);
-  background: #fff;
+  background: var(--haut);
   border-color: var(--line);
 }
 
 .chip.active {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--accent);
+  border-color: var(--accent);
   color: var(--ink-invert);
 }
 
@@ -96,8 +98,8 @@
   margin: 0;
   border: none;
   border-radius: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: saturate(180%) blur(12px);
+  background: rgba(23, 19, 39, 0.9);
+  backdrop-filter: saturate(160%) blur(12px);
   color: var(--ink);
   cursor: pointer;
   display: flex;
@@ -122,13 +124,13 @@
 }
 
 .outil:hover:not(:disabled) {
-  background: #fff;
-  color: var(--accent);
+  background: var(--haut);
+  color: var(--accent-ink);
   border: none;
 }
 
 .outil.active {
-  background: var(--ink);
+  background: var(--accent);
   border: none;
   color: var(--ink-invert);
 }
@@ -141,9 +143,9 @@
   z-index: 6;
   margin: 0;
   max-width: calc(100% - 120px);
-  background: rgba(21, 22, 26, 0.92);
+  background: rgba(16, 13, 27, 0.92);
   backdrop-filter: blur(8px);
-  color: #fff;
+  color: var(--ink);
   font-size: 0.82rem;
   line-height: 1.4;
   padding: 10px 16px;
@@ -161,17 +163,17 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  background: #fff;
+  background: var(--haut);
   border-radius: var(--r-full);
   padding: 4px 11px 4px 5px;
-  box-shadow: 0 2px 10px rgba(21, 22, 26, 0.18), 0 0 0 1px rgba(21, 22, 26, 0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(0, 0, 0, 0.11);
   cursor: pointer;
   white-space: nowrap;
   transition: box-shadow 0.15s ease;
 }
 
 .pin-lieu:hover {
-  box-shadow: 0 6px 18px rgba(21, 22, 26, 0.26), 0 0 0 1px var(--ink);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--accent);
 }
 
 .pin-lieu::after {
@@ -181,9 +183,9 @@
   left: 50%;
   width: 9px;
   height: 9px;
-  background: #fff;
+  background: var(--haut);
   transform: translateX(-50%) rotate(45deg);
-  box-shadow: 2px 2px 5px rgba(21, 22, 26, 0.1);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.18);
 }
 
 .pin-lieu.eteint {
@@ -195,7 +197,7 @@
 }
 
 .pin-lieu.selectionne {
-  box-shadow: 0 6px 18px rgba(21, 22, 26, 0.26), 0 0 0 2px var(--ink);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), 0 0 0 2px var(--accent);
 }
 
 .pin-icone {
@@ -221,7 +223,7 @@
 }
 
 .pin-compteur {
-  background: var(--ink);
+  background: var(--accent);
   color: var(--ink-invert);
   border-radius: var(--r-full);
   font-size: 0.68rem;
@@ -234,7 +236,7 @@
 
 .pin-bonus {
   background: var(--accent);
-  color: #fff;
+  color: var(--ink-invert);
   border-radius: var(--r-full);
   font-size: 0.66rem;
   font-weight: 650;
@@ -244,23 +246,23 @@
 
 /* Un lieu encore voilé : on sait qu'il y a quelque chose, pas quoi. */
 .pin-lieu.voile {
-  background: rgba(21, 22, 26, 0.78);
+  background: rgba(11, 9, 19, 0.82);
   backdrop-filter: blur(2px);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(21, 22, 26, 0.24);
+  color: var(--ink-muted);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 .pin-lieu.voile::after {
-  background: rgba(21, 22, 26, 0.78);
+  background: rgba(11, 9, 19, 0.82);
   box-shadow: none;
 }
 
 .pin-lieu.voile .pin-icone {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(243, 241, 250, 0.12);
 }
 
 .pin-lieu.voile .pin-nom {
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(243, 241, 250, 0.7);
   font-weight: 550;
 }
 
@@ -279,9 +281,9 @@
   height: 32px;
   border-radius: 50% 50% 50% 3px;
   transform: rotate(-45deg);
-  background: #fff;
-  border: 1.5px solid var(--ink);
-  box-shadow: 0 3px 10px rgba(21, 22, 26, 0.2);
+  background: var(--haut);
+  border: 1.5px solid var(--accent-clair);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.36);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -305,7 +307,7 @@
 
 .pin-mission.accomplie .pin-corps {
   border-color: var(--positive);
-  background: #e9f5ef;
+  background: var(--positive-soft);
 }
 
 .pin-mission.en_attente .pin-corps {
@@ -318,9 +320,11 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--ink);
-  border: 3px solid #fff;
-  box-shadow: 0 0 0 5px rgba(21, 22, 26, 0.14), 0 2px 8px rgba(21, 22, 26, 0.28);
+  /* Ma propre position est le seul point violet plein de la carte : c'est
+     celui qu'on cherche du regard en permanence. */
+  background: var(--accent-clair);
+  border: 3px solid var(--nuit);
+  box-shadow: 0 0 0 6px rgba(124, 92, 255, 0.25), 0 2px 10px rgba(0, 0, 0, 0.6);
 }
 
 /* ---------- Fiche partenaire (panneau bas) ---------- */
@@ -329,7 +333,7 @@
   position: fixed;
   inset: 0;
   z-index: 45;
-  background: rgba(21, 22, 26, 0.3);
+  background: rgba(0, 0, 0, 0.54);
   backdrop-filter: blur(2px);
 }
 
@@ -473,7 +477,7 @@
 }
 
 .mission-bloc.selectionne {
-  border-left: 2px solid var(--ink);
+  border-left: 2px solid var(--accent);
   border-top-color: transparent;
   padding-left: 14px;
 }

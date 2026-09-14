@@ -859,6 +859,58 @@ de 42 pixels. La page la réduit avant de l'envoyer : recadrage au carré centr�
 où), 512 pixels de côté pour un joueur, 720 pour un commerce dont la photo
 s'affiche aussi en bandeau. L'envoi est instantané et la base reste légère.
 
+## L'habillage visuel
+
+Le parti pris tient en un mot : **la nuit**.
+
+Le jeu se joue le soir, dehors, en ville. L'interface prend le même parti : un
+fond bleu-nuit très sombre, des surfaces à peine plus claires posées dessus, et
+**une seule couleur vive** — un violet — réservée à ce sur quoi on agit.
+
+Trois règles tiennent tout l'ensemble :
+
+1. **La couleur vive ne sert qu'à l'action.** Un bouton, un onglet actif, une
+   pastille sélectionnée. Si tout est violet, plus rien ne ressort.
+2. **La hiérarchie se fait par la lumière, pas par le trait.** Plus un élément
+   est proche de l'utilisateur, plus sa surface est claire. Un champ à remplir
+   est *creusé* (plus sombre que la carte) ; un bouton est *posé* (plus clair,
+   avec une lueur violette). On comprend au premier coup d'œil ce qui se
+   remplit et ce qui se clique, sans avoir à lire.
+3. **Le vert, le rouge et l'orange sont réservés au sens** — réussi, refusé,
+   attention. Jamais pour décorer.
+
+Tout passe par une trentaine de variables déclarées en haut de
+`backend/public/style.css`. Changer la couleur d'accent du site, c'est changer
+une ligne.
+
+### Les cartes
+
+OpenStreetMap ne fournit que des fonds de carte clairs, et un rectangle blanc
+au milieu d'une interface de nuit est aveuglant. La carte 3D les assombrit
+nativement (MapLibre sait le faire sur une couche d'images), les petites cartes
+passent par un filtre appliqué **aux seules tuiles** — les repères et les
+étiquettes posés par-dessus gardent leurs couleurs.
+
+Le résultat : les rues se devinent en gris violacé sur le noir, et ce sont les
+lieux et les missions qui ressortent. C'est ce qu'on veut regarder sur une
+carte de jeu.
+
+### Ce qu'un changement de palette révèle
+
+Passer du clair au sombre ne se résume pas à inverser des couleurs : certaines
+règles qui semblaient anodines deviennent fausses.
+
+`background: var(--ink)` voulait dire « le fond fort, en noir ». En sombre,
+l'encre est presque blanche : les étapes franchies du parcours sont devenues
+des disques blancs avec une coche blanche dessus — invisible. Partout où ce
+motif servait à marquer l'état fort, il prend maintenant le violet ; et une
+étape franchie, qui est un *état* et non une action, prend le vert.
+
+Même piège avec la lueur du bouton principal : donnée à `button`, elle a été
+héritée par la cloche et par les onglets, qui n'ont pas de fond violet pour la
+porter. Elle est maintenant retirée explicitement sur chaque variante — une
+lueur appartient au fond qui la justifie.
+
 ## Et après ?
 
 Les grandes briques fonctionnelles des specs sont implémentées, et le site se

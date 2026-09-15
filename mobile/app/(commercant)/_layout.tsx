@@ -2,12 +2,13 @@
  * L'espace commerçant dans l'application.
  *
  * Un commerçant qui se connecte n'a rien à faire des onglets du joueur : il
- * ne joue pas, il tient un comptoir. Deux écrans lui suffisent, et ce sont
- * ceux dont il se sert plusieurs fois par jour — scanner un client, et
- * regarder qui vient.
+ * ne joue pas, il tient un comptoir. Ses quatre écrans sont ceux dont il se
+ * sert dans la journée, du plus fréquent au plus rare : scanner un client,
+ * répondre à ce qu'on lui demande, suivre ses offres, regarder qui vient.
  *
- * Le reste de son espace (offres, événements, ciblage, concurrence) reste sur
- * le site : ça se fait assis, pas debout derrière une caisse.
+ * Deux choses restent sur le site, parce qu'elles se font assises : les
+ * événements et le ciblage (des formulaires longs), et la carte de la
+ * concurrence (une carte, justement).
  */
 import { Tabs } from 'expo-router';
 import { ColorValue, Text } from 'react-native';
@@ -42,6 +43,20 @@ export default function OngletsCommercant() {
         options={{
           title: 'Scanner',
           tabBarIcon: ({ color }) => <Icone symbole="▣" couleur={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="comptoir"
+        options={{
+          title: 'Comptoir',
+          tabBarIcon: ({ color }) => <Icone symbole="✓" couleur={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="offres"
+        options={{
+          title: 'Offres',
+          tabBarIcon: ({ color }) => <Icone symbole="◎" couleur={color} />,
         }}
       />
       <Tabs.Screen

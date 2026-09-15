@@ -77,8 +77,13 @@ liste des clients du commerçant.
   chemin n'a jamais été exercé. La saisie des huit caractères, elle, est
   vérifiée partout et sert de recours (`BarcodeDetector` est absent de Safari
   et de Firefox).
-- **Le reste de l'espace commerçant sur téléphone** : offres, événements,
-  ciblage et concurrence restent sur le site. À décider s'ils doivent suivre.
+- ~~Le reste de l'espace commerçant sur téléphone~~ — fait (brique 37) pour
+  ce qui se fait debout : le comptoir (missions à valider, bons à encaisser),
+  les offres et les jetons. Restent sur le site, parce qu'ils se font assis :
+  les événements, le ciblage, et la carte de la concurrence.
+- **Choisir l'image d'une offre depuis le téléphone.** Ça demande d'ouvrir la
+  galerie (`expo-image-picker`), qui n'a pas pu être essayée faute d'appareil
+  dans l'environnement de développement. L'écran renvoie au site, et le dit.
 
 ---
 

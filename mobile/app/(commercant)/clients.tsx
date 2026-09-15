@@ -14,8 +14,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { appeler, urlPhoto } from '../../src/api/client';
 import { useMonCommerce } from '../../src/api/commerce';
 import { useSession } from '../../src/api/session';
-import { Aide, Bouton, Carte, Erreur, SousTitre, Titre } from '../../src/design/composants';
+import { Aide, Bouton, Carte, Champ, Erreur, SousTitre, Titre } from '../../src/design/composants';
 import { couleurs, espaces, rayons, typo } from '../../src/design/theme';
+
+interface Jetons {
+  solde: number;
+}
 
 interface Client {
   playerId: string;
@@ -30,6 +34,10 @@ export default function Clients() {
   const { commerce, erreur: erreurCommerce } = useMonCommerce();
   const { utilisateur, deconnecter } = useSession();
   const [clients, setClients] = useState<Client[]>([]);
+  const [jetons, setJetons] = useState<Jetons | null>(null);
+  const [montant, setMontant] = useState('');
+  const [message, setMessage] = useState('');
+  const [enCours, setEnCours] = useState(false);
   const [rechargement, setRechargement] = useState(false);
   const [erreur, setErreur] = useState('');
 
@@ -37,11 +45,36 @@ export default function Clients() {
     if (!commerce) return;
     setErreur('');
     try {
-      setClients(await appeler<Client[]>(`/businesses/${commerce.id}/clients`));
+      const [sesClients, sonSolde] = await Promise.all([
+        appeler<Client[]>(`/businesses/${commerce.id}/clients`),
+        appeler<Jetons>(`/businesses/${commerce.id}/jetons`),
+      ]);
+      setClients(sesClients);
+      setJetons(sonSolde);
     } catch (e) {
       setErreur((e as Error).message);
     }
   }, [commerce?.id]);
+
+  async function recharger() {
+    if (!commerce) return;
+    setErreur('');
+    setMessage('');
+    setEnCours(true);
+    try {
+      await appeler(`/businesses/${commerce.id}/jetons/recharger`, {
+        methode: 'POST',
+        corps: { montant: Number(montant) },
+      });
+      setMessage(`${montant} jetons crédités.`);
+      setMontant('');
+      await charger();
+    } catch (e) {
+      setErreur((e as Error).message);
+    } finally {
+      setEnCours(false);
+    }
+  }
 
   useEffect(() => {
     charger();
@@ -99,10 +132,33 @@ export default function Clients() {
         ))}
 
         <Carte>
+          <SousTitre>Mes jetons</SousTitre>
+          <Text style={styles.solde}>{jetons?.solde ?? 0}</Text>
+          <Aide>
+            Les jetons paient les lectures de tes offres et les envois de ciblage. Sans solde, tes
+            offres s'arrêtent. Valider une mission ne t'en coûte aucun : cette récompense-là est
+            émise par la plateforme.
+          </Aide>
+          <Champ
+            etiquette="Recharger"
+            value={montant}
+            onChangeText={setMontant}
+            placeholder="20"
+            keyboardType="decimal-pad"
+          />
+          {Boolean(message) && <Text style={styles.succes}>{message}</Text>}
+          <Bouton titre="Créditer mon compte" onPress={recharger} charge={enCours} />
+          <Aide>
+            Le paiement est simulé tant qu'aucun prestataire n'est branché : le crédit est
+            immédiat, et rien n'est débité.
+          </Aide>
+        </Carte>
+
+        <Carte>
           <SousTitre>Mon compte</SousTitre>
           <Aide>
-            Connecté en tant que {utilisateur?.pseudo}. Les offres, les événements et le ciblage
-            se gèrent depuis l'espace commerçant du site.
+            Connecté en tant que {utilisateur?.pseudo}. Les événements, le ciblage et la carte de
+            la concurrence se gèrent depuis l'espace commerçant du site.
           </Aide>
           <Bouton titre="Se déconnecter" variante="discret" onPress={deconnecter} />
         </Carte>
@@ -149,4 +205,7 @@ const styles = StyleSheet.create({
   },
   pastilleImage: { width: 40, height: 40 },
   pastilleTexte: { ...typo.petit, fontWeight: '700', color: couleurs.encre },
+
+  solde: { fontSize: 34, fontWeight: '700', color: couleurs.accentEncre },
+  succes: { ...typo.petit, color: couleurs.positif },
 });

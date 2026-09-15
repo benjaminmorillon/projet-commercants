@@ -243,7 +243,7 @@ async function loadParcours() {
 
   document.getElementById('zones-decouvertes').textContent =
     deblocage.zonesDecouvertes === 0
-      ? "Carte : aucun quartier levé pour l'instant — un check-in chez un partenaire lève tout son quartier d'un coup."
+      ? "Carte : aucun quartier levé pour l'instant — fais scanner ton code chez un partenaire, et tout son quartier se lève d'un coup."
       : `Carte : ${deblocage.zonesDecouvertes} quartier${deblocage.zonesDecouvertes > 1 ? 's' : ''} levé${deblocage.zonesDecouvertes > 1 ? 's' : ''}.`;
 }
 

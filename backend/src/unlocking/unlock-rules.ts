@@ -40,8 +40,8 @@ export const ETAPES_TUTORIEL: EtapeTutoriel[] = [
   {
     id: 'premier_checkin',
     titre: 'Pousse la porte d’un partenaire',
-    consigne: 'Rends-toi chez un partenaire de la carte et fais un check-in sur place : c’est ce qui lève le voile sur le quartier.',
-    lien: 'carte.html',
+    consigne: 'Rends-toi chez un partenaire de la carte et montre-lui ton code : il le scanne, et tout son quartier se lève sur ta carte.',
+    lien: 'code.html',
     estFaite: (etat) => etat.checkinsEffectues >= 1,
   },
 ];

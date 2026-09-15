@@ -130,11 +130,7 @@ async function main() {
     for (const indexLieu of joueur.visites) {
       const lieu = LIEUX[indexLieu];
       await essayer(journal, `${joueur.pseudo} passe au ${lieu.nom}`, () =>
-        checkins.checkIn(lieux[indexLieu].id, {
-          playerId: joueurs[index].id,
-          latitude: lieu.latitude,
-          longitude: lieu.longitude,
-        }),
+        checkins.enregistrerPassage(lieux[indexLieu].id, joueurs[index].id),
       );
     }
 

@@ -76,18 +76,6 @@ export const GROUPES = [
 export const CATALOGUE: DefinitionReglage[] = [
   // --- Le terrain --------------------------------------------------------
   {
-    cle: 'checkin.rayonMetres',
-    groupe: 'terrain',
-    libelle: 'Rayon de validation de présence',
-    explication:
-      "À quelle distance du commerce un joueur peut déclarer qu'il y est. Trop petit, le GPS d'un téléphone en intérieur fait échouer des joueurs pourtant sur place ; trop grand, on peut valider depuis le trottoir d'en face.",
-    type: 'entier',
-    defaut: 150,
-    min: 10,
-    max: 2000,
-    unite: 'm',
-  },
-  {
     cle: 'carte.tailleZoneDegres',
     groupe: 'terrain',
     libelle: "Taille d'un quartier de la carte",
@@ -109,6 +97,19 @@ export const CATALOGUE: DefinitionReglage[] = [
     defaut: 3,
     min: 1,
     max: 10,
+  },
+
+  {
+    cle: 'presence.dureeCodeSecondes',
+    groupe: 'terrain',
+    libelle: 'Durée de validité du code de présence',
+    explication:
+      "Le code que le joueur montre au commerçant pour faire enregistrer sa venue. Court, il ne survit pas à une capture d'écran envoyée à un ami ; trop court, il expire pendant que le commerçant le tape.",
+    type: 'entier',
+    defaut: 120,
+    min: 30,
+    max: 900,
+    unite: 's',
   },
 
   // --- Le rythme ---------------------------------------------------------

@@ -544,7 +544,7 @@ function blocMission(lieu, mission) {
 
   const etiquetteValideur = mission.estMissionType
     ? '<span class="badge valideur">Validée par un autre joueur</span>'
-    : '<span class="badge valideur">Validée par le commerçant — check-in requis</span>';
+    : '<span class="badge valideur">Validée par le commerçant — il faut être passé sur place</span>';
 
   let zoneAction = '';
   if (!playerId) {
@@ -603,7 +603,7 @@ function ficheVoilee(lieu) {
       <div class="fiche-stat"><strong>?</strong><span>Missions</span></div>
       <div class="fiche-stat"><strong>+XP</strong><span>À la découverte</span></div>
     </div>
-    <p>Rends-toi sur place et fais un <strong>check-in</strong> : tout le quartier se révèle d'un coup, et la découverte rapporte de l'XP — davantage si le lieu est encore peu fréquenté.</p>
+    <p>Rends-toi sur place et fais scanner <strong>ton code</strong> par le commerçant : tout le quartier se révèle d'un coup, et la découverte rapporte de l'XP — davantage si le lieu est encore peu fréquenté.</p>
     <div class="mission-actions">
       <button type="button" class="secondary" id="fiche-approcher">Me localiser pour voir autour de moi</button>
     </div>
@@ -648,10 +648,10 @@ function ouvrirFiche(lieu, missionCiblee) {
     </div>
 
     <div class="mission-actions">
-      <button type="button" id="fiche-checkin">Check-in ici</button>
+      <a class="bouton-lien" href="code.html">Montrer mon code</a>
       <button type="button" class="secondary" id="fiche-avis">Voir les avis</button>
     </div>
-    <p id="fiche-checkin-statut" class="hint" hidden></p>
+    <p class="hint">Sur place, le commerçant scanne ton code : c'est ce qui enregistre ta venue.</p>
     <div id="fiche-avis-liste" hidden></div>
 
     ${playerId ? `
@@ -717,33 +717,6 @@ function positionActuelle() {
 }
 
 function brancherFiche(lieu) {
-  const checkinBtn = document.getElementById('fiche-checkin');
-  const checkinStatut = document.getElementById('fiche-checkin-statut');
-
-  if (!playerId) {
-    checkinBtn.disabled = true;
-    checkinStatut.hidden = false;
-    checkinStatut.innerHTML = `<a href="index.html">Crée ton profil joueur</a> pour faire un check-in.`;
-  } else {
-    checkinBtn.addEventListener('click', async () => {
-      checkinStatut.hidden = false;
-      checkinStatut.textContent = 'Localisation en cours...';
-      checkinBtn.disabled = true;
-      try {
-        const coords = await positionActuelle();
-        const checkin = await apiCall('POST', `/businesses/${lieu.id}/checkins`, {
-          playerId,
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-        });
-        checkinStatut.textContent = `Check-in validé (${Math.round(checkin.distanceMeters)} m du lieu).`;
-      } catch (error) {
-        checkinStatut.textContent = error.message;
-        checkinBtn.disabled = false;
-      }
-    });
-  }
-
   brancherPaiement(lieu);
 
   const avisBtn = document.getElementById('fiche-avis');

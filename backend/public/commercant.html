@@ -61,6 +61,7 @@
     <section id="dashboard" hidden>
       <div class="tab-bar" id="dashboard-tabs">
         <button type="button" class="tab-btn active" data-tab="activite">Activité</button>
+        <button type="button" class="tab-btn" data-tab="clients">Clients</button>
         <button type="button" class="tab-btn" data-tab="offres">Offres</button>
         <button type="button" class="tab-btn" data-tab="ciblage">Ciblage</button>
         <button type="button" class="tab-btn" data-tab="concurrence">Concurrence</button>
@@ -201,7 +202,49 @@
         </section>
       </section>
 
-      <!-- ONGLET 2 : OFFRES -->
+      <!-- ONGLET 2 : CLIENTS -->
+      <section class="tab-panel" data-panel="clients" hidden>
+        <section class="card">
+          <h2>Scanner un client</h2>
+          <p class="hint">
+            Le client ouvre « Mon code » sur son téléphone et te le présente. Tu le scannes, sa
+            venue est enregistrée, et il entre dans ta liste de clients. Un code ne vaut qu'une
+            fois et quelques minutes : c'est ce qui fait qu'on ne peut pas être compté sans être
+            venu.
+          </p>
+
+          <div class="scanner">
+            <video id="scan-video" playsinline muted hidden></video>
+            <p id="scan-etat" class="hint"></p>
+            <button type="button" id="scan-demarrer">Allumer la caméra</button>
+            <button type="button" id="scan-arreter" class="secondary" hidden>Éteindre la caméra</button>
+          </div>
+
+          <form id="scan-form">
+            <label>
+              …ou tape le code affiché sur son téléphone
+              <input type="text" id="scan-code" placeholder="Ex : ABCD EFGH" autocomplete="off"
+                     spellcheck="false" maxlength="20" />
+            </label>
+            <button type="submit">Enregistrer la venue</button>
+          </form>
+
+          <div id="scan-resultat" hidden></div>
+          <p id="scan-erreur" class="error" hidden></p>
+        </section>
+
+        <section class="card">
+          <h2 id="clients-count">Mes clients</h2>
+          <p class="hint">
+            Les gens qui sont réellement passés chez toi. C'est une carte de fidélité qu'ils n'ont
+            pas eu à demander — et la liste à qui tes offres s'adressent.
+          </p>
+          <div id="clients-list"></div>
+          <p id="clients-empty" class="hint" hidden>Personne n'a encore fait scanner son code chez toi.</p>
+        </section>
+      </section>
+
+      <!-- ONGLET 3 : OFFRES -->
       <section class="tab-panel" data-panel="offres" hidden>
         <section class="card">
           <h2>Publier une offre</h2>
@@ -300,7 +343,7 @@
         </section>
       </section>
 
-      <!-- ONGLET 3 : CIBLAGE -->
+      <!-- ONGLET 4 : CIBLAGE -->
       <section class="tab-panel" data-panel="ciblage" hidden>
         <section class="card">
           <h2>Cibler des joueurs</h2>
@@ -370,7 +413,7 @@
         </section>
       </section>
 
-      <!-- ONGLET 4 : CONCURRENCE -->
+      <!-- ONGLET 5 : CONCURRENCE -->
       <section class="tab-panel" data-panel="concurrence" hidden>
         <section class="card">
           <h2>Filtrer</h2>

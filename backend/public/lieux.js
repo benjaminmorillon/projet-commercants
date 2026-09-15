@@ -3,20 +3,6 @@ const noPlayerWarning = document.getElementById('no-player-warning');
 
 const playerId = localStorage.getItem('playerId');
 
-function getCurrentPosition() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Ton navigateur ne supporte pas la géolocalisation."));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) => resolve(position.coords),
-      () => reject(new Error("Impossible d'obtenir ta position. Autorise l'accès à la localisation et réessaie.")),
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
-  });
-}
-
 async function apiCall(method, path, body) {
   const response = await fetch(path, {
     method,
@@ -66,7 +52,10 @@ function renderPlace(place) {
         <p class="hint">${escapeHtml(place.typeEtablissement)} — ${escapeHtml(place.adresse)}</p>
       </div>
     </div>
-    <button type="button" class="checkin-btn">Check-in ici</button>
+    <p class="hint venue">
+      Pour enregistrer ta venue ici, montre <a href="code.html">ton code</a> au commerçant sur
+      place : c'est lui qui le scanne.
+    </p>
     <p class="checkin-status hint" hidden></p>
     <form class="review-form" hidden>
       <label>
@@ -90,32 +79,11 @@ function renderPlace(place) {
     <div class="reviews-list" hidden></div>
   `;
 
-  const checkinBtn = card.querySelector('.checkin-btn');
   const checkinStatus = card.querySelector('.checkin-status');
   const reviewForm = card.querySelector('.review-form');
   const reviewError = card.querySelector('.review-error');
   const toggleReviewsBtn = card.querySelector('.toggle-reviews-btn');
   const reviewsListEl = card.querySelector('.reviews-list');
-
-  checkinBtn.addEventListener('click', async () => {
-    checkinStatus.hidden = false;
-    checkinStatus.textContent = 'Localisation en cours...';
-    checkinBtn.disabled = true;
-
-    try {
-      const coords = await getCurrentPosition();
-      const checkin = await apiCall('POST', `/businesses/${place.id}/checkins`, {
-        playerId,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-      });
-      checkinStatus.textContent = `Check-in validé (${Math.round(checkin.distanceMeters)}m du lieu). Tu peux laisser un avis !`;
-      reviewForm.hidden = false;
-    } catch (error) {
-      checkinStatus.textContent = error.message;
-      checkinBtn.disabled = false;
-    }
-  });
 
   reviewForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -163,8 +131,8 @@ function renderPlace(place) {
     toggleReviewsBtn.textContent = willShow ? 'Masquer les avis' : 'Voir les avis';
   });
 
-  if (!playerId) {
-    checkinBtn.disabled = true;
+  if (playerId) {
+    reviewForm.hidden = false;
   }
 
   return card;
@@ -190,13 +158,6 @@ function renderMap(places) {
   }).addTo(map);
 
   const markers = places.map((place) => {
-    // Cercle illustrant la zone dans laquelle le check-in est accepté (150m).
-    L.circle([place.latitude, place.longitude], {
-      radius: 150,
-      color: '#1f5f50',
-      weight: 1,
-      fillOpacity: 0.08,
-    }).addTo(map);
 
     const marker = L.marker([place.latitude, place.longitude]).addTo(map);
     marker.bindPopup(

@@ -678,6 +678,156 @@ function renderConcurrenceList(places) {
 
 document.getElementById('concurrence-filters').addEventListener('change', loadConcurrence);
 
+/* ---------- Clients : le scan du code de présence ---------- */
+
+const scanVideo = document.getElementById('scan-video');
+const scanEtat = document.getElementById('scan-etat');
+const scanErreur = document.getElementById('scan-erreur');
+const scanResultat = document.getElementById('scan-resultat');
+const btnDemarrer = document.getElementById('scan-demarrer');
+const btnArreter = document.getElementById('scan-arreter');
+
+let fluxCamera = null;
+let boucleScan = null;
+
+/**
+ * Le lecteur de codes du navigateur.
+ *
+ * `BarcodeDetector` est intégré à Chrome et à Android ; Safari et Firefox ne
+ * l'ont pas. Plutôt que d'embarquer une bibliothèque de décodage de plusieurs
+ * centaines de kilooctets pour ces cas-là, on laisse la saisie manuelle
+ * prendre le relais : le code est fait pour ça — huit caractères sans I, L,
+ * O, 0 ni 1, justement pour être tapés sans se tromper.
+ */
+function lecteurDisponible() {
+  return typeof window.BarcodeDetector === 'function';
+}
+
+async function demarrerCamera() {
+  scanErreur.hidden = true;
+
+  if (!lecteurDisponible()) {
+    scanEtat.textContent =
+      "Ce navigateur ne sait pas lire un QR code. Demande au client les huit caractères affichés sous son code et tape-les ci-dessous.";
+    return;
+  }
+
+  try {
+    fluxCamera = await navigator.mediaDevices.getUserMedia({
+      // La caméra arrière : sur un téléphone posé sur le comptoir, c'est
+      // elle qui regarde l'écran du client.
+      video: { facingMode: 'environment' },
+    });
+  } catch (erreur) {
+    scanEtat.textContent =
+      "La caméra n'est pas accessible (refusée, ou déjà utilisée). Tu peux taper le code à la main.";
+    return;
+  }
+
+  scanVideo.srcObject = fluxCamera;
+  scanVideo.hidden = false;
+  await scanVideo.play();
+
+  btnDemarrer.hidden = true;
+  btnArreter.hidden = false;
+  scanEtat.textContent = 'Vise le code affiché sur le téléphone du client.';
+
+  const lecteur = new window.BarcodeDetector({ formats: ['qr_code'] });
+  boucleScan = setInterval(async () => {
+    try {
+      const trouves = await lecteur.detect(scanVideo);
+      if (trouves.length > 0) {
+        arreterCamera();
+        await envoyerCode(trouves[0].rawValue);
+      }
+    } catch {
+      // Une image illisible entre deux : rien à signaler, on réessaie.
+    }
+  }, 400);
+}
+
+function arreterCamera() {
+  if (boucleScan) clearInterval(boucleScan);
+  boucleScan = null;
+  if (fluxCamera) fluxCamera.getTracks().forEach((piste) => piste.stop());
+  fluxCamera = null;
+  scanVideo.hidden = true;
+  btnDemarrer.hidden = false;
+  btnArreter.hidden = true;
+  scanEtat.textContent = '';
+}
+
+btnDemarrer.addEventListener('click', demarrerCamera);
+btnArreter.addEventListener('click', arreterCamera);
+// Quitter la page sans éteindre la caméra laisserait la diode allumée.
+window.addEventListener('pagehide', arreterCamera);
+
+document.getElementById('scan-form').addEventListener('submit', async (submitEvent) => {
+  submitEvent.preventDefault();
+  const champ = document.getElementById('scan-code');
+  await envoyerCode(champ.value);
+  champ.value = '';
+});
+
+async function envoyerCode(code) {
+  scanErreur.hidden = true;
+  scanResultat.hidden = true;
+
+  try {
+    const resultat = await apiCall('POST', `/businesses/${businessId}/presence`, { code });
+
+    const url = urlPhoto('joueur', resultat.joueur.id, resultat.joueur.photoVersion);
+    scanResultat.className = 'scan-resultat';
+    scanResultat.innerHTML = `
+      ${pastilleAvatar(resultat.joueur.pseudo, url)}
+      <div>
+        <strong>${escapeHtml(resultat.joueur.pseudo)}</strong>
+        <p class="hint">${
+          resultat.premiereVisite
+            ? 'Première venue chez toi. Son quartier vient de se lever sur sa carte.'
+            : `${resultat.visites}<sup>e</sup> venue chez toi.`
+        }</p>
+      </div>
+    `;
+    scanResultat.hidden = false;
+
+    await loadClients();
+  } catch (erreur) {
+    scanErreur.textContent = erreur.message;
+    scanErreur.hidden = false;
+  }
+}
+
+function dateCourte(valeur) {
+  if (!valeur) return '';
+  return new Date(valeur).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+}
+
+async function loadClients() {
+  if (!businessId) return;
+  const clients = await apiCall('GET', `/businesses/${businessId}/clients`);
+
+  const liste = document.getElementById('clients-list');
+  document.getElementById('clients-count').textContent = `Mes clients (${clients.length})`;
+  document.getElementById('clients-empty').hidden = clients.length > 0;
+  liste.innerHTML = '';
+
+  clients.forEach((client) => {
+    const ligne = document.createElement('div');
+    ligne.className = 'client';
+    const url = urlPhoto('joueur', client.playerId, client.photoVersion);
+    ligne.innerHTML = `
+      ${pastilleAvatar(client.pseudo, url)}
+      <div>
+        <div class="client-nom">${escapeHtml(client.pseudo)}</div>
+        <div class="client-detail">Depuis le ${dateCourte(client.premiereVisite)} · dernière venue le ${dateCourte(client.derniereVisite)}</div>
+      </div>
+      <span class="client-visites">${client.visites} venue${client.visites > 1 ? 's' : ''}</span>
+    `;
+    liste.appendChild(ligne);
+  });
+}
+
 /* ---------- Offres ---------- */
 
 // L'image choisie, réduite, en attente de la création de l'offre. Elle ne
@@ -750,11 +900,6 @@ offreForm.addEventListener('submit', async (submitEvent) => {
     offreError.hidden = false;
   }
 });
-
-function dateCourte(valeur) {
-  if (!valeur) return '';
-  return new Date(valeur).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
-}
 
 async function loadOffres() {
   if (!businessId) return;
@@ -874,6 +1019,7 @@ function showDashboard() {
   loadCampaigns();
   loadOffres();
   loadBons();
+  loadClients();
   refreshPreview();
 }
 

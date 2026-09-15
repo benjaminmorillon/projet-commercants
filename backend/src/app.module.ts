@@ -53,6 +53,8 @@ import { PublicitesModule } from './publicites/publicites.module';
 import { Publicite } from './publicites/publicite.entity';
 import { OuverturePublicite } from './publicites/ouverture.entity';
 import { Photo } from './photos/photo.entity';
+import { CodePresence } from './presence/code-presence.entity';
+import { PresenceModule } from './presence/presence.module';
 import { Reglage } from './admin/reglage.entity';
 import { JournalAdmin } from './admin/journal-admin.entity';
 
@@ -90,6 +92,7 @@ import { JournalAdmin } from './admin/journal-admin.entity';
         Reglage,
         JournalAdmin,
         Photo,
+        CodePresence,
         Publicite,
         OuverturePublicite,
       ],
@@ -119,6 +122,7 @@ import { JournalAdmin } from './admin/journal-admin.entity';
     AdminModule,
     PhotosModule,
     PublicitesModule,
+    PresenceModule,
   ],
   // Le garde s'applique à TOUTES les routes : une route oubliée est protégée
   // par défaut, plutôt que l'inverse.

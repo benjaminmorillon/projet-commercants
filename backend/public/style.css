@@ -2576,3 +2576,157 @@ textarea:user-invalid {
   font-size: 0.8rem;
   color: var(--ink-muted);
 }
+
+/* ---------------------------------------------------------------------------
+   23. Le code de présence
+
+   Le QR est le seul élément blanc de tout le site, et c'est voulu : un code
+   à scanner a besoin d'un fond franc pour que la caméra d'en face
+   l'accroche. On le pose donc sur une plaque blanche, comme un badge.
+   --------------------------------------------------------------------------- */
+
+.carte-code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.qr-cadre {
+  background: #ffffff;
+  border-radius: var(--r-md);
+  padding: 14px;
+  line-height: 0;
+}
+
+.qr-cadre img {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+}
+
+/* Les huit caractères, gros et espacés : ils doivent pouvoir être lus à
+   l'envers, par-dessus un comptoir. */
+.code-lisible {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.compte-a-rebours {
+  margin: 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+.compte-a-rebours.expire {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.etapes {
+  margin: 12px 0 16px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.etapes::marker,
+.etapes li::marker {
+  color: var(--accent-ink);
+}
+
+/* --- Le scan, côté commerçant --------------------------------------------- */
+
+.scanner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* La vidéo de la caméra. Fond noir : le temps qu'elle démarre, un cadre vide
+   gris clair ferait croire à une image cassée. */
+.scanner video {
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-md);
+  background: #000;
+  object-fit: cover;
+}
+
+.scan-resultat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--positive-soft);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.scan-resultat strong {
+  color: var(--ink);
+}
+
+.scan-resultat .hint {
+  margin: 0;
+}
+
+.client {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.client:first-child {
+  border-top: none;
+}
+
+.client-nom {
+  font-weight: 600;
+  font-size: 0.93rem;
+}
+
+.client-detail {
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+.client-visites {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+  color: var(--accent-ink);
+}
+
+/* Un lien qui doit avoir l'allure d'un bouton principal (fiche de la carte). */
+.bouton-lien {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 18px;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: var(--ink-invert);
+  font-size: 0.87rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bouton-lien:hover {
+  background: var(--accent-fonce);
+  text-decoration: none;
+}

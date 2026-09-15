@@ -1,15 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ReglagesService } from '../admin/reglages.service';
 import { Business } from '../businesses/business.entity';
 import { BalancingService } from '../balancing/balancing.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
-import { CreateCheckinDto } from './dto/create-checkin.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
-import { distanceInMeters } from './geo';
 import { CheckIn } from './checkin.entity';
 import { Review } from './review.entity';
 
@@ -32,7 +29,6 @@ export class CheckinsService {
     private readonly playerEvents: PlayerEventsService,
     private readonly balancing: BalancingService,
     private readonly unlocking: UnlockingService,
-    private readonly reglages: ReglagesService,
   ) {}
 
   private async getBusinessOrThrow(businessId: string): Promise<Business> {
@@ -51,42 +47,39 @@ export class CheckinsService {
     return player;
   }
 
-  async checkIn(businessId: string, dto: CreateCheckinDto): Promise<CheckIn> {
+  /**
+   * Enregistrer la venue d'un joueur dans un commerce.
+   *
+   * Il n'y a plus qu'une seule façon de déclencher ça : le commerçant scanne
+   * le code de présence du joueur (module `presence`). L'ancien pointage GPS
+   * a été retiré — il se laissait tromper depuis le trottoir d'en face, alors
+   * qu'un code présenté à quelqu'un derrière un comptoir suppose d'y être
+   * entré.
+   *
+   * La position enregistrée est celle DU COMMERCE, et non celle du téléphone :
+   * on ne demande plus sa position au joueur, et c'est bien là qu'il se
+   * trouve puisque quelqu'un sur place vient de scanner son code. C'est cette
+   * position qui lève le quartier correspondant sur la carte.
+   */
+  async enregistrerPassage(businessId: string, playerId: string): Promise<CheckIn> {
     const business = await this.getBusinessOrThrow(businessId);
-    await this.getPlayerOrThrow(dto.playerId);
-
-    const distance = distanceInMeters(
-      business.latitude,
-      business.longitude,
-      dto.latitude,
-      dto.longitude,
-    );
-
-    const rayon = this.reglages.entier('checkin.rayonMetres');
-    if (distance > rayon) {
-      throw new BadRequestException(
-        `Tu es à ${Math.round(distance)}m du lieu (max ${rayon}m) : trop loin pour valider le check-in.`,
-      );
-    }
+    await this.getPlayerOrThrow(playerId);
 
     // Découvrir un lieu ou revenir dans un lieu connu ne dit pas la même
     // chose du joueur : le moteur d'événements fait la différence.
-    const dejaVenu = await this.checkIns.findOne({
-      where: { playerId: dto.playerId, businessId },
-    });
+    const dejaVenu = await this.checkIns.findOne({ where: { playerId, businessId } });
 
     const checkin = await this.checkIns.save(
       this.checkIns.create({
-        playerId: dto.playerId,
+        playerId,
         businessId,
-        latitude: dto.latitude,
-        longitude: dto.longitude,
-        distanceMeters: distance,
+        latitude: business.latitude,
+        longitude: business.longitude,
       }),
     );
 
     await this.playerEvents.record(
-      dto.playerId,
+      playerId,
       dejaVenu ? 'lieu_habituel_visite' : 'lieu_inedit_visite',
       { businessId },
     );
@@ -94,11 +87,7 @@ export class CheckinsService {
     // Se déplacer lève le voile sur le quartier (section 2.9). La découverte
     // rapporte plus si le lieu est encore peu fréquenté.
     const multiplicateur = await this.balancing.getMultiplier(businessId);
-    const zone = await this.unlocking.enregistrerDecouverte(
-      dto.playerId,
-      business,
-      multiplicateur,
-    );
+    const zone = await this.unlocking.enregistrerDecouverte(playerId, business, multiplicateur);
 
     return Object.assign(checkin, {
       zoneDecouverte: zone ? { cleZone: zone.cleZone, xpGagnee: zone.xpGagnee } : null,
@@ -116,7 +105,7 @@ export class CheckinsService {
 
     if (!lastCheckIn) {
       throw new BadRequestException(
-        'Tu dois être check-iné sur ce lieu pour pouvoir laisser un avis.',
+        'Tu dois être passé dans ce lieu — et t’y être fait scanner — pour pouvoir laisser un avis.',
       );
     }
 

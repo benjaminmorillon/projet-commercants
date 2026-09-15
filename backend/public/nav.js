@@ -14,6 +14,7 @@ const ICONES = {
   validation: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
   invitations: '<rect x="3" y="5.5" width="18" height="13" rx="2.2"/><path d="m3.8 7 7.1 5.4a2 2 0 0 0 2.2 0L20.2 7"/>',
   amis: '<circle cx="12" cy="8" r="3.4"/><path d="M5 19.4c.6-3.5 3.4-5.6 7-5.6s6.4 2.1 7 5.6"/>',
+  code: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><path d="M13.5 13.5h3v3h-3zM19.5 13.5h1M13.5 19.5h1M17.5 17.5h3v3h-3z"/>',
   offres: '<path d="M12 3.4 3.6 6.2v6c0 4.4 3.4 7.4 8.4 8.4 5-1 8.4-4 8.4-8.4v-6Z"/><path d="m9.4 14.6 5.2-5.2"/><circle cx="9.6" cy="9.8" r="1"/><circle cx="14.4" cy="14.2" r="1"/>',
   commercant: '<path d="M4 9.5 5.4 4.6h13.2L20 9.5a2.7 2.7 0 0 1-5.3.6 2.7 2.7 0 0 1-5.4 0 2.7 2.7 0 0 1-5.3-.6Z"/><path d="M5.4 11.6v7.8h13.2v-7.8"/>',
   cloche: '<path d="M18 9.6a6 6 0 1 0-12 0c0 4.6-1.6 6-1.6 6h15.2S18 14.2 18 9.6Z"/><path d="M13.7 19.4a2 2 0 0 1-3.4 0"/>',
@@ -28,7 +29,7 @@ const ONGLETS = [
   { href: 'index.html', label: 'Profil', icone: 'profil' },
   { href: 'missions.html', label: 'Missions', icone: 'missions' },
   { href: 'carte.html', label: 'Carte', icone: 'carte' },
-  { href: 'duos.html', label: 'Duos', icone: 'duos' },
+  { href: 'code.html', label: 'Mon code', icone: 'code' },
 ];
 
 // Le reste de la navigation, dans la feuille « Plus ».
@@ -37,6 +38,7 @@ const SECONDAIRES = [
   { href: 'validation.html', label: 'Validation de missions', icone: 'validation' },
   { href: 'invitations.html', label: 'Invitations', icone: 'invitations' },
   { href: 'amis.html', label: 'Amis', icone: 'amis' },
+  { href: 'duos.html', label: 'Duos', icone: 'duos' },
   { href: 'offres.html', label: 'Offres et bons', icone: 'offres' },
 ];
 

@@ -2,15 +2,20 @@
  * Les lieux autour de soi.
  *
  * L'écran le plus « téléphone » de l'application : il se sert du GPS pour
- * trier les commerces par distance et pour valider qu'on y est vraiment.
+ * trier les commerces du plus proche au plus loin.
+ *
+ * Le GPS ne sert plus qu'à ÇA. Enregistrer une venue passe maintenant par le
+ * code de présence, que le commerçant scanne sur place — un GPS se laisse
+ * tromper depuis le trottoir d'en face, pas un code présenté à quelqu'un
+ * derrière un comptoir.
  *
  * Trois états à tenir, et aucun ne doit laisser un écran vide :
- *  - la position est connue → la liste est triée, le check-in est possible ;
- *  - elle est refusée → la liste s'affiche quand même, et on explique
- *    pourquoi le check-in ne l'est pas ;
+ *  - la position est connue → la liste est triée par distance ;
+ *  - elle est refusée → la liste s'affiche quand même, sans les distances ;
  *  - elle n'arrive pas (intérieur, GPS qui démarre) → pareil, avec un bouton
  *    pour réessayer.
  */
+import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -57,29 +62,10 @@ interface Lieu {
   photoVersion: number | null;
 }
 
-interface Retour {
-  texte: string;
-  bon: boolean;
-}
-
-/**
- * Le rayon de validation côté serveur, recopié ici pour l'AFFICHAGE
- * seulement. Il est réglable depuis le back-office : si quelqu'un le change,
- * le bouton restera discret un peu trop tôt ou un peu trop tard, mais le
- * serveur, lui, appliquera toujours la bonne valeur.
- */
-const RAYON_INDICATIF_METRES = 150;
-
-function tropLoin(metres: number | null): boolean {
-  return metres !== null && metres > RAYON_INDICATIF_METRES;
-}
-
 export default function Lieux() {
   const { utilisateur } = useSession();
   const [lieux, setLieux] = useState<Lieu[]>([]);
   const [position, setPosition] = useState<EtatPosition>({ etat: 'attente' });
-  const [retours, setRetours] = useState<Record<string, Retour>>({});
-  const [enCours, setEnCours] = useState<string | null>(null);
   const [rechargement, setRechargement] = useState(false);
   const [erreur, setErreur] = useState('');
 
@@ -101,37 +87,6 @@ export default function Lieux() {
     charger();
     localiser();
   }, [charger, localiser]);
-
-  async function validerMaVenue(lieu: Lieu) {
-    if (position.etat !== 'connue' || !utilisateur) return;
-
-    setEnCours(lieu.id);
-    try {
-      const resultat = await appeler<{ zoneDecouverte: { xpGagnee: number } | null }>(
-        `/businesses/${lieu.id}/checkins`,
-        {
-          methode: 'POST',
-          corps: {
-            playerId: utilisateur.id,
-            latitude: position.latitude,
-            longitude: position.longitude,
-          },
-        },
-      );
-
-      const quartier = resultat.zoneDecouverte
-        ? ` Nouveau quartier dévoilé : +${resultat.zoneDecouverte.xpGagnee} XP.`
-        : '';
-      setRetours((r) => ({
-        ...r,
-        [lieu.id]: { texte: `Ta venue est validée.${quartier}`, bon: true },
-      }));
-    } catch (e) {
-      setRetours((r) => ({ ...r, [lieu.id]: { texte: (e as Error).message, bon: false } }));
-    } finally {
-      setEnCours(null);
-    }
-  }
 
   // Trier par distance n'a de sens que si on sait où l'on est. Sinon on garde
   // l'ordre du serveur plutôt que d'inventer un classement.
@@ -197,30 +152,13 @@ export default function Lieux() {
             </View>
 
             <Bouton
-              titre={
-                tropLoin(metres) ? `Trop loin (${distanceLisible(metres!)})` : 'Je suis sur place'
-              }
-              onPress={() => validerMaVenue(lieu)}
-              charge={enCours === lieu.id}
-              // Discret quand on est visiblement trop loin : le bouton invite
-              // moins, sans jamais interdire. Car c'est le SERVEUR qui
-              // tranche, avec sa propre mesure — griser d'après un calcul
-              // fait sur le téléphone empêcherait de valider une venue
-              // parfaitement légitime quand le GPS est simplement imprécis.
-              variante={tropLoin(metres) ? 'discret' : 'principal'}
-              desactive={position.etat !== 'connue'}
+              titre="Montrer mon code sur place"
+              variante="discret"
+              onPress={() => router.push('/code')}
             />
-
-            {retours[lieu.id] && (
-              <Text
-                style={[
-                  styles.retour,
-                  { color: retours[lieu.id].bon ? couleurs.positif : couleurs.negatif },
-                ]}
-              >
-                {retours[lieu.id].texte}
-              </Text>
-            )}
+            <Aide>
+              C'est le commerçant qui scanne ton code : c'est ce qui enregistre ta venue.
+            </Aide>
           </Carte>
         ))}
 
@@ -286,7 +224,7 @@ function EtatDeLaPosition({
       </SousTitre>
       <Aide>
         {position.etat === 'refusee'
-          ? "Sans ta position, l'application ne peut pas classer les commerces par distance ni valider que tu es sur place. Tu peux l'autoriser dans les réglages de ton téléphone."
+          ? "Sans ta position, les commerces ne peuvent pas être classés du plus proche au plus loin. Tu peux l’autoriser dans les réglages de ton téléphone — ça ne change rien à l’enregistrement de tes venues, qui passe par ton code."
           : "Ton téléphone n'arrive pas à se situer. C'est fréquent en intérieur : approche-toi d'une fenêtre et réessaie."}
       </Aide>
       <Bouton titre="Réessayer" variante="discret" onPress={onReessayer} />

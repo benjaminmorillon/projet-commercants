@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Mon code</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+
+    <header>
+      <h1>Mon code</h1>
+      <p class="subtitle">Montre-le au commerçant : c'est ce qui enregistre ta venue et lève son quartier sur la carte.</p>
+    </header>
+
+    <p id="connexion" class="verrou" hidden>
+      <a href="index.html">Crée ton profil joueur</a> pour avoir ton code de présence.
+    </p>
+
+    <section class="card carte-code" id="bloc-code" hidden>
+      <div class="qr-cadre">
+        <img id="qr" alt="Le code à faire scanner par le commerçant" width="512" height="512" />
+      </div>
+
+      <p class="code-lisible" id="code-lisible" aria-live="polite"></p>
+      <p class="hint" id="code-aide">Si la caméra du commerçant ne veut rien savoir, il peut taper ces huit caractères.</p>
+
+      <p class="compte-a-rebours" id="rebours" aria-live="polite"></p>
+
+      <button type="button" id="renouveler">Afficher un nouveau code</button>
+      <p id="code-erreur" class="error" hidden></p>
+    </section>
+
+    <section class="card">
+      <h2>Comment ça marche</h2>
+      <ol class="etapes">
+        <li>Tu entres dans le commerce et tu ouvres cette page.</li>
+        <li>Le commerçant scanne ton code depuis son espace — ou tape les huit caractères.</li>
+        <li>Ta venue est enregistrée : tu gagnes de l'XP, le quartier se lève sur ta carte, et tu peux laisser un avis.</li>
+      </ol>
+      <p class="hint">
+        Un code ne vaut qu'une fois, et quelques minutes. Envoyer une capture d'écran à quelqu'un ne
+        lui sert à rien — c'est justement ce qui garantit que seuls les gens réellement passés chez
+        un partenaire comptent.
+      </p>
+      <p class="hint">
+        En te faisant scanner, tu entres dans la liste des clients de ce commerce : il pourra
+        t'adresser ses offres, comme une carte de fidélité — sans que tu aies eu à créer de compte
+        chez lui.
+      </p>
+    </section>
+  </main>
+
+  <script src="nav.js"></script>
+  <script src="utils.js"></script>
+  <script src="code.js"></script>
+</body>
+</html>

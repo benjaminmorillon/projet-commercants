@@ -9,6 +9,8 @@ entre deux séances. Chaque entrée dit **ce qu'on veut**, **pourquoi**, et
 ## 1. Le QR code du commerçant : débloquer un lieu en se présentant
 
 **Décidé le :** 14 septembre 2026.
+**CONSTRUIT le :** 15 septembre 2026 (brique 32). Ce qui reste à faire est
+listé en bas de cette section.
 
 ### Ce qu'on veut
 
@@ -48,9 +50,23 @@ liste des clients du commerçant.
 - Ce que le joueur accepte doit être dit clairement : se faire scanner, c'est
   entrer dans la liste de contacts du commerce. Il doit pouvoir en sortir.
 
-### Décisions restées ouvertes
+### Décisions prises
 
-- Le check-in GPS actuel disparaît-il, ou les deux coexistent-ils (GPS pour le
-  jeu, QR code pour la fidélité et les offres) ?
-- Le joueur gagne-t-il quelque chose au scan lui-même (jetons, XP), ou
-  seulement l'accès ?
+- **Le pointage GPS disparaît.** Décidé le 15 septembre : « il n'y a qu'en
+  physique que les commerçants pourront flasher le QR code ». Le GPS ne sert
+  plus qu'à trier les lieux du plus proche au plus loin.
+- **Le scan rapporte ce que rapportait le pointage** : l'XP de visite, le
+  quartier levé sur la carte, le droit de laisser un avis, et la visite
+  vérifiée dont les offres ont besoin. Rien n'a été ajouté par-dessus.
+
+### Ce qu'il reste à faire sur ce sujet
+
+- Le **scanner caméra dans l'application du commerçant** (`expo-camera`). Sur
+  le site, le scan caméra passe par `BarcodeDetector`, présent dans Chrome et
+  sur Android mais absent de Safari et de Firefox ; la saisie des huit
+  caractères sert de recours et fonctionne partout.
+- Le **ciblage des offres sur la liste des clients** : la liste existe
+  (onglet « Clients » de l'espace commerçant), il reste à pouvoir dire
+  « envoyer cette offre à mes clients ».
+- Le **droit de sortir de la liste** d'un commerce, promis au joueur dans le
+  texte de l'écran « Mon code ».

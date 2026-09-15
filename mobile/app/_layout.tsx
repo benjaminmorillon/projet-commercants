@@ -21,12 +21,17 @@ function Aiguillage() {
   useEffect(() => {
     if (chargement) return;
 
-    const dansLApplication = segments[0] === '(onglets)';
+    // Un commerçant n'a rien à faire des onglets du joueur, et
+    // réciproquement : chaque type de compte a son espace, et on l'y remet
+    // s'il se retrouve dans l'autre.
+    const espaceAttendu = utilisateur?.type === 'commercant' ? '(commercant)' : '(onglets)';
+    const espaceActuel = segments[0];
+    const dansUnEspace = espaceActuel === '(onglets)' || espaceActuel === '(commercant)';
 
-    if (!utilisateur && dansLApplication) {
+    if (!utilisateur && dansUnEspace) {
       router.replace('/connexion');
-    } else if (utilisateur && !dansLApplication) {
-      router.replace('/(onglets)');
+    } else if (utilisateur && espaceActuel !== espaceAttendu) {
+      router.replace(`/${espaceAttendu}`);
     }
   }, [utilisateur, chargement, segments]);
 

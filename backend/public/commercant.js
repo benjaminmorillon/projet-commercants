@@ -154,12 +154,9 @@ accountForm.addEventListener('submit', async (event) => {
 
 // Après une connexion, on retrouve l'établissement rattaché au compte.
 async function retrouverMonEtablissement() {
-  const utilisateur = await apiCall('GET', '/auth/moi');
-  const tous = await apiCall('GET', '/businesses');
-  const mien = tous.find((b) => b.userId === utilisateur.id);
-  if (!mien) {
-    throw new Error("Ce compte n'a pas encore d'établissement enregistré.");
-  }
+  // Le serveur sait lequel est le mien : inutile de télécharger tous les
+  // lieux du quartier pour en chercher un.
+  const mien = await apiCall('GET', '/businesses/mien');
   businessId = mien.id;
   localStorage.setItem('businessId', businessId);
   showDashboard();

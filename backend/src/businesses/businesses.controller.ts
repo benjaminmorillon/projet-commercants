@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { UtilisateurConnecte } from '../auth/auth.service';
 import { BusinessOwnerGuard } from '../auth/business-owner.guard';
 import { Public } from '../auth/public.decorator';
@@ -54,6 +62,24 @@ export class BusinessesController {
       tauxOccupation: balancing.get(business.id)?.tauxOccupation ?? 0,
       photoVersion: photos.get(business.id) ?? null,
     }));
+  }
+
+  /**
+   * Mon établissement.
+   *
+   * Déclarée AVANT `:id`, sinon Nest lirait « mien » comme un identifiant.
+   *
+   * Sans elle, chaque client devait charger TOUS les lieux et chercher le
+   * sien dedans — ce que faisaient le site et l'application, chacun de son
+   * côté.
+   */
+  @Get('mien')
+  async mien(@Utilisateur() utilisateur: UtilisateurConnecte) {
+    const mien = await this.businesses.monEtablissement(utilisateur.id);
+    if (!mien) {
+      throw new NotFoundException("Ce compte n'a pas encore d'établissement enregistré.");
+    }
+    return mien;
   }
 
   @Public()

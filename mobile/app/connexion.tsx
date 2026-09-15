@@ -127,6 +127,14 @@ export default function Connexion() {
               Ton mot de passe n'est jamais enregistré tel quel : le serveur n'en garde
               qu'une empreinte impossible à remonter.
             </Aide>
+
+            {mode === 'connexion' && (
+              <Aide>
+                Commerçant ? Connecte-toi avec le compte de ton espace commerçant : tu arrives
+                directement sur le scanner. La fiche de ton établissement, elle, se crée depuis
+                le site.
+              </Aide>
+            )}
           </Carte>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -22,6 +22,11 @@ export class BusinessesService {
    * L'établissement est rattaché au compte connecté : c'est lui, et lui seul,
    * qui pourra ensuite poster des missions ou lancer une campagne.
    */
+  /** L'établissement rattaché à un compte commerçant, s'il en a un. */
+  monEtablissement(userId: string): Promise<Business | null> {
+    return this.businesses.findOne({ where: { userId } });
+  }
+
   async createBusiness(userId: string, dto: CreateBusinessDto): Promise<Business> {
     const user = await this.users.findOne({ where: { id: userId } });
     if (!user) {

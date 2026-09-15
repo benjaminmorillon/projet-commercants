@@ -32,7 +32,15 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Projet Commerçant se sert de ta position pour te montrer les commerces autour de toi et vérifier que tu y es vraiment quand tu valides ta venue."
+          "locationAlwaysAndWhenInUsePermission": "Projet Commerçant se sert de ta position pour te montrer les commerces autour de toi, du plus proche au plus loin. Elle n'est jamais envoyée au serveur."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Projet Commerçant se sert de l'appareil photo pour scanner le code que le client présente en arrivant dans le commerce.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ]
     ],

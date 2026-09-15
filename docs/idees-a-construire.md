@@ -59,14 +59,51 @@ liste des clients du commerçant.
   quartier levé sur la carte, le droit de laisser un avis, et la visite
   vérifiée dont les offres ont besoin. Rien n'a été ajouté par-dessus.
 
+### Ce qui a été construit depuis
+
+- Le **ciblage des offres sur la liste des clients** (brique 33) : un bouton
+  par offre, avec trois garde-fous — une seule annonce par offre, un délai
+  entre deux annonces d'un même commerce, rien vers une liste vide.
+- Le **droit de sortir de la liste** d'un commerce (brique 33), sur le site
+  comme dans l'application, sans perdre ses venues.
+- L'**espace commerçant dans l'application** (brique 34) : un commerçant qui
+  se connecte arrive sur le scanner, avec la liste de ses clients à côté.
+
 ### Ce qu'il reste à faire sur ce sujet
 
-- Le **scanner caméra dans l'application du commerçant** (`expo-camera`). Sur
-  le site, le scan caméra passe par `BarcodeDetector`, présent dans Chrome et
-  sur Android mais absent de Safari et de Firefox ; la saisie des huit
-  caractères sert de recours et fonctionne partout.
-- Le **ciblage des offres sur la liste des clients** : la liste existe
-  (onglet « Clients » de l'espace commerçant), il reste à pouvoir dire
-  « envoyer cette offre à mes clients ».
-- Le **droit de sortir de la liste** d'un commerce, promis au joueur dans le
-  texte de l'écran « Mon code ».
+- **Essayer le scan caméra sur un vrai téléphone.** Le code est écrit des deux
+  côtés — `expo-camera` dans l'application, `BarcodeDetector` sur le site —
+  mais aucune caméra n'existe dans l'environnement de développement, donc ce
+  chemin n'a jamais été exercé. La saisie des huit caractères, elle, est
+  vérifiée partout et sert de recours (`BarcodeDetector` est absent de Safari
+  et de Firefox).
+- **Le reste de l'espace commerçant sur téléphone** : offres, événements,
+  ciblage et concurrence restent sur le site. À décider s'ils doivent suivre.
+
+---
+
+## 2. La carte sur le téléphone : un plan, pas une carte
+
+**Décidé le :** 15 septembre 2026. **CONSTRUIT** dans la foulée (brique 36).
+
+### Ce qui a été fait
+
+L'onglet « Quartier » de l'application ne montre ni rues ni bâtiments : le
+joueur au centre, les commerces les plus proches posés à leur vraie direction
+et à leur vraie distance, et les quartiers levés en violet. Les commerces
+encore voilés apparaissent en gris, sans nom ni missions — savoir qu'il y a
+quelque chose là-bas est exactement ce qui donne envie d'y aller.
+
+### Pourquoi pas une vraie carte
+
+Une carte avec les rues demande une bibliothèque native. Conséquences :
+l'application ne se teste plus avec Expo Go (il faut fabriquer une version
+d'essai à chaque fois), et Android réclame une clé Google Maps. Le plan ne
+demande rien, et répond déjà aux deux questions qu'on se pose devant une
+carte : qu'est-ce qu'il y a autour de moi, et où suis-je allé ?
+
+### Si on veut la vraie carte un jour
+
+Le travail serait limité à l'écran `app/(onglets)/carte.tsx` : les données
+arrivent déjà en un seul appel (`GET /map`), quartiers levés compris. C'est
+le dessin qui changerait, pas la plomberie.

@@ -51,8 +51,17 @@ export default function Onglets() {
       <Tabs.Screen
         name="code"
         options={{
-          title: 'Mon code',
+          // « Code » et non « Mon code » : à six onglets, le libellé est
+          // tronqué en « Mon co… », ce qui ne veut plus rien dire.
+          title: 'Code',
           tabBarIcon: ({ color }) => <Icone symbole="▣" couleur={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="carte"
+        options={{
+          title: 'Quartier',
+          tabBarIcon: ({ color }) => <Icone symbole="◇" couleur={color} />,
         }}
       />
       <Tabs.Screen

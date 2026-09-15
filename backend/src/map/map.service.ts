@@ -80,13 +80,24 @@ export class MapService {
       statutJoueur: statutParMission.get(mission.id) ?? 'disponible',
     });
 
+    const tailleZone = this.reglages.nombre('carte.tailleZoneDegres');
+
     return {
+      // Les quartiers levés, et la taille d'un quartier.
+      //
+      // Le site dessine le voile à partir de ces deux valeurs ; l'application
+      // en a besoin pour la même raison. Sans elles, elle ne pourrait montrer
+      // que les lieux découverts, sans jamais dire ce qui a été exploré
+      // AUTOUR — or c'est justement ce qu'on regarde sur une carte voilée.
+      //
+      // `null` veut dire « tout est visible » (prototype sans joueur
+      // identifié), et non « rien n'est visible ».
+      zones: {
+        visibles: zonesVisibles ? [...zonesVisibles] : null,
+        tailleDegres: tailleZone,
+      },
       lieux: lieux.map((lieu) => {
-        const zone = cleZone(
-          lieu.latitude,
-          lieu.longitude,
-          this.reglages.nombre('carte.tailleZoneDegres'),
-        );
+        const zone = cleZone(lieu.latitude, lieu.longitude, tailleZone);
         const decouvert = zonesVisibles === null || zonesVisibles.has(zone);
 
         // Un lieu encore voilé n'expose que sa position et sa zone : ni nom,

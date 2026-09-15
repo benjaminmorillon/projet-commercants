@@ -47,34 +47,8 @@ export async function demanderPosition(): Promise<EtatPosition> {
   }
 }
 
-/**
- * Distance à vol d'oiseau entre deux points, en mètres (formule de Haversine).
- *
- * La même que côté serveur — mais calculée ici pour AFFICHER une distance,
- * jamais pour décider. C'est le serveur qui tranche si un check-in est valide,
- * avec sa propre mesure : un téléphone peut mentir sur sa position, pas le
- * calcul du serveur sur ce qu'il a reçu.
- */
-export function distanceEnMetres(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number,
-): number {
-  const RAYON_TERRE = 6371000;
-  const rad = (d: number) => (d * Math.PI) / 180;
-  const dLat = rad(lat2 - lat1);
-  const dLon = rad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return RAYON_TERRE * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-/** « 80 m », « 1,2 km » : une distance telle qu'on la dit. */
-export function distanceLisible(metres: number): string {
-  if (metres < 1000) {
-    return `${Math.round(metres)} m`;
-  }
-  return `${(metres / 1000).toFixed(1).replace('.', ',')} km`;
-}
+// Les distances sont calculées ailleurs, dans un fichier qui ne parle pas au
+// téléphone et peut donc être testé. On les réexporte ici : les écrans les
+// importaient depuis ce module, et il n'y a aucune raison de les faire
+// changer d'adresse.
+export { distanceEnMetres, distanceLisible } from '../carte/distances';

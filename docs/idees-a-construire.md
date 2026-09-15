@@ -81,9 +81,10 @@ liste des clients du commerçant.
   ce qui se fait debout : le comptoir (missions à valider, bons à encaisser),
   les offres et les jetons. Restent sur le site, parce qu'ils se font assis :
   les événements, le ciblage, et la carte de la concurrence.
-- **Choisir l'image d'une offre depuis le téléphone.** Ça demande d'ouvrir la
-  galerie (`expo-image-picker`), qui n'a pas pu être essayée faute d'appareil
-  dans l'environnement de développement. L'écran renvoie au site, et le dit.
+- **Choisir l'image d'une offre depuis le téléphone.** L'écran renvoie encore
+  au site. Les pièces jointes (brique 38) montrent que le sélecteur de
+  fichiers fonctionne dans l'application : la même mécanique conviendrait à
+  l'image d'une offre.
 
 ---
 
@@ -112,3 +113,38 @@ carte : qu'est-ce qu'il y a autour de moi, et où suis-je allé ?
 Le travail serait limité à l'écran `app/(onglets)/carte.tsx` : les données
 arrivent déjà en un seul appel (`GET /map`), quartiers levés compris. C'est
 le dessin qui changerait, pas la plomberie.
+
+---
+
+## 3. Les pièces jointes d'un commerce
+
+**Décidé et construit le :** 15 septembre 2026 (brique 38).
+
+Un commerçant dépose sa carte, ses tarifs, une affiche — en photo ou en PDF.
+Les joueurs les retrouvent sur sa fiche, sur le site comme dans
+l'application. Dix documents par commerce (réglable), 2 Mo par image, 5 Mo
+par PDF.
+
+### Les trois dangers, et ce qu'on en a fait
+
+1. **Un fichier qui ment sur ce qu'il est.** On lit ses premiers octets,
+   jamais ce qu'il prétend être. Un PDF renommé en `.png` est refusé.
+2. **Un fichier qui remplit la base.** Un plafond par type, et un nombre
+   maximum de documents par commerce.
+3. **Un nom de fichier hostile.** C'est le plus vicieux : le nom repart dans
+   un en-tête HTTP au téléchargement, et un retour à la ligne glissé dedans
+   permettrait d'inventer des en-têtes. Le nom est nettoyé, pas seulement
+   raccourci.
+
+Le SVG reste refusé (c'est un document qui peut contenir du script). Le PDF
+est accepté mais servi en TÉLÉCHARGEMENT, jamais affiché dans la page : un
+PDF peut embarquer du script et le lecteur intégré du navigateur l'exécute ;
+en téléchargement, il s'ouvre dans le lecteur du système, hors de notre
+domaine.
+
+### Ce qu'il reste à vérifier
+
+Sur un vrai téléphone, choisir un fichier rend un chemin `file://` que
+l'application convertit avant de l'envoyer. Ce chemin-là n'a pas pu être
+exercé ici — seule la version web du sélecteur l'a été, et elle rend
+directement le fichier encodé.

@@ -17,10 +17,15 @@ import { enProduction, entetesDeSecurite } from './securite';
 // (« request entity too large ») au lieu de « Image trop lourde (520 Ko,
 // maximum 400 Ko) ».
 //
-// La limite reste basse : c'est un garde-fou contre un envoi démesuré, pas
-// le contrôle de la taille des images. Celui-là est fait juste après, en
-// français, par les règles de chaque type d'image.
-const TAILLE_MAXIMALE_REQUETE = '1mb';
+// Depuis les pièces jointes, la même règle s'applique à des PDF : une carte
+// de restaurant de 5 Mo en fait près de 7 une fois encodée en texte. D'où les
+// 8 Mo, qui laissent juste la marge nécessaire.
+//
+// La limite reste un garde-fou contre un envoi démesuré, pas le contrôle de
+// la taille des fichiers. Celui-là est fait juste après, en français, par les
+// règles de chaque type (400 Ko pour une photo de profil, 2 Mo pour une image
+// jointe, 5 Mo pour un PDF).
+const TAILLE_MAXIMALE_REQUETE = '8mb';
 
 async function bootstrap() {
   mkdirSync(join(__dirname, '..', 'data'), { recursive: true });

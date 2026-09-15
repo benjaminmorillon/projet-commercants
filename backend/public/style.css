@@ -2735,3 +2735,85 @@ textarea:user-invalid {
   background: var(--accent-fonce);
   text-decoration: none;
 }
+
+/* ---------------------------------------------------------------------------
+   24. Les pièces jointes
+
+   Une ligne par document : une icône qui dit son genre, son nom cliquable,
+   son poids. Pas de vignette — une carte de restaurant en PDF n'a pas
+   d'aperçu, et une liste où un élément sur deux a une image et l'autre non
+   est plus difficile à lire qu'une liste sans aucune.
+   --------------------------------------------------------------------------- */
+
+.pieces {
+  display: flex;
+  flex-direction: column;
+  margin: 14px 0;
+}
+
+.piece {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.piece:first-child {
+  border-top: none;
+}
+
+.piece-icone {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+  color: var(--accent-ink);
+  font-size: 0.95rem;
+}
+
+.piece-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.piece-nom {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.piece-nom:hover {
+  color: var(--accent-ink);
+}
+
+.piece-poids {
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.piece .lien-discret {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.pieces-lieu {
+  margin-top: 6px;
+}
+
+.pieces-titre {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}

@@ -85,6 +85,22 @@
         </section>
 
         <section class="card">
+          <h2 id="pieces-titre">Mes pièces jointes</h2>
+          <p class="hint">
+            Ta carte, tes tarifs, une affiche. Les joueurs les retrouvent sur ta fiche, dans la
+            liste des lieux partenaires. Photos (JPEG, PNG, WebP) jusqu'à 2 Mo, PDF jusqu'à 5 Mo.
+          </p>
+
+          <div id="pieces-liste" class="pieces"></div>
+          <p id="pieces-vide" class="hint" hidden>Aucun document pour l'instant.</p>
+
+          <button type="button" id="btn-piece">Ajouter un document</button>
+          <input type="file" id="fichier-piece"
+                 accept="image/jpeg,image/png,image/webp,application/pdf" hidden />
+          <p id="piece-erreur" class="error" hidden></p>
+        </section>
+
+        <section class="card">
           <h2>Mon compte de jetons</h2>
           <p class="hint">Les jetons servent à payer tes campagnes de ciblage. Tes clients peuvent aussi régler chez toi avec les leurs — ils reviennent alors sur ce compte.</p>
 

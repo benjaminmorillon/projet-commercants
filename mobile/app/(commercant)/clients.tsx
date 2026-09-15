@@ -9,9 +9,11 @@
  * poussent la porte.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { appeler, urlPhoto } from '../../src/api/client';
+import { Linking } from 'react-native';
+import { URL_SERVEUR, appeler, urlPhoto } from '../../src/api/client';
+import { choisirFichier } from '../../src/api/fichiers';
 import { useMonCommerce } from '../../src/api/commerce';
 import { useSession } from '../../src/api/session';
 import { Aide, Bouton, Carte, Champ, Erreur, SousTitre, Titre } from '../../src/design/composants';
@@ -19,6 +21,13 @@ import { couleurs, espaces, rayons, typo } from '../../src/design/theme';
 
 interface Jetons {
   solde: number;
+}
+
+interface PieceJointe {
+  id: string;
+  nom: string;
+  poids: string;
+  affichable: boolean;
 }
 
 interface Client {
@@ -35,6 +44,8 @@ export default function Clients() {
   const { utilisateur, deconnecter } = useSession();
   const [clients, setClients] = useState<Client[]>([]);
   const [jetons, setJetons] = useState<Jetons | null>(null);
+  const [pieces, setPieces] = useState<PieceJointe[]>([]);
+  const [enDepot, setEnDepot] = useState(false);
   const [montant, setMontant] = useState('');
   const [message, setMessage] = useState('');
   const [enCours, setEnCours] = useState(false);
@@ -45,16 +56,52 @@ export default function Clients() {
     if (!commerce) return;
     setErreur('');
     try {
-      const [sesClients, sonSolde] = await Promise.all([
+      const [sesClients, sonSolde, sesPieces] = await Promise.all([
         appeler<Client[]>(`/businesses/${commerce.id}/clients`),
         appeler<Jetons>(`/businesses/${commerce.id}/jetons`),
+        appeler<PieceJointe[]>(`/businesses/${commerce.id}/pieces-jointes`),
       ]);
       setClients(sesClients);
       setJetons(sonSolde);
+      setPieces(sesPieces);
     } catch (e) {
       setErreur((e as Error).message);
     }
   }, [commerce?.id]);
+
+  async function deposer() {
+    if (!commerce) return;
+    setErreur('');
+    try {
+      const fichier = await choisirFichier();
+      // Refermer le sélecteur sans rien choisir n'est pas une erreur.
+      if (!fichier) return;
+
+      setEnDepot(true);
+      await appeler(`/businesses/${commerce.id}/pieces-jointes`, {
+        methode: 'POST',
+        corps: { fichier: fichier.dataUrl, nom: fichier.nom },
+      });
+      await charger();
+    } catch (e) {
+      setErreur((e as Error).message);
+    } finally {
+      setEnDepot(false);
+    }
+  }
+
+  async function retirer(piece: PieceJointe) {
+    if (!commerce) return;
+    setErreur('');
+    try {
+      await appeler(`/businesses/${commerce.id}/pieces-jointes/${piece.id}`, {
+        methode: 'DELETE',
+      });
+      await charger();
+    } catch (e) {
+      setErreur((e as Error).message);
+    }
+  }
 
   async function recharger() {
     if (!commerce) return;
@@ -132,6 +179,32 @@ export default function Clients() {
         ))}
 
         <Carte>
+          <SousTitre>Mes documents ({pieces.length})</SousTitre>
+          <Aide>
+            Ta carte, tes tarifs, une affiche. Les joueurs les retrouvent sur ta fiche. Photos
+            jusqu'à 2 Mo, PDF jusqu'à 5 Mo.
+          </Aide>
+
+          {pieces.map((piece) => (
+            <View key={piece.id} style={styles.piece}>
+              <Text style={styles.pieceIcone}>{piece.affichable ? '▣' : '▤'}</Text>
+              <Pressable
+                style={styles.pieceTexte}
+                onPress={() => Linking.openURL(`${URL_SERVEUR}/pieces-jointes/${piece.id}`)}
+              >
+                <Text style={styles.pieceNom}>{piece.nom}</Text>
+                <Text style={styles.piecePoids}>{piece.poids}</Text>
+              </Pressable>
+              <Pressable onPress={() => retirer(piece)}>
+                <Text style={styles.pieceRetirer}>Retirer</Text>
+              </Pressable>
+            </View>
+          ))}
+
+          <Bouton titre="Ajouter un document" onPress={deposer} charge={enDepot} />
+        </Carte>
+
+        <Carte>
           <SousTitre>Mes jetons</SousTitre>
           <Text style={styles.solde}>{jetons?.solde ?? 0}</Text>
           <Aide>
@@ -207,5 +280,19 @@ const styles = StyleSheet.create({
   pastilleTexte: { ...typo.petit, fontWeight: '700', color: couleurs.encre },
 
   solde: { fontSize: 34, fontWeight: '700', color: couleurs.accentEncre },
+
+  piece: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaces.md,
+    paddingVertical: espaces.md,
+    borderTopWidth: 1,
+    borderTopColor: couleurs.trait,
+  },
+  pieceIcone: { fontSize: 18, color: couleurs.accentEncre },
+  pieceTexte: { flex: 1, gap: 2 },
+  pieceNom: { fontSize: 14.5, fontWeight: '500', color: couleurs.encre },
+  piecePoids: { ...typo.petit, color: couleurs.encreFaible },
+  pieceRetirer: { ...typo.petit, fontWeight: '600', color: couleurs.encreDouce },
   succes: { ...typo.petit, color: couleurs.positif },
 });

@@ -675,6 +675,80 @@ function renderConcurrenceList(places) {
 
 document.getElementById('concurrence-filters').addEventListener('change', loadConcurrence);
 
+/* ---------- Pièces jointes ---------- */
+
+// Le fichier part tel quel, sans réduction : un PDF ne se redimensionne pas,
+// et une image jointe est faite pour être lue en grand (une carte, une
+// affiche). C'est le serveur qui plafonne, et qui le dit en français.
+function fichierEnDataUrl(fichier) {
+  return new Promise((resoudre, rejeter) => {
+    const lecteur = new FileReader();
+    lecteur.onerror = () => rejeter(new Error('Impossible de lire ce fichier.'));
+    lecteur.onload = () => resoudre(lecteur.result);
+    lecteur.readAsDataURL(fichier);
+  });
+}
+
+async function loadPieces() {
+  if (!businessId) return;
+  const pieces = await apiCall('GET', `/businesses/${businessId}/pieces-jointes`);
+
+  const liste = document.getElementById('pieces-liste');
+  document.getElementById('pieces-titre').textContent = `Mes pièces jointes (${pieces.length})`;
+  document.getElementById('pieces-vide').hidden = pieces.length > 0;
+  liste.innerHTML = '';
+
+  pieces.forEach((piece) => {
+    const ligne = document.createElement('div');
+    ligne.className = 'piece';
+    ligne.innerHTML = `
+      <span class="piece-icone" aria-hidden="true">${piece.affichable ? '▣' : '▤'}</span>
+      <div class="piece-texte">
+        <a class="piece-nom" href="/pieces-jointes/${encodeURIComponent(piece.id)}" target="_blank" rel="noopener">
+          ${escapeHtml(piece.nom)}
+        </a>
+        <span class="piece-poids">${escapeHtml(piece.poids)}</span>
+      </div>
+      <button type="button" class="lien-discret piece-retirer">Retirer</button>
+    `;
+
+    ligne.querySelector('.piece-retirer').addEventListener('click', async (clic) => {
+      if (!window.confirm(`Retirer « ${piece.nom} » ?`)) return;
+      clic.target.disabled = true;
+      await apiCall('DELETE', `/businesses/${businessId}/pieces-jointes/${piece.id}`);
+      await loadPieces();
+    });
+
+    liste.appendChild(ligne);
+  });
+}
+
+document.getElementById('btn-piece').addEventListener('click', () => {
+  document.getElementById('fichier-piece').click();
+});
+
+document.getElementById('fichier-piece').addEventListener('change', async (evenement) => {
+  const fichier = evenement.target.files?.[0];
+  const erreur = document.getElementById('piece-erreur');
+  erreur.hidden = true;
+  if (!fichier) return;
+
+  try {
+    await apiCall('POST', `/businesses/${businessId}/pieces-jointes`, {
+      fichier: await fichierEnDataUrl(fichier),
+      nom: fichier.name,
+    });
+    await loadPieces();
+  } catch (e) {
+    erreur.textContent = e.message;
+    erreur.hidden = false;
+  } finally {
+    // Sans ça, rechoisir le MÊME fichier après une erreur ne déclenche rien :
+    // la valeur du champ n'a pas changé.
+    evenement.target.value = '';
+  }
+});
+
 /* ---------- Clients : le scan du code de présence ---------- */
 
 const scanVideo = document.getElementById('scan-video');
@@ -1046,6 +1120,7 @@ function showDashboard() {
   loadOffres();
   loadBons();
   loadClients();
+  loadPieces();
   refreshPreview();
 }
 

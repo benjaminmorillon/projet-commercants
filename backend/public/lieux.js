@@ -75,6 +75,7 @@ function renderPlace(place) {
       <button type="submit">Publier l'avis</button>
       <p class="review-error error" hidden></p>
     </form>
+    <div class="pieces-lieu"></div>
     <button type="button" class="toggle-reviews-btn">Voir les avis</button>
     <div class="reviews-list" hidden></div>
   `;
@@ -105,6 +106,41 @@ function renderPlace(place) {
       reviewError.hidden = false;
     }
   });
+
+  // Les documents du lieu : sa carte, ses tarifs, une affiche. Chargés avec
+  // la fiche, parce que c'est souvent ce qu'on vient chercher — savoir ce
+  // qu'il y a à la carte avant de pousser la porte.
+  async function loadPieces() {
+    const pieces = await apiCall('GET', `/businesses/${place.id}/pieces-jointes`).catch(() => []);
+    const bloc = card.querySelector('.pieces-lieu');
+    if (pieces.length === 0) {
+      bloc.hidden = true;
+      return;
+    }
+
+    bloc.hidden = false;
+    bloc.innerHTML = `
+      <p class="pieces-titre">Ses documents</p>
+      <div class="pieces">
+        ${pieces
+          .map(
+            (piece) => `
+              <div class="piece">
+                <span class="piece-icone" aria-hidden="true">${piece.affichable ? '▣' : '▤'}</span>
+                <div class="piece-texte">
+                  <a class="piece-nom" href="/pieces-jointes/${encodeURIComponent(piece.id)}"
+                     target="_blank" rel="noopener">${escapeHtml(piece.nom)}</a>
+                  <span class="piece-poids">${escapeHtml(piece.poids)}</span>
+                </div>
+              </div>
+            `,
+          )
+          .join('')}
+      </div>
+    `;
+  }
+
+  loadPieces();
 
   async function loadReviews() {
     const reviews = await apiCall('GET', `/businesses/${place.id}/reviews`);

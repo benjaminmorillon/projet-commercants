@@ -20,6 +20,8 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Linking,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -27,7 +29,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { appeler, urlPhoto } from '../../src/api/client';
+import { URL_SERVEUR, appeler, urlPhoto } from '../../src/api/client';
 import { useSession } from '../../src/api/session';
 import {
   demanderPosition,
@@ -48,6 +50,13 @@ import {
 } from '../../src/design/composants';
 import { couleurs, espaces, rayons, typo } from '../../src/design/theme';
 
+interface PieceJointe {
+  id: string;
+  nom: string;
+  poids: string;
+  affichable: boolean;
+}
+
 interface Lieu {
   id: string;
   nom: string;
@@ -65,6 +74,10 @@ interface Lieu {
 export default function Lieux() {
   const { utilisateur } = useSession();
   const [lieux, setLieux] = useState<Lieu[]>([]);
+  // Les documents de chaque lieu, chargés en même temps que la liste : c'est
+  // souvent ce qu'on vient chercher — savoir ce qu'il y a à la carte avant de
+  // pousser la porte.
+  const [documents, setDocuments] = useState<Record<string, PieceJointe[]>>({});
   const [position, setPosition] = useState<EtatPosition>({ etat: 'attente' });
   const [rechargement, setRechargement] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -72,7 +85,16 @@ export default function Lieux() {
   const charger = useCallback(async () => {
     setErreur('');
     try {
-      setLieux(await appeler<Lieu[]>('/businesses'));
+      const liste = await appeler<Lieu[]>('/businesses');
+      setLieux(liste);
+
+      const parLieu = await Promise.all(
+        liste.map(async (lieu) => [
+          lieu.id,
+          await appeler<PieceJointe[]>(`/businesses/${lieu.id}/pieces-jointes`).catch(() => []),
+        ] as const),
+      );
+      setDocuments(Object.fromEntries(parLieu.filter(([, pieces]) => pieces.length > 0)));
     } catch (e) {
       setErreur((e as Error).message);
     }
@@ -150,6 +172,18 @@ export default function Lieux() {
                 />
               )}
             </View>
+
+            {(documents[lieu.id] ?? []).map((piece) => (
+              <Pressable
+                key={piece.id}
+                style={styles.piece}
+                onPress={() => Linking.openURL(`${URL_SERVEUR}/pieces-jointes/${piece.id}`)}
+              >
+                <Text style={styles.pieceIcone}>{piece.affichable ? '▣' : '▤'}</Text>
+                <Text style={styles.pieceNom}>{piece.nom}</Text>
+                <Text style={styles.piecePoids}>{piece.poids}</Text>
+              </Pressable>
+            ))}
 
             <Bouton
               titre="Montrer mon code sur place"
@@ -233,6 +267,18 @@ function EtatDeLaPosition({
 }
 
 const styles = StyleSheet.create({
+  piece: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaces.sm,
+    paddingVertical: espaces.sm,
+    borderTopWidth: 1,
+    borderTopColor: couleurs.trait,
+  },
+  pieceIcone: { fontSize: 16, color: couleurs.accentEncre },
+  pieceNom: { flex: 1, ...typo.petit, color: couleurs.encre },
+  piecePoids: { ...typo.petit, color: couleurs.encreFaible },
+
   ecran: { flex: 1, backgroundColor: couleurs.fond },
   contenu: { padding: espaces.lg, gap: espaces.md, paddingBottom: espaces.xxl },
 

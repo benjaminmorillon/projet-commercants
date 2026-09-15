@@ -100,6 +100,18 @@ export const CATALOGUE: DefinitionReglage[] = [
   },
 
   {
+    cle: 'fichiers.parCommerce',
+    groupe: 'terrain',
+    libelle: 'Pièces jointes par commerce',
+    explication:
+      "Combien de documents un commerçant peut déposer sur sa fiche (sa carte, ses tarifs, une affiche). Sans plafond, un seul compte pourrait remplir la base.",
+    type: 'entier',
+    defaut: 10,
+    min: 1,
+    max: 100,
+    unite: 'fichiers',
+  },
+  {
     cle: 'presence.dureeCodeSecondes',
     groupe: 'terrain',
     libelle: 'Durée de validité du code de présence',

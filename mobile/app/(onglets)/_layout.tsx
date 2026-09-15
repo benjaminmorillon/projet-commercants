@@ -69,6 +69,13 @@ export default function Onglets() {
           tabBarIcon: ({ color }) => <Icone symbole="◎" couleur={color} />,
         }}
       />
+
+      {/* Amis et duos existent, mais pas dans la barre : à six onglets, on ne
+          lit plus les libellés. On y entre depuis le profil, qui est déjà la
+          page de « moi et les autres ». `href: null` garde l'écran
+          navigable tout en le retirant de la barre. */}
+      <Tabs.Screen name="amis" options={{ href: null }} />
+      <Tabs.Screen name="duos" options={{ href: null }} />
     </Tabs>
   );
 }

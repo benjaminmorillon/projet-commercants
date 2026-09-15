@@ -5,6 +5,7 @@
  * il doit répondre d'un coup d'œil à « qu'est-ce que j'ai gagné » et
  * « qu'est-ce que je fais maintenant ».
  */
+import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Image,
@@ -177,6 +178,16 @@ export default function MonProfil() {
               encore quelles missions te proposer.
             </Aide>
           )}
+        </Carte>
+
+        <Carte>
+          <SousTitre>Les autres</SousTitre>
+          <Aide>
+            Le jeu se joue aussi à plusieurs : des missions à deux avec quelqu'un que
+            l'application te trouve, et les gens que tu croises en route.
+          </Aide>
+          <Bouton titre="Missions à deux" onPress={() => router.push('/duos')} />
+          <Bouton titre="Mes amis" variante="discret" onPress={() => router.push('/amis')} />
         </Carte>
 
         <Bouton titre="Se déconnecter" variante="discret" onPress={deconnecter} />

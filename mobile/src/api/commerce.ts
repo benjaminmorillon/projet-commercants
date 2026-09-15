@@ -7,6 +7,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { appeler } from './client';
+import { useSession } from './session';
 
 export interface Commerce {
   id: string;
@@ -24,11 +25,22 @@ export interface EtatCommerce {
 }
 
 export function useMonCommerce(): EtatCommerce {
+  const { utilisateur } = useSession();
   const [commerce, setCommerce] = useState<Commerce | null>(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
 
   const recharger = useCallback(async () => {
+    // Un joueur n'a pas d'établissement, et la question n'a pas à être posée
+    // au serveur. Sur le web, le routeur monte brièvement les écrans du
+    // commerçant pendant qu'il choisit sa destination : sans ce garde,
+    // chaque ouverture de l'application produisait un 404 inutile.
+    if (utilisateur?.type !== 'commercant') {
+      setCommerce(null);
+      setChargement(false);
+      return;
+    }
+
     setChargement(true);
     try {
       setCommerce(await appeler<Commerce>('/businesses/mien'));
@@ -39,7 +51,7 @@ export function useMonCommerce(): EtatCommerce {
     } finally {
       setChargement(false);
     }
-  }, []);
+  }, [utilisateur?.type]);
 
   useEffect(() => {
     recharger();

@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomInt } from 'crypto';
 import * as QRCode from 'qrcode';
-import { IsNull, LessThan, Repository } from 'typeorm';
+import { In, IsNull, LessThan, Repository } from 'typeorm';
 import { ReglagesService } from '../admin/reglages.service';
 import { Business } from '../businesses/business.entity';
 import { CheckIn } from '../checkins/checkin.entity';
@@ -18,6 +18,7 @@ import {
   verdictDuScan,
 } from './code-presence';
 import { CodePresence } from './code-presence.entity';
+import { RetraitClient } from './retrait-client.entity';
 
 const JOUR_MS = 24 * 60 * 60 * 1000;
 
@@ -47,6 +48,7 @@ export class PresenceService {
     @InjectRepository(User) private readonly users: Repository<User>,
     @InjectRepository(Business) private readonly businesses: Repository<Business>,
     @InjectRepository(CheckIn) private readonly checkIns: Repository<CheckIn>,
+    @InjectRepository(RetraitClient) private readonly retraits: Repository<RetraitClient>,
     private readonly checkins: CheckinsService,
     private readonly photos: PhotosService,
     private readonly reglages: ReglagesService,
@@ -202,6 +204,76 @@ export class PresenceService {
   }
 
   /**
+   * Les commerces qui connaissent ce joueur, et où il en est avec chacun.
+   *
+   * L'écran « Mon code » promet au joueur qu'il pourra sortir de ces listes.
+   * Une promesse qu'on ne peut pas tenir depuis l'interface n'en est pas une :
+   * voilà de quoi la tenir.
+   */
+  async mesCommerces(playerId: string) {
+    const [visites, retraits] = await Promise.all([
+      this.checkIns.find({ where: { playerId }, order: { createdAt: 'ASC' } }),
+      this.retraits.find({ where: { playerId } }),
+    ]);
+    if (visites.length === 0) {
+      return [];
+    }
+
+    const sortis = new Set(retraits.map((r) => r.businessId));
+    const parCommerce = new Map<string, { premiere: Date; derniere: Date; visites: number }>();
+
+    for (const visite of visites) {
+      const connu = parCommerce.get(visite.businessId);
+      if (connu) {
+        connu.derniere = visite.createdAt;
+        connu.visites += 1;
+      } else {
+        parCommerce.set(visite.businessId, {
+          premiere: visite.createdAt,
+          derniere: visite.createdAt,
+          visites: 1,
+        });
+      }
+    }
+
+    const ids = [...parCommerce.keys()];
+    const lieux = await this.businesses.find({ where: { id: In(ids) } });
+    const noms = new Map(lieux.map((l) => [l.id, l.nom]));
+
+    return ids
+      .map((id) => {
+        const compte = parCommerce.get(id) as { premiere: Date; derniere: Date; visites: number };
+        return {
+          businessId: id,
+          nom: noms.get(id) ?? '(commerce supprimé)',
+          premiereVisite: compte.premiere,
+          derniereVisite: compte.derniere,
+          visites: compte.visites,
+          retire: sortis.has(id),
+        };
+      })
+      .sort((a, b) => b.derniereVisite.getTime() - a.derniereVisite.getTime());
+  }
+
+  /** Sortir de la liste des clients d'un commerce, ou y revenir. */
+  async changerMonRetrait(playerId: string, businessId: string, retire: boolean) {
+    const existant = await this.retraits.findOne({ where: { playerId, businessId } });
+
+    if (retire && !existant) {
+      await this.retraits.save(this.retraits.create({ playerId, businessId }));
+    } else if (!retire && existant) {
+      await this.retraits.delete({ id: existant.id });
+    }
+
+    return { businessId, retire };
+  }
+
+  /** Les joueurs qu'un commerce a le droit de prévenir. */
+  async destinatairesDesAnnonces(businessId: string): Promise<string[]> {
+    return (await this.clients(businessId)).map((c) => c.playerId);
+  }
+
+  /**
    * Les clients d'un commerce : qui est venu, quand, combien de fois.
    *
    * C'est la carte de fidélité que le commerçant n'avait pas, et que le
@@ -209,13 +281,17 @@ export class PresenceService {
    * ses offres.
    */
   async clients(businessId: string) {
-    const visites = await this.checkIns.find({
-      where: { businessId },
-      order: { createdAt: 'ASC' },
-    });
+    const [visites, retraits] = await Promise.all([
+      this.checkIns.find({ where: { businessId }, order: { createdAt: 'ASC' } }),
+      this.retraits.find({ where: { businessId } }),
+    ]);
     if (visites.length === 0) {
       return [];
     }
+
+    // Ceux qui ont demandé à ne plus figurer dans cette liste en sortent —
+    // sans perdre leurs venues, qui appartiennent à leur jeu à eux.
+    const sortis = new Set(retraits.map((r) => r.playerId));
 
     const parJoueur = new Map<
       string,
@@ -223,6 +299,7 @@ export class PresenceService {
     >();
 
     for (const visite of visites) {
+      if (sortis.has(visite.playerId)) continue;
       const connu = parJoueur.get(visite.playerId);
       if (connu) {
         connu.derniereVisite = visite.createdAt;
@@ -237,6 +314,10 @@ export class PresenceService {
     }
 
     const ids = [...parJoueur.keys()];
+    if (ids.length === 0) {
+      return [];
+    }
+
     const [joueurs, photos] = await Promise.all([
       this.users.find({ where: ids.map((id) => ({ id })) }),
       this.photos.versions('joueur', ids),

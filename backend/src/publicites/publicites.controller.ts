@@ -68,6 +68,12 @@ export class BusinessPublicitesController {
     return this.publicites.retirerImage(offreId);
   }
 
+  /** Prévenir ses clients qu'une offre est là. */
+  @Post(':id/offres/:offreId/annoncer')
+  annoncer(@Param('id') id: string, @Param('offreId') offreId: string) {
+    return this.publicites.annoncer(offreId, id);
+  }
+
   // --- Les bons à encaisser ------------------------------------------------
 
   @Get(':id/bons')

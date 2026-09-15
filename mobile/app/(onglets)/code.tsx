@@ -13,12 +13,21 @@
  */
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { appeler } from '../../src/api/client';
 import { useSession } from '../../src/api/session';
 import { Aide, Bouton, Carte, Erreur, SousTitre, Titre } from '../../src/design/composants';
 import { couleurs, espaces, rayons, typo } from '../../src/design/theme';
+
+interface Commerce {
+  businessId: string;
+  nom: string;
+  premiereVisite: string;
+  derniereVisite: string;
+  visites: number;
+  retire: boolean;
+}
 
 interface MonCode {
   code: string;
@@ -35,6 +44,7 @@ export default function Code() {
   const [restantes, setRestantes] = useState(0);
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
+  const [commerces, setCommerces] = useState<Commerce[]>([]);
   const minuteur = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const afficher = useCallback((recu: MonCode) => {
@@ -43,14 +53,28 @@ export default function Code() {
     setErreur('');
   }, []);
 
+  const chargerCommerces = useCallback(async () => {
+    if (!utilisateur) return;
+    setCommerces(await appeler<Commerce[]>('/presence/mes-commerces').catch(() => []));
+  }, [utilisateur?.id]);
+
   const charger = useCallback(async () => {
     if (!utilisateur) return;
     try {
       afficher(await appeler<MonCode>('/presence/mon-code'));
+      await chargerCommerces();
     } catch (e) {
       setErreur((e as Error).message);
     }
-  }, [utilisateur?.id, afficher]);
+  }, [utilisateur?.id, afficher, chargerCommerces]);
+
+  async function changerRetrait(commerce: Commerce) {
+    await appeler(`/presence/mes-commerces/${commerce.businessId}/retrait`, {
+      methode: 'POST',
+      corps: { retire: !commerce.retire },
+    });
+    await chargerCommerces();
+  }
 
   // À chaque fois qu'on revient sur l'onglet : le code affiché a pu mourir
   // pendant que le téléphone était dans la poche.
@@ -133,9 +157,39 @@ export default function Code() {
           <Aide>
             En te faisant scanner, tu entres dans la liste des clients de ce commerce : il pourra
             t'adresser ses offres, comme une carte de fidélité — sans que tu aies eu à créer de
-            compte chez lui.
+            compte chez lui. Tu peux en sortir quand tu veux, juste en dessous.
           </Aide>
         </Carte>
+
+        {commerces.length > 0 && (
+          <Carte>
+            <SousTitre>Les commerces qui me connaissent</SousTitre>
+            <Aide>
+              Tant que tu figures dans leur liste, ils peuvent t'envoyer leurs offres. En sortir
+              ne t'enlève rien : tes venues, ton XP et tes quartiers levés restent à toi.
+            </Aide>
+
+            {commerces.map((commerce) => (
+              <View
+                key={commerce.businessId}
+                style={[styles.commerce, commerce.retire && styles.commerceRetire]}
+              >
+                <View style={styles.commerceTexte}>
+                  <Text style={styles.commerceNom}>{commerce.nom}</Text>
+                  <Text style={styles.commerceDetail}>
+                    {commerce.visites} venue{commerce.visites > 1 ? 's' : ''}
+                    {commerce.retire ? ' · tu ne figures plus dans sa liste' : ''}
+                  </Text>
+                </View>
+                <Pressable onPress={() => changerRetrait(commerce)}>
+                  <Text style={styles.commerceAction}>
+                    {commerce.retire ? 'Y revenir' : 'Ne plus recevoir ses offres'}
+                  </Text>
+                </Pressable>
+              </View>
+            ))}
+          </Carte>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -161,4 +215,18 @@ const styles = StyleSheet.create({
   reboursExpire: { color: couleurs.attention, fontWeight: '600' },
 
   etape: { ...typo.petit, color: couleurs.encreDouce, lineHeight: 20 },
+
+  commerce: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaces.md,
+    paddingVertical: espaces.md,
+    borderTopWidth: 1,
+    borderTopColor: couleurs.trait,
+  },
+  commerceRetire: { opacity: 0.6 },
+  commerceTexte: { flex: 1, gap: 2 },
+  commerceNom: { fontSize: 14.5, fontWeight: '600', color: couleurs.encre },
+  commerceDetail: { ...typo.petit, color: couleurs.encreFaible },
+  commerceAction: { ...typo.petit, fontWeight: '600', color: couleurs.accentEncre, textAlign: 'right' },
 });

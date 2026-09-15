@@ -77,6 +77,13 @@ export class Publicite {
   @Column({ type: 'float' })
   coutParOuverture: number;
 
+  /**
+   * Quand cette offre a été annoncée aux clients du commerce. Nulle tant
+   * qu'elle ne l'a pas été — et une offre ne s'annonce qu'une fois.
+   */
+  @Column({ type: 'datetime', nullable: true })
+  annonceeLe: Date | null;
+
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 }

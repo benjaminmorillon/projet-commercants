@@ -54,6 +54,7 @@ import { Publicite } from './publicites/publicite.entity';
 import { OuverturePublicite } from './publicites/ouverture.entity';
 import { Photo } from './photos/photo.entity';
 import { CodePresence } from './presence/code-presence.entity';
+import { RetraitClient } from './presence/retrait-client.entity';
 import { PresenceModule } from './presence/presence.module';
 import { Reglage } from './admin/reglage.entity';
 import { JournalAdmin } from './admin/journal-admin.entity';
@@ -93,6 +94,7 @@ import { JournalAdmin } from './admin/journal-admin.entity';
         JournalAdmin,
         Photo,
         CodePresence,
+        RetraitClient,
         Publicite,
         OuverturePublicite,
       ],

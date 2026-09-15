@@ -4,6 +4,8 @@ import { OwnershipModule } from '../auth/ownership.module';
 import { Business } from '../businesses/business.entity';
 import { CheckIn } from '../checkins/checkin.entity';
 import { LedgerModule } from '../ledger/ledger.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { PresenceModule } from '../presence/presence.module';
 import { OuverturePublicite } from './ouverture.entity';
 import { Publicite } from './publicite.entity';
 import { User } from '../users/user.entity';
@@ -18,6 +20,8 @@ import { PublicitesService } from './publicites.service';
     TypeOrmModule.forFeature([Publicite, OuverturePublicite, Business, CheckIn, User]),
     OwnershipModule,
     LedgerModule,
+    PresenceModule,
+    NotificationsModule,
   ],
   controllers: [BusinessPublicitesController, PublicitesController],
   providers: [PublicitesService],

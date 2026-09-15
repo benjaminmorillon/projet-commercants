@@ -5,14 +5,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { In, IsNull, LessThanOrEqual, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { ReglagesService } from '../admin/reglages.service';
 import { Business } from '../businesses/business.entity';
 import { CheckIn } from '../checkins/checkin.entity';
 import { arrondir } from '../ledger/ledger-rules';
 import { LedgerService } from '../ledger/ledger.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PhotosService } from '../photos/photos.service';
+import { PresenceService } from '../presence/presence.service';
 import { User } from '../users/user.entity';
+import {
+  DELAI_ENTRE_ANNONCES_JOURS,
+  libelleDisponibilite,
+  verdictDAnnonce,
+} from './annonce';
 import { libelleReduction, verdictDePaiement } from './eligibilite';
 import { OuverturePublicite } from './ouverture.entity';
 import { Publicite } from './publicite.entity';
@@ -45,6 +52,8 @@ export class PublicitesService {
     private readonly ledger: LedgerService,
     private readonly reglages: ReglagesService,
     private readonly photos: PhotosService,
+    private readonly presence: PresenceService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // --- Côté commerçant -----------------------------------------------------
@@ -111,13 +120,31 @@ export class PublicitesService {
     }
 
     const ids = offres.map((o) => o.id);
-    const [ouvertures, photos] = await Promise.all([
+    const [ouvertures, photos, destinataires, derniereAnnonce] = await Promise.all([
       this.ouvertures.find({ where: { publiciteId: In(ids) } }),
       this.photos.versions('publicite', ids),
+      this.presence.destinatairesDesAnnonces(businessId),
+      this.derniereAnnonceDuCommerce(businessId),
     ]);
+
+    const delaiMinimalJours =
+      this.reglages.entier('publicite.delaiEntreAnnoncesJours') ?? DELAI_ENTRE_ANNONCES_JOURS;
 
     return offres.map((offre) => {
       const siennes = ouvertures.filter((o) => o.publiciteId === offre.id);
+
+      // L'état du bouton « prévenir mes clients » vient avec l'offre : un
+      // bouton qui refuse une fois sur deux sans prévenir est un mauvais
+      // bouton, et le libellé sort de la règle elle-même plutôt que d'être
+      // réécrit dans la page.
+      const verdict = verdictDAnnonce({
+        offreEnCours: this.enCours(offre),
+        dejaAnnoncee: Boolean(offre.annonceeLe),
+        joursDepuisDerniereAnnonce: derniereAnnonce,
+        delaiMinimalJours,
+        nombreDeClients: destinataires.length,
+      });
+
       return {
         ...offre,
         photoVersion: photos.get(offre.id) ?? null,
@@ -126,8 +153,68 @@ export class PublicitesService {
         nombrePayees: siennes.filter((o) => o.paye).length,
         nombreBonsUtilises: siennes.filter((o) => o.utiliseLe).length,
         budgetRestant: arrondir(offre.budgetJetons - offre.depenseJetons),
+        annonce: {
+          possible: verdict.possible,
+          libelle: libelleDisponibilite(verdict, destinataires.length),
+        },
       };
     });
+  }
+
+  /**
+   * Annoncer une offre aux clients du commerce.
+   *
+   * Ceux qui sont passés chez lui, code scanné à l'appui — et qui n'ont pas
+   * demandé à sortir de sa liste. Le service de présence en est seul juge :
+   * on ne recompose pas la liste ici, sinon les deux finiraient par diverger
+   * et on écrirait à des gens qui avaient demandé le contraire.
+   */
+  async annoncer(publiciteId: string, businessId: string) {
+    const offre = await this.verifierAppartenance(publiciteId, businessId);
+    const [commerce, destinataires, derniere] = await Promise.all([
+      this.businesses.findOne({ where: { id: businessId } }),
+      this.presence.destinatairesDesAnnonces(businessId),
+      this.derniereAnnonceDuCommerce(businessId),
+    ]);
+
+    const verdict = verdictDAnnonce({
+      offreEnCours: this.enCours(offre),
+      dejaAnnoncee: Boolean(offre.annonceeLe),
+      joursDepuisDerniereAnnonce: derniere,
+      delaiMinimalJours:
+        this.reglages.entier('publicite.delaiEntreAnnoncesJours') ?? DELAI_ENTRE_ANNONCES_JOURS,
+      nombreDeClients: destinataires.length,
+    });
+
+    if (!verdict.possible) {
+      throw new BadRequestException(verdict.raison);
+    }
+
+    // On marque l'offre annoncée AVANT d'envoyer : si l'envoi part à moitié,
+    // un deuxième clic ne doit pas prévenir deux fois les mêmes personnes.
+    const annonceeLe = new Date();
+    await this.publicites.update({ id: publiciteId }, { annonceeLe });
+
+    for (const playerId of destinataires) {
+      await this.notifications.prevenir(playerId, 'offre_annoncee', {
+        lieu: commerce?.nom,
+        offre: offre.offre,
+      });
+    }
+
+    return { annonceeLe, prevenus: destinataires.length };
+  }
+
+  /** Depuis combien de jours ce commerce a annoncé quelque chose. */
+  private async derniereAnnonceDuCommerce(businessId: string): Promise<number | null> {
+    const derniere = await this.publicites.findOne({
+      where: { businessId, annonceeLe: Not(IsNull()) },
+      order: { annonceeLe: 'DESC' },
+    });
+    if (!derniere?.annonceeLe) {
+      return null;
+    }
+    return Math.floor((Date.now() - new Date(derniere.annonceeLe).getTime()) / JOUR_MS);
   }
 
   async basculerActive(publiciteId: string, active: boolean): Promise<Publicite> {

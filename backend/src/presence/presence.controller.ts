@@ -18,6 +18,22 @@ export class PresenceController {
   renouveler(@Utilisateur() utilisateur: UtilisateurConnecte) {
     return this.presence.renouveler(utilisateur.id);
   }
+
+  /** Les commerces qui me connaissent, et si je figure encore dans leur liste. */
+  @Get('mes-commerces')
+  mesCommerces(@Utilisateur() utilisateur: UtilisateurConnecte) {
+    return this.presence.mesCommerces(utilisateur.id);
+  }
+
+  /** Sortir de la liste d'un commerce — ou y revenir. */
+  @Post('mes-commerces/:businessId/retrait')
+  changerRetrait(
+    @Utilisateur() utilisateur: UtilisateurConnecte,
+    @Param('businessId') businessId: string,
+    @Body() corps: { retire?: unknown },
+  ) {
+    return this.presence.changerMonRetrait(utilisateur.id, businessId, Boolean(corps?.retire));
+  }
 }
 
 /** Ce que le commerçant scanne, et les clients que ça lui constitue. */

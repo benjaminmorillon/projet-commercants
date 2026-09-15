@@ -7,12 +7,13 @@ import { CheckinsModule } from '../checkins/checkins.module';
 import { PhotosModule } from '../photos/photos.module';
 import { User } from '../users/user.entity';
 import { CodePresence } from './code-presence.entity';
+import { RetraitClient } from './retrait-client.entity';
 import { BusinessPresenceController, PresenceController } from './presence.controller';
 import { PresenceService } from './presence.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CodePresence, User, Business, CheckIn]),
+    TypeOrmModule.forFeature([CodePresence, RetraitClient, User, Business, CheckIn]),
     OwnershipModule,
     CheckinsModule,
     PhotosModule,

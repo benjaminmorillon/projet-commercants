@@ -14,7 +14,8 @@ export type TypeNotification =
   | 'invitation_recue'
   | 'invitation_repondue'
   | 'niveau_atteint'
-  | 'badge_obtenu';
+  | 'badge_obtenu'
+  | 'offre_annoncee';
 
 export interface DonneesNotification {
   // De qui ou de quoi il est question, selon le type.
@@ -25,6 +26,7 @@ export interface DonneesNotification {
   badge?: string;
   credits?: number;
   reponse?: string;
+  offre?: string;
 }
 
 export interface NotificationRendue {
@@ -107,6 +109,14 @@ const RENDUS: Record<TypeNotification, (d: DonneesNotification) => NotificationR
     titre: 'Nouveau badge',
     corps: `Tu viens de débloquer « ${d.badge ?? 'un badge'} ».`,
     lien: 'index.html',
+  }),
+  // Envoyée par un commerce à ceux qui y sont déjà passés. Le nom du lieu
+  // vient en premier : c'est lui qui donne le droit d'interrompre quelqu'un,
+  // et c'est à lui qu'on reconnaît qu'il ne s'agit pas d'un inconnu.
+  offre_annoncee: (d) => ({
+    titre: `${d.lieu ?? 'Un commerce'} a une offre pour toi`,
+    corps: d.offre ?? 'Une nouvelle offre est disponible.',
+    lien: 'offres.html',
   }),
 };
 

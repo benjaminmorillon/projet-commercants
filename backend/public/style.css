@@ -2705,6 +2705,11 @@ textarea:user-invalid {
   color: var(--ink-faint);
 }
 
+.client .lien-discret {
+  margin-left: auto;
+  text-align: right;
+}
+
 .client-visites {
   margin-left: auto;
   font-variant-numeric: tabular-nums;

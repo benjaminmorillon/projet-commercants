@@ -930,9 +930,15 @@ async function loadOffres() {
         <span class="badge">${offre.nombreBonsUtilises} bon${offre.nombreBonsUtilises > 1 ? 's' : ''} encaissé${offre.nombreBonsUtilises > 1 ? 's' : ''}</span>
         <span class="badge">Reste ${offre.budgetRestant} / ${offre.budgetJetons} jetons</span>
       </div>
-      <button type="button" class="secondary offre-bascule">
-        ${offre.active ? 'Suspendre' : 'Réactiver'}
-      </button>
+      <div class="mission-actions">
+        <button type="button" class="offre-annoncer"${offre.annonce.possible ? '' : ' disabled'}>
+          ${escapeHtml(offre.annonce.libelle)}
+        </button>
+        <button type="button" class="secondary offre-bascule">
+          ${offre.active ? 'Suspendre' : 'Réactiver'}
+        </button>
+      </div>
+      <p class="offre-annonce-erreur error" hidden></p>
     `;
 
     carte.querySelector('.offre-bascule').addEventListener('click', async (clic) => {
@@ -942,6 +948,29 @@ async function loadOffres() {
       });
       await loadOffres();
     });
+
+    const boutonAnnonce = carte.querySelector('.offre-annoncer');
+    const erreurAnnonce = carte.querySelector('.offre-annonce-erreur');
+    if (offre.annonce.possible) {
+      boutonAnnonce.addEventListener('click', async () => {
+        // Une notification poussée sur le téléphone de quelqu'un ne se
+        // rattrape pas : on demande confirmation avant, pas après.
+        if (!window.confirm(`Prévenir tes clients de cette offre ? Tu ne pourras le faire qu'une fois pour celle-ci.`)) {
+          return;
+        }
+        boutonAnnonce.disabled = true;
+        erreurAnnonce.hidden = true;
+        try {
+          const retour = await apiCall('POST', `/businesses/${businessId}/offres/${offre.id}/annoncer`);
+          boutonAnnonce.textContent = `${retour.prevenus} client${retour.prevenus > 1 ? 's' : ''} prévenu${retour.prevenus > 1 ? 's' : ''}`;
+          await loadOffres();
+        } catch (erreur) {
+          erreurAnnonce.textContent = erreur.message;
+          erreurAnnonce.hidden = false;
+          boutonAnnonce.disabled = false;
+        }
+      });
+    }
 
     liste.appendChild(carte);
   });

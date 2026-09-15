@@ -450,6 +450,18 @@ export const CATALOGUE: DefinitionReglage[] = [
     unite: 'jours',
   },
   {
+    cle: 'publicite.delaiEntreAnnoncesJours',
+    groupe: 'publicite',
+    libelle: 'Délai entre deux annonces à ses clients',
+    explication:
+      "Un commerçant peut prévenir ses clients quand il publie une offre. C'est un privilège fragile : une notification de trop et les gens coupent les notifications de l'application, ce qui emporte tout le reste du jeu. Ce délai est le garde-fou.",
+    type: 'entier',
+    defaut: 7,
+    min: 0,
+    max: 365,
+    unite: 'jours',
+  },
+  {
     cle: 'publicite.dureeMaximaleJours',
     groupe: 'publicite',
     libelle: "Durée maximale d'une offre",

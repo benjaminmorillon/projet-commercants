@@ -55,6 +55,13 @@ export default function Onglets() {
           tabBarIcon: ({ color }) => <Icone symbole="◈" couleur={color} />,
         }}
       />
+      <Tabs.Screen
+        name="offres"
+        options={{
+          title: 'Offres',
+          tabBarIcon: ({ color }) => <Icone symbole="◎" couleur={color} />,
+        }}
+      />
     </Tabs>
   );
 }

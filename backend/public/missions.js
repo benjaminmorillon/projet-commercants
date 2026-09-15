@@ -88,8 +88,9 @@ async function apiCall(method, path, body) {
   return data;
 }
 
+/** « 1 jeton », « 1,5 jeton », « 3 jetons » : en français le pluriel part à 2. */
 function jetons(montant) {
-  return `${montant} jeton${montant > 1 ? 's' : ''}`;
+  return `${montant} jeton${montant >= 2 ? 's' : ''}`;
 }
 
 function renderWalletBanner(solde) {

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Offres</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+
+    <header>
+      <h1>Offres</h1>
+      <p class="subtitle">Les bons plans des commerces du quartier. Les ouvrir te rapporte des jetons, et te donne la réduction.</p>
+    </header>
+
+    <p id="connexion" class="verrou" hidden>
+      <a href="index.html">Crée ton profil joueur</a> pour voir les offres du quartier.
+    </p>
+
+    <section class="card" id="bloc-recherche" hidden>
+      <form id="recherche-form" class="recherche" role="search">
+        <input
+          type="search"
+          id="recherche"
+          placeholder="Une pizza, une coupe de cheveux, un cadeau…"
+          aria-label="Chercher un produit ou un service"
+          autocomplete="off"
+        />
+        <button type="submit">Chercher</button>
+      </form>
+      <p class="hint" id="recherche-resume">Tape ce que tu cherches, ou laisse vide pour tout voir.</p>
+    </section>
+
+    <section class="card" id="bloc-offres" hidden>
+      <h2 id="offres-titre">Offres en cours</h2>
+      <div id="offres-liste" class="offres"></div>
+      <p id="offres-vide" class="hint" hidden></p>
+    </section>
+
+    <section class="card" id="bloc-bons" hidden>
+      <h2>Mes bons</h2>
+      <p class="hint">Montre le bon au commerçant au moment de payer : c'est lui qui l'encaisse.</p>
+      <div id="bons-liste" class="offres"></div>
+      <p id="bons-vide" class="hint" hidden>Tu n'as encore ouvert aucune offre.</p>
+    </section>
+  </main>
+
+  <script src="nav.js"></script>
+  <script src="utils.js"></script>
+  <script src="offres.js"></script>
+</body>
+</html>

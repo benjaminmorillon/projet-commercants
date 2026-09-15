@@ -1,12 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
   Put,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { UtilisateurConnecte } from '../auth/auth.service';
@@ -42,6 +42,42 @@ export class BusinessPublicitesController {
     // pourrait suspendre celle d'un concurrent en changeant un identifiant.
     await this.publicites.verifierAppartenance(offreId, id);
     return this.publicites.basculerActive(offreId, Boolean(corps?.active));
+  }
+
+  /**
+   * L'image de l'offre.
+   *
+   * Elle vit ici plutôt que dans le contrôleur des photos parce que c'est ici
+   * qu'on sait vérifier les deux choses nécessaires : que l'établissement est
+   * bien celui du compte connecté (le garde), et que l'offre appartient bien
+   * à cet établissement.
+   */
+  @Put(':id/offres/:offreId/image')
+  async changerImage(
+    @Param('id') id: string,
+    @Param('offreId') offreId: string,
+    @Body() corps: { image?: unknown },
+  ) {
+    await this.publicites.verifierAppartenance(offreId, id);
+    return this.publicites.changerImage(offreId, corps?.image);
+  }
+
+  @Delete(':id/offres/:offreId/image')
+  async retirerImage(@Param('id') id: string, @Param('offreId') offreId: string) {
+    await this.publicites.verifierAppartenance(offreId, id);
+    return this.publicites.retirerImage(offreId);
+  }
+
+  // --- Les bons à encaisser ------------------------------------------------
+
+  @Get(':id/bons')
+  bons(@Param('id') id: string) {
+    return this.publicites.bonsDuCommerce(id);
+  }
+
+  @Post(':id/bons/:bonId/utiliser')
+  utiliserBon(@Param('id') id: string, @Param('bonId') bonId: string) {
+    return this.publicites.utiliserBon(bonId, id);
   }
 }
 

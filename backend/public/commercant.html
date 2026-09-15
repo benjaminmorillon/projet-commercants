@@ -60,7 +60,8 @@
 
     <section id="dashboard" hidden>
       <div class="tab-bar" id="dashboard-tabs">
-        <button type="button" class="tab-btn active" data-tab="activite">Mon activité</button>
+        <button type="button" class="tab-btn active" data-tab="activite">Activité</button>
+        <button type="button" class="tab-btn" data-tab="offres">Offres</button>
         <button type="button" class="tab-btn" data-tab="ciblage">Ciblage</button>
         <button type="button" class="tab-btn" data-tab="concurrence">Concurrence</button>
       </div>
@@ -200,7 +201,106 @@
         </section>
       </section>
 
-      <!-- ONGLET 2 : CIBLAGE -->
+      <!-- ONGLET 2 : OFFRES -->
+      <section class="tab-panel" data-panel="offres" hidden>
+        <section class="card">
+          <h2>Publier une offre</h2>
+          <p class="hint">
+            Une offre reste consultable pendant toute la période que tu fixes, se
+            retrouve quand un joueur cherche ce que tu vends, et lui sert de bon de
+            réduction quand il vient payer chez toi.
+          </p>
+
+          <form id="offre-form">
+            <label>
+              Titre
+              <input type="text" id="offre-titre" required minlength="3" maxlength="100"
+                     placeholder="Ex : Le menu du midi" />
+            </label>
+
+            <label>
+              L'offre en une phrase
+              <input type="text" id="offre-offre" required minlength="3" maxlength="200"
+                     placeholder="Ex : Entrée + plat + café à 14 €" />
+            </label>
+
+            <label>
+              Description
+              <textarea id="offre-description" required minlength="10" maxlength="1000" rows="3"
+                        placeholder="Ce que le joueur découvre en ouvrant l'offre."></textarea>
+            </label>
+
+            <label>
+              Mots-clés
+              <input type="text" id="offre-motscles" required minlength="3" maxlength="300"
+                     placeholder="pizza, italien, pâtes, midi, à emporter" />
+              <span class="hint">C'est par ces mots qu'on te trouvera. Écris ce qu'un client taperait, pas le nom de ton commerce.</span>
+            </label>
+
+            <div class="grille-2">
+              <label>
+                Réduction en %
+                <input type="number" id="offre-pourcent" min="1" max="100" step="1" placeholder="10" />
+              </label>
+              <label>
+                ou en jetons
+                <input type="number" id="offre-jetons" min="0.5" step="0.5" placeholder="3" />
+              </label>
+            </div>
+            <p class="hint">Les deux sont facultatifs : une offre peut n'être qu'une annonce.</p>
+
+            <div class="grille-2">
+              <label>
+                Du
+                <input type="date" id="offre-debut" required />
+              </label>
+              <label>
+                au
+                <input type="date" id="offre-fin" required />
+              </label>
+            </div>
+
+            <div class="grille-2">
+              <label>
+                Budget total
+                <input type="number" id="offre-budget" min="1" step="0.5" required placeholder="30" />
+              </label>
+              <label>
+                Coût par ouverture
+                <input type="number" id="offre-cout" min="0.1" step="0.1" placeholder="0.3" />
+              </label>
+            </div>
+            <p class="hint" id="offre-estimation"></p>
+
+            <label>
+              Image (facultative)
+              <input type="file" id="offre-image" accept="image/*" />
+            </label>
+            <img id="offre-image-preview" class="image-preview" alt="" hidden />
+
+            <p id="offre-error" class="error" hidden></p>
+            <button type="submit">Publier l'offre</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2 id="offres-count">Mes offres</h2>
+          <div id="offres-list" class="missions-list"></div>
+          <p id="offres-empty" class="hint" hidden>Tu n'as encore publié aucune offre.</p>
+        </section>
+
+        <section class="card">
+          <h2 id="bons-count">Bons à encaisser</h2>
+          <p class="hint">
+            Quand un joueur te montre son bon, retrouve-le ici et encaisse-le. Un bon
+            ne peut être encaissé qu'une fois.
+          </p>
+          <div id="bons-list" class="missions-list"></div>
+          <p id="bons-empty" class="hint" hidden>Personne n'a encore ouvert tes offres.</p>
+        </section>
+      </section>
+
+      <!-- ONGLET 3 : CIBLAGE -->
       <section class="tab-panel" data-panel="ciblage" hidden>
         <section class="card">
           <h2>Cibler des joueurs</h2>
@@ -270,7 +370,7 @@
         </section>
       </section>
 
-      <!-- ONGLET 3 : CONCURRENCE -->
+      <!-- ONGLET 4 : CONCURRENCE -->
       <section class="tab-panel" data-panel="concurrence" hidden>
         <section class="card">
           <h2>Filtrer</h2>

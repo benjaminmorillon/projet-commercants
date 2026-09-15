@@ -2422,3 +2422,157 @@ textarea:user-invalid {
   margin-bottom: 12px;
   color: var(--ink);
 }
+
+/* ---------------------------------------------------------------------------
+   22. Les offres des commerçants
+
+   Une offre est une VITRINE : l'image d'abord, le nom du commerce ensuite,
+   et l'accroche en gros. C'est la seule partie du site où l'image mène —
+   ailleurs c'est toujours le texte.
+   --------------------------------------------------------------------------- */
+
+.recherche {
+  display: flex;
+  /* `form` est en colonne par défaut sur tout le site : ici on veut le champ
+     et le bouton côte à côte, il faut donc le redire explicitement. */
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+}
+
+.recherche input[type='search'] {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.recherche button {
+  /* Le `min-width: 160px` des boutons d'envoi mangerait la moitié de la
+     barre ; ici le champ doit rester le plus large des deux. */
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+/* Deux champs côte à côte (du / au, budget / coût). Ils repassent l'un sous
+   l'autre dès que la colonne se resserre. */
+.grille-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.offres {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.offre {
+  border-radius: var(--r-md);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.offre-image {
+  display: block;
+  width: 100%;
+  /* Une hauteur fixe pour que deux offres côte à côte s'alignent, quelle que
+     soit la photo envoyée par le commerçant. */
+  height: 150px;
+  object-fit: cover;
+}
+
+.offre-corps {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.offre-corps h3 {
+  /* `.card h3` en fait un intertitre minuscule en capitales. Ici c'est le
+     nom de l'offre : il doit se lire en premier. */
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--ink);
+}
+
+.offre-commerce {
+  margin: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.offre-accroche {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.offre-detail {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.885rem;
+  line-height: 1.6;
+}
+
+.offre-action {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.offre-action .hint {
+  margin: 0;
+}
+
+/* Un bon périmé reste visible — c'est un historique — mais il s'efface. */
+.bon-perime {
+  opacity: 0.6;
+}
+
+/* Le bandeau d'offre sur la page d'accueil du joueur. Il emprunte la couleur
+   de l'accent parce qu'on peut cliquer dessus — c'est un lien, pas un encart. */
+.bandeau {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  border: 1px solid rgba(124, 92, 255, 0.28);
+  text-decoration: none;
+}
+
+.bandeau:hover {
+  background: rgba(124, 92, 255, 0.2);
+}
+
+.bandeau-etiquette {
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+.bandeau-titre {
+  font-size: 0.97rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.bandeau-lieu {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}

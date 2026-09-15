@@ -678,6 +678,190 @@ function renderConcurrenceList(places) {
 
 document.getElementById('concurrence-filters').addEventListener('change', loadConcurrence);
 
+/* ---------- Offres ---------- */
+
+// L'image choisie, réduite, en attente de la création de l'offre. Elle ne
+// peut être envoyée qu'APRÈS : elle se range sous l'identifiant de l'offre,
+// qui n'existe pas encore au moment où le commerçant la choisit.
+let offreImageDataUrl = null;
+wireImagePicker('offre-image', 'offre-image-preview', (value) => {
+  offreImageDataUrl = value;
+});
+
+const offreForm = document.getElementById('offre-form');
+const offreError = document.getElementById('offre-error');
+const offreEstimation = document.getElementById('offre-estimation');
+
+// Dire tout de suite combien de lectures le budget paie. Un commerçant qui
+// saisit « 30 » sans savoir ce que ça achète n'a aucun moyen de juger.
+function rafraichirEstimation() {
+  const budget = Number(document.getElementById('offre-budget').value);
+  const cout = Number(document.getElementById('offre-cout').value) || 0.3;
+  if (!budget || !cout) {
+    offreEstimation.textContent =
+      "Le coût par ouverture est ce que tu paies chaque fois qu'un joueur lit ton offre. Laisse vide pour le tarif par défaut.";
+    return;
+  }
+  const lectures = Math.floor(budget / cout);
+  offreEstimation.textContent = `Avec ce budget, ton offre sera lue environ ${lectures} fois avant de s'arrêter.`;
+}
+
+['offre-budget', 'offre-cout'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', rafraichirEstimation);
+});
+rafraichirEstimation();
+
+offreForm.addEventListener('submit', async (submitEvent) => {
+  submitEvent.preventDefault();
+  offreError.hidden = true;
+
+  const pourcent = Number(document.getElementById('offre-pourcent').value);
+  const jetonsReduc = Number(document.getElementById('offre-jetons').value);
+  const cout = Number(document.getElementById('offre-cout').value);
+
+  try {
+    const offre = await apiCall('POST', `/businesses/${businessId}/offres`, {
+      titre: document.getElementById('offre-titre').value.trim(),
+      offre: document.getElementById('offre-offre').value.trim(),
+      description: document.getElementById('offre-description').value.trim(),
+      motsCles: document.getElementById('offre-motscles').value.trim(),
+      ...(pourcent ? { reductionPourcent: pourcent } : {}),
+      ...(jetonsReduc ? { reductionJetons: jetonsReduc } : {}),
+      debutLe: document.getElementById('offre-debut').value,
+      finLe: document.getElementById('offre-fin').value,
+      budgetJetons: Number(document.getElementById('offre-budget').value),
+      ...(cout ? { coutParOuverture: cout } : {}),
+    });
+
+    if (offreImageDataUrl) {
+      await apiCall('PUT', `/businesses/${businessId}/offres/${offre.id}/image`, {
+        image: offreImageDataUrl,
+      });
+    }
+
+    offreForm.reset();
+    offreImageDataUrl = null;
+    document.getElementById('offre-image-preview').hidden = true;
+    rafraichirEstimation();
+    await loadOffres();
+    await loadBons();
+  } catch (erreur) {
+    offreError.textContent = erreur.message;
+    offreError.hidden = false;
+  }
+});
+
+function dateCourte(valeur) {
+  if (!valeur) return '';
+  return new Date(valeur).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+}
+
+async function loadOffres() {
+  if (!businessId) return;
+  const offres = await apiCall('GET', `/businesses/${businessId}/offres`);
+
+  const liste = document.getElementById('offres-list');
+  document.getElementById('offres-count').textContent = `Mes offres (${offres.length})`;
+  document.getElementById('offres-empty').hidden = offres.length > 0;
+  liste.innerHTML = '';
+
+  offres.forEach((offre) => {
+    const carte = document.createElement('article');
+    carte.className = 'mission-card';
+
+    const image = urlPhoto('publicite', offre.id, offre.photoVersion);
+
+    carte.innerHTML = `
+      <div class="mission-card-header">
+        <h4>${escapeHtml(offre.titre)}</h4>
+        <span class="badge${offre.enCours ? ' bonus' : ''}">${offre.enCours ? 'En cours' : offre.active ? 'Hors période ou budget épuisé' : 'Suspendue'}</span>
+      </div>
+      ${image ? `<img class="image-preview" src="${escapeHtml(image)}" alt="" />` : ''}
+      <p>${escapeHtml(offre.offre)}</p>
+      <div class="badges">
+        <span class="badge">${dateCourte(offre.debutLe)} → ${dateCourte(offre.finLe)}</span>
+        <span class="badge">${offre.nombreOuvertures} lecture${offre.nombreOuvertures > 1 ? 's' : ''}</span>
+        <span class="badge">${offre.nombrePayees} payée${offre.nombrePayees > 1 ? 's' : ''}</span>
+        <span class="badge">${offre.nombreBonsUtilises} bon${offre.nombreBonsUtilises > 1 ? 's' : ''} encaissé${offre.nombreBonsUtilises > 1 ? 's' : ''}</span>
+        <span class="badge">Reste ${offre.budgetRestant} / ${offre.budgetJetons} jetons</span>
+      </div>
+      <button type="button" class="secondary offre-bascule">
+        ${offre.active ? 'Suspendre' : 'Réactiver'}
+      </button>
+    `;
+
+    carte.querySelector('.offre-bascule').addEventListener('click', async (clic) => {
+      clic.target.disabled = true;
+      await apiCall('PUT', `/businesses/${businessId}/offres/${offre.id}`, {
+        active: !offre.active,
+      });
+      await loadOffres();
+    });
+
+    liste.appendChild(carte);
+  });
+}
+
+async function loadBons() {
+  if (!businessId) return;
+  const bons = await apiCall('GET', `/businesses/${businessId}/bons`);
+
+  // Ceux à encaisser d'abord : c'est la seule chose qu'on cherche ici quand
+  // un client est devant le comptoir.
+  const ranges = [...bons].sort((a, b) => Number(b.valable) - Number(a.valable));
+  const aEncaisser = bons.filter((b) => b.valable).length;
+
+  const liste = document.getElementById('bons-list');
+  document.getElementById('bons-count').textContent = `Bons à encaisser (${aEncaisser})`;
+  document.getElementById('bons-empty').hidden = bons.length > 0;
+  liste.innerHTML = '';
+
+  ranges.forEach((bon) => {
+    const ligne = document.createElement('article');
+    ligne.className = 'mission-card';
+
+    const etat = bon.utiliseLe
+      ? `<span class="badge">Encaissé le ${dateCourte(bon.utiliseLe)}</span>`
+      : bon.valable
+        ? `<span class="badge valideur">À encaisser</span>`
+        : `<span class="badge">Offre terminée</span>`;
+
+    ligne.innerHTML = `
+      <div class="mission-card-header">
+        <h4>${escapeHtml(bon.joueur)}</h4>
+        ${etat}
+      </div>
+      <p>${escapeHtml(bon.titre)} — ${escapeHtml(bon.offre)}</p>
+      <div class="badges">
+        ${bon.reduction ? `<span class="badge bonus">${escapeHtml(bon.reduction)}</span>` : ''}
+        <span class="badge">Obtenu le ${dateCourte(bon.obtenuLe)}</span>
+      </div>
+      ${bon.valable ? '<button type="button" class="bon-encaisser">Encaisser ce bon</button>' : ''}
+      <p class="bon-erreur error" hidden></p>
+    `;
+
+    const bouton = ligne.querySelector('.bon-encaisser');
+    if (bouton) {
+      const erreur = ligne.querySelector('.bon-erreur');
+      bouton.addEventListener('click', async () => {
+        bouton.disabled = true;
+        erreur.hidden = true;
+        try {
+          await apiCall('POST', `/businesses/${businessId}/bons/${bon.id}/utiliser`);
+          await loadBons();
+          await loadOffres();
+        } catch (e) {
+          erreur.textContent = e.message;
+          erreur.hidden = false;
+          bouton.disabled = false;
+        }
+      });
+    }
+
+    liste.appendChild(ligne);
+  });
+}
+
 /* ---------- Démarrage ---------- */
 
 function showDashboard() {
@@ -688,6 +872,8 @@ function showDashboard() {
   loadEvents();
   loadMissions();
   loadCampaigns();
+  loadOffres();
+  loadBons();
   refreshPreview();
 }
 

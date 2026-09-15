@@ -12,6 +12,7 @@ import { CheckIn } from '../checkins/checkin.entity';
 import { arrondir } from '../ledger/ledger-rules';
 import { LedgerService } from '../ledger/ledger.service';
 import { PhotosService } from '../photos/photos.service';
+import { User } from '../users/user.entity';
 import { libelleReduction, verdictDePaiement } from './eligibilite';
 import { OuverturePublicite } from './ouverture.entity';
 import { Publicite } from './publicite.entity';
@@ -40,6 +41,7 @@ export class PublicitesService {
     private readonly ouvertures: Repository<OuverturePublicite>,
     @InjectRepository(Business) private readonly businesses: Repository<Business>,
     @InjectRepository(CheckIn) private readonly checkIns: Repository<CheckIn>,
+    @InjectRepository(User) private readonly users: Repository<User>,
     private readonly ledger: LedgerService,
     private readonly reglages: ReglagesService,
     private readonly photos: PhotosService,
@@ -132,6 +134,87 @@ export class PublicitesService {
     const offre = await this.trouver(publiciteId);
     await this.publicites.update({ id: publiciteId }, { active });
     return { ...offre, active };
+  }
+
+  /** L'image d'une offre. Le contrôleur a déjà vérifié qu'elle est bien sienne. */
+  async changerImage(publiciteId: string, image: unknown): Promise<{ version: number }> {
+    const version = await this.photos.enregistrer('publicite', publiciteId, image);
+    return { version: version.getTime() };
+  }
+
+  async retirerImage(publiciteId: string): Promise<{ version: null }> {
+    await this.photos.supprimer('publicite', publiciteId);
+    return { version: null };
+  }
+
+  /**
+   * Les bons que ce commerce doit encaisser.
+   *
+   * C'est la contrepartie de l'offre : le joueur l'a ouverte, elle lui a
+   * donné droit à une réduction, il se présente et le commerçant la lui
+   * applique. Sans cet écran, le bon existerait en base sans jamais pouvoir
+   * être utilisé — et la promesse faite au joueur ne tiendrait pas.
+   */
+  async bonsDuCommerce(businessId: string) {
+    const offres = await this.publicites.find({ where: { businessId } });
+    if (offres.length === 0) return [];
+
+    const parId = new Map(offres.map((o) => [o.id, o]));
+    const ouvertures = await this.ouvertures.find({
+      where: { publiciteId: In([...parId.keys()]) },
+      order: { ouverteLe: 'DESC' },
+    });
+    if (ouvertures.length === 0) return [];
+
+    const joueurs = await this.users.find({
+      where: { id: In([...new Set(ouvertures.map((o) => o.playerId))]) },
+    });
+    const pseudos = new Map(joueurs.map((j) => [j.id, j.pseudo]));
+
+    return ouvertures.map((ouverture) => {
+      const offre = parId.get(ouverture.publiciteId) as Publicite;
+      return {
+        id: ouverture.id,
+        publiciteId: offre.id,
+        titre: offre.titre,
+        offre: offre.offre,
+        reduction: libelleReduction({
+          pourcent: offre.reductionPourcent,
+          jetons: offre.reductionJetons,
+        }),
+        joueur: pseudos.get(ouverture.playerId) ?? 'Joueur',
+        obtenuLe: ouverture.ouverteLe,
+        utiliseLe: ouverture.utiliseLe,
+        finLe: offre.finLe,
+        valable: !ouverture.utiliseLe && this.enCours(offre),
+      };
+    });
+  }
+
+  /**
+   * Encaisser un bon.
+   *
+   * Un bon ne s'encaisse qu'une fois : sans ce contrôle, la même réduction
+   * pourrait être appliquée tous les jours avec la même capture d'écran.
+   */
+  async utiliserBon(bonId: string, businessId: string) {
+    const bon = await this.ouvertures.findOne({ where: { id: bonId } });
+    if (!bon) {
+      throw new NotFoundException('Bon introuvable.');
+    }
+
+    const offre = await this.verifierAppartenance(bon.publiciteId, businessId);
+
+    if (bon.utiliseLe) {
+      throw new BadRequestException('Ce bon a déjà été utilisé.');
+    }
+    if (!this.enCours(offre)) {
+      throw new BadRequestException("Cette offre n'est plus en cours : le bon n'est plus valable.");
+    }
+
+    const utiliseLe = new Date();
+    await this.ouvertures.update({ id: bonId }, { utiliseLe });
+    return { id: bonId, utiliseLe };
   }
 
   // --- Côté joueur ---------------------------------------------------------

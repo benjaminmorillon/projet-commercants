@@ -6,6 +6,7 @@ import { CheckIn } from '../checkins/checkin.entity';
 import { LedgerModule } from '../ledger/ledger.module';
 import { OuverturePublicite } from './ouverture.entity';
 import { Publicite } from './publicite.entity';
+import { User } from '../users/user.entity';
 import {
   BusinessPublicitesController,
   PublicitesController,
@@ -14,7 +15,7 @@ import { PublicitesService } from './publicites.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Publicite, OuverturePublicite, Business, CheckIn]),
+    TypeOrmModule.forFeature([Publicite, OuverturePublicite, Business, CheckIn, User]),
     OwnershipModule,
     LedgerModule,
   ],

@@ -162,8 +162,10 @@ function messageDe(donnees: unknown): string {
 }
 
 /** L'adresse d'une photo, ou null s'il n'y en a pas. */
+export type SujetPhoto = 'joueur' | 'commerce' | 'publicite';
+
 export function urlPhoto(
-  sujet: 'joueur' | 'commerce',
+  sujet: SujetPhoto,
   id: string | undefined,
   version: number | null | undefined,
 ): string | null {
@@ -186,7 +188,7 @@ export function urlPhoto(
  * mais l'envoyer ne coûte rien et évite deux chemins de code.)
  */
 export async function sourcePhoto(
-  sujet: 'joueur' | 'commerce',
+  sujet: SujetPhoto,
   id: string | undefined,
   version: number | null | undefined,
 ): Promise<{ uri: string; headers?: Record<string, string> } | null> {

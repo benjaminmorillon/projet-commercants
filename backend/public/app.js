@@ -604,8 +604,39 @@ async function initialiser() {
     `Connecté en tant que ${utilisateur.pseudo} (${utilisateur.email}).`;
   rafraichirBoutonPush();
 
+  chargerBandeauOffres();
+
   showStep('questionnaire');
   demarrer();
+}
+
+/**
+ * Le bandeau des offres.
+ *
+ * Une seule offre à la fois, la plus récente qu'on n'a pas encore ouverte :
+ * c'est un rappel, pas une régie publicitaire. Quatre offres empilées sur la
+ * page d'accueil transformeraient le profil du joueur en prospectus.
+ *
+ * Si la requête échoue, le bandeau reste simplement caché : rien sur cette
+ * page ne dépend de lui.
+ */
+async function chargerBandeauOffres() {
+  const bandeau = document.getElementById('bandeau-offres');
+  if (!bandeau) return;
+
+  const offres = await apiGet('/offres').catch(() => []);
+  const aLire = offres.find((offre) => !offre.dejaOuverte);
+  if (!aLire) {
+    bandeau.hidden = true;
+    return;
+  }
+
+  bandeau.innerHTML = `
+    <span class="bandeau-etiquette">Offre du quartier</span>
+    <span class="bandeau-titre">${escapeHtml(aLire.offre)}</span>
+    <span class="bandeau-lieu">${escapeHtml(aLire.commerce)}${aLire.gainPossible > 0 ? ` · +${aLire.gainPossible} jeton${aLire.gainPossible >= 2 ? 's' : ''} à la lecture` : ''}</span>
+  `;
+  bandeau.hidden = false;
 }
 
 initialiser();

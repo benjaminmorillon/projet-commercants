@@ -4,9 +4,13 @@
    Parti pris : la nuit.
 
    Le jeu se joue le soir, dehors, en ville. L'interface prend le même parti :
-   un fond bleu-nuit très sombre, des surfaces à peine plus claires posées
+   un fond bleu-nuit très sombre, des surfaces nettement plus claires posées
    dessus, et UNE couleur vive — un violet — réservée à ce sur quoi on agit.
    Tout le reste est en nuances de gris violacé.
+
+   Le fond est volontairement très bas (clarté perçue L* 2 sur 100) : c'est
+   l'écart avec les cartes, et lui seul, qui les fait remonter vers le
+   lecteur. Il reste bleu-violet — ce n'est jamais un noir d'écran éteint.
 
    Trois règles qui tiennent tout :
 
@@ -30,8 +34,8 @@
      Du plus profond au plus proche. Un bleu-violet très désaturé plutôt
      qu'un gris neutre : c'est ce qui donne à l'ensemble sa couleur de nuit
      au lieu d'un noir d'écran éteint. */
-  --nuit: #0b0913;
-  --paper: #100d1b;
+  --nuit: #050410;
+  --paper: #08060f;
   --card: #171327;
   --raised: #1e1932;
   --haut: #282141;
@@ -55,7 +59,7 @@
      ces valeurs en toutes lettres plutôt qu'un `var()`, qui ne sait pas
      rendre une couleur transparente. Elles sont ici, avec les autres, pour
      qu'un changement de fond ne les laisse pas en arrière. */
-  --voile-haut: rgba(16, 13, 27, 0.88);
+  --voile-haut: rgba(8, 6, 15, 0.9);
   --voile-bas: rgba(23, 19, 39, 0.92);
 
   /* --- L'accent -----------------------------------------------------------
@@ -334,7 +338,7 @@ body {
 }
 
 .tab.active {
-  color: var(--ink);
+  color: var(--univers-ink);
 }
 
 .tab-pastille {
@@ -2980,10 +2984,11 @@ textarea:user-invalid {
     color: var(--ink);
   }
 
-  /* L'onglet courant est le seul endroit coloré du rail. */
+  /* L'onglet courant est le seul endroit coloré du rail, et il porte la
+     couleur de la page où il mène. */
   .tab.active {
-    background: var(--accent-soft);
-    color: var(--accent-ink);
+    background: var(--univers-soft);
+    color: var(--univers-ink);
   }
 
   .tab-pastille {
@@ -3092,26 +3097,132 @@ textarea:user-invalid {
   }
 }
 
+
 /* ---------------------------------------------------------------------------
-   27. ESSAI — un fond plus sombre
+   27. La couleur des pages
 
-   La remarque est juste : entre le fond de page (#100d1b) et les cartes
-   (#171327) il n'y avait qu'un cheveu. Les bannières et les cartes ne se
-   décollaient pas du fond, elles s'y fondaient.
+   Le problème : tout le site était du même bleu-violet, page après page. Rien
+   ne disait au joueur qu'il venait de changer d'endroit.
 
-   On ne touche pas aux cartes : on creuse SOUS elles. Le fond descend de
-   #100d1b à #08060f — presque deux fois plus sombre, mais toujours un
-   bleu-violet, jamais un noir d'écran éteint. Les cartes, elles, ne bougent
-   pas d'un pixel : c'est l'écart qui les fait remonter.
+   La règle de départ tient toujours : le violet reste la couleur de l'action,
+   partout, sans exception. Si les boutons changeaient de couleur d'une page à
+   l'autre, on perdrait le seul repère fiable de l'interface — et la Carte,
+   avec des boutons verts, dirait « réussi » sur chaque bouton.
 
-   Cette section ne s'applique qu'aux pages qui portent la classe
-   `fond-sombre` sur leur <body>. Le temps de l'essai, c'est la page d'accueil
-   seulement — les autres gardent l'ancien fond, pour pouvoir comparer en
-   passant de l'une à l'autre.
+   Alors ce n'est pas l'action qui change de couleur, c'est la PAGE. Chaque
+   grande destination a sa teinte, et cette teinte n'apparaît qu'à trois
+   endroits :
+
+     1. un trait court au-dessus du titre — la signature de la page ;
+     2. l'onglet courant dans la navigation ;
+     3. un halo très pâle en haut de l'écran, qui s'éteint en 360 px.
+
+   Trois touches, jamais une quatrième. C'est assez pour reconnaître la page
+   d'un coup d'œil, trop peu pour repeindre l'interface.
+
+   L'espace commerçant, lui, ne prend pas de teinte : il change de GRIS. Le
+   bleu-violet du jeu laisse place à un gris légèrement chaud. On n'est plus
+   dans le jeu, on est dans son outil de travail — et ça se sent avant même
+   d'avoir lu le titre.
    --------------------------------------------------------------------------- */
 
-body.fond-sombre {
-  --nuit: #050410;
-  --paper: #08060f;
-  --voile-haut: rgba(8, 6, 15, 0.9);
+:root {
+  /* L'univers par défaut, pour toutes les pages qui n'en déclarent pas :
+     le violet de l'accent. */
+  --univers: var(--accent);
+  --univers-ink: var(--accent-ink);
+  --univers-soft: var(--accent-soft);
+  --univers-halo: rgba(124, 92, 255, 0.11);
+}
+
+/* Profil — le violet mère. C'est la page de soi, elle garde la couleur du
+   site. */
+body[data-univers='profil'] {
+  --univers: #7c5cff;
+  --univers-ink: #c3b2ff;
+  --univers-soft: rgba(124, 92, 255, 0.14);
+  --univers-halo: rgba(124, 92, 255, 0.13);
+}
+
+/* Missions — un cyan glacier. C'est déjà la couleur de la première voie de
+   l'arbre ; la page entière la reprend. */
+body[data-univers='missions'] {
+  --univers: #38bdf8;
+  --univers-ink: #7dd3fc;
+  --univers-soft: rgba(56, 189, 248, 0.14);
+  --univers-halo: rgba(56, 189, 248, 0.12);
+}
+
+/* Carte — un vert d'eau. Assez loin du vert « réussi » (#34d399), qui est
+   plus jaune, pour qu'on ne les confonde pas. */
+body[data-univers='carte'] {
+  --univers: #2dd4bf;
+  --univers-ink: #5eead4;
+  --univers-soft: rgba(45, 212, 191, 0.14);
+  --univers-halo: rgba(45, 212, 191, 0.12);
+}
+
+/* Mon code — un ambre chaud. La page qu'on ouvre en tendant son téléphone
+   à quelqu'un : c'est la plus « présente » des cinq. */
+body[data-univers='code'] {
+  --univers: #f59e0b;
+  --univers-ink: #fcd34d;
+  --univers-soft: rgba(245, 158, 11, 0.14);
+  --univers-halo: rgba(245, 158, 11, 0.11);
+}
+
+/* Espace commerçant — pas de teinte, un autre gris.
+
+   Le bleu-violet du jeu devient un gris de pierre, à peine chaud. Les cartes
+   et les traits suivent : c'est toute la matière de la page qui change, pas
+   un détail posé dessus. Le violet de l'action, lui, reste — c'est le fil
+   qui relie les deux moitiés du produit. */
+body[data-univers='commerce'] {
+  --nuit: #0b0a09;
+  --paper: #0d0c0b;
+  --card: #1b1917;
+  --raised: #24211e;
+  --haut: #2e2a26;
+  --line: #2a2522;
+  --line-strong: #3a342f;
+  --ink: #f5f3f0;
+  --ink-muted: #a8a29b;
+  --ink-faint: #756f68;
+  --voile-haut: rgba(13, 12, 11, 0.9);
+  --voile-bas: rgba(27, 25, 23, 0.92);
+  --univers-halo: rgba(168, 162, 155, 0.05);
+}
+
+/* --- Les trois touches ---------------------------------------------------- */
+
+/* 1. La signature : un trait court au-dessus du titre de la page. */
+.app > header h1::before {
+  content: '';
+  display: block;
+  width: 38px;
+  height: 3px;
+  margin-bottom: 16px;
+  border-radius: var(--r-full);
+  background: var(--univers);
+}
+
+/* 3. Le halo. `z-index: -1` le glisse entre le fond de la page et son
+   contenu : il colore sans rien recouvrir. Il s'éteint en 360 px, de sorte
+   qu'on le voit en arrivant sur la page et qu'on l'oublie en descendant. */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 360px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(130% 100% at 50% 0%, var(--univers-halo), transparent 72%);
+}
+
+/* La carte occupe l'écran entier : le halo serait recouvert, et le trait de
+   signature n'a pas de titre où se poser. */
+body.carte-body::before {
+  display: none;
 }

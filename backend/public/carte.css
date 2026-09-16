@@ -143,7 +143,7 @@
   z-index: 6;
   margin: 0;
   max-width: calc(100% - 120px);
-  background: rgba(16, 13, 27, 0.92);
+  background: rgba(8, 6, 15, 0.93);
   backdrop-filter: blur(8px);
   color: var(--ink);
   font-size: 0.82rem;

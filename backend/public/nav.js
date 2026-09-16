@@ -42,6 +42,17 @@ const SECONDAIRES = [
   { href: 'offres.html', label: 'Offres et bons', icone: 'offres' },
 ];
 
+// Chaque grande destination a sa couleur d'identité. Elle ne remplace pas le
+// violet de l'action : elle signe la page, pour qu'on sache d'un coup d'œil
+// où on est. Les pages qui n'y figurent pas gardent l'univers par défaut.
+const UNIVERS = {
+  'index.html': 'profil',
+  'missions.html': 'missions',
+  'carte.html': 'carte',
+  'code.html': 'code',
+  'commercant.html': 'commerce',
+};
+
 function pageCourante() {
   const fichier = window.location.pathname.split('/').pop();
   return fichier === '' ? 'index.html' : fichier;
@@ -100,6 +111,14 @@ function construireCoquille() {
       ${lien({ href: 'commercant.html', label: 'Espace commerçant', icone: 'commercant' })}
     </div>
   `;
+
+  // La couleur d'identité de la page. Posée sur le <body> : c'est la feuille
+  // de style qui décide de ce qu'elle en fait (voir « 27. La couleur des
+  // pages » dans style.css).
+  const univers = UNIVERS[courante];
+  if (univers) {
+    document.body.dataset.univers = univers;
+  }
 
   document.body.prepend(appbar);
   document.body.appendChild(tabbar);

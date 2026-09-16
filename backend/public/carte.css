@@ -540,3 +540,85 @@
   object-fit: cover;
   display: block;
 }
+
+/* ---------------------------------------------------------------------------
+   L'écran d'ordinateur
+
+   La carte n'a pas de colonne de contenu : elle occupe l'écran, et l'interface
+   flotte par-dessus. Au-delà de 1000 px, la barre d'onglets devient une
+   colonne à gauche (voir « 25. L'écran d'ordinateur » dans style.css) — tout
+   ce qui était collé au bord gauche ou calé sur la barre du bas doit donc être
+   recalé, sinon la colonne recouvre les filtres et les boutons flottent au
+   milieu du vide.
+   --------------------------------------------------------------------------- */
+
+@media (min-width: 900px) {
+  /* La carte commence après la colonne de navigation. */
+  #carte,
+  .carte-overlay {
+    left: var(--rail);
+  }
+
+  /* Quand la fiche partenaire est ouverte, elle occuperait les filtres : on
+     les décale de sa largeur pour qu'ils restent cliquables. `:has` permet de
+     réagir à l'ouverture de la fiche sans que le script ait à prévenir la
+     feuille de style. */
+  body:has(.fiche:not([hidden])) .carte-overlay {
+    left: calc(var(--rail) + 400px);
+  }
+
+  /* Plus de barre en bas : les outils redescendent au ras de l'écran. */
+  .carte-outils {
+    bottom: 24px;
+  }
+
+  .carte-message {
+    bottom: 22px;
+    /* Centré sur la carte, pas sur la fenêtre : la colonne de gauche ne
+       compte pas. */
+    left: calc(50% + var(--rail) / 2);
+  }
+
+  .maplibregl-ctrl-bottom-right,
+  .maplibregl-ctrl-bottom-left {
+    margin-bottom: 4px;
+  }
+
+  /* La fiche partenaire ne remonte plus du bas : elle se range contre la
+     colonne de navigation, comme un second panneau. La carte reste visible
+     et manipulable à côté — c'est justement ce qu'on gagne à avoir de la
+     place. */
+  .fiche {
+    top: var(--appbar-h);
+    bottom: 0;
+    left: var(--rail);
+    right: auto;
+    width: 400px;
+    /* La règle des 560 px centre la fiche avec un décalage de la moitié de sa
+       largeur. Ici elle est accolée à gauche : ce décalage doit sauter, sinon
+       elle passe sous la colonne de navigation. */
+    transform: none;
+    max-height: none;
+    border-radius: 0;
+    border-right: 1px solid var(--line);
+    padding: 16px 22px 32px;
+    animation: fiche-entre 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Puisque la carte reste utilisable, on ne l'assombrit plus : la fiche se
+     ferme par sa croix. */
+  .fiche-fond {
+    display: none;
+  }
+
+  .fiche-poignee {
+    display: none;
+  }
+
+  @keyframes fiche-entre {
+    from {
+      opacity: 0.4;
+      transform: translateX(-28px);
+    }
+  }
+}

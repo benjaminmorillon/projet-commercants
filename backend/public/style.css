@@ -82,6 +82,12 @@
 
   --appbar-h: 54px;
   --tabbar-h: 62px;
+
+  /* La largeur de la colonne de navigation de gauche. Elle ne sert qu'au-delà
+     de 1000 px (voir « 25. L'écran d'ordinateur »), mais elle est déclarée
+     ici parce que la carte plein écran, qui a sa propre feuille, en a besoin
+     elle aussi. */
+  --rail: 244px;
 }
 
 * {
@@ -267,6 +273,19 @@ body {
   background: rgba(23, 19, 39, 0.92);
   backdrop-filter: saturate(160%) blur(18px);
   border-top: 1px solid var(--line);
+}
+
+/* Sur un téléphone, les groupes du rail n'existent pas : `display: contents`
+   les efface du rendu et laisse les onglets redevenir les enfants directs de
+   la barre. Le second groupe, lui, reste derrière le bouton « Plus ». */
+.tabbar > .tab-groupe {
+  display: contents;
+}
+
+/* Même portée que la règle ci-dessus, et écrite après : c'est elle qui
+   l'emporte pour le second groupe. */
+.tabbar > .tab-annexe {
+  display: none;
 }
 
 .tab {
@@ -2816,4 +2835,250 @@ textarea:user-invalid {
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--ink-faint);
+}
+
+/* ---------------------------------------------------------------------------
+   25. L'écran d'ordinateur
+
+   Tout ce qui précède a été dessiné pour un téléphone : une colonne de 560 px
+   et une barre d'onglets en bas, sous le pouce. Posé tel quel sur un écran
+   d'ordinateur, le site devenait un ruban — deux tiers de l'écran vides à
+   gauche et à droite, une barre d'onglets de téléphone en travers du bas, et
+   la page des lieux partenaires qui faisait vingt mille pixels de haut.
+
+   Cette section ne change RIEN en dessous de 1000 px : le téléphone garde
+   exactement la mise en page qu'il avait. Au-dessus, elle fait trois choses.
+
+   1. La barre d'onglets se relève : elle devient une colonne à gauche. Sur un
+      écran il n'y a pas de pouce, et la place à gauche ne coûte rien.
+   2. Comme il y a enfin de la place, le menu « Plus » disparaît : ses six
+      destinations s'affichent directement dans la colonne. Un clic au lieu
+      de deux.
+   3. Le contenu s'étale : les pages faites d'une pile de cartes se rangent
+      en deux colonnes, et les listes de cartes se rangent en grille. C'est
+      ce qui raccourcit vraiment les pages.
+
+   Une seule règle de fond : la maquette du téléphone n'est jamais modifiée,
+   elle est complétée. Tout ce qui suit vit à l'intérieur du @media.
+   --------------------------------------------------------------------------- */
+
+/* Deux colonnes côte à côte sur grand écran.
+
+   `display: contents` fait disparaître les deux boîtes du rendu : sur un
+   téléphone, les cartes s'empilent exactement comme si ces div n'existaient
+   pas. C'est ce qui permet d'ajouter la mise en page de l'ordinateur sans
+   toucher d'une ligne à celle du téléphone. */
+.colonnes,
+.colonne {
+  display: contents;
+}
+
+@media (min-width: 900px) {
+  /* Le contenu se décale pour laisser la place au rail. La barre du haut,
+     elle, est fixe : elle traverse l'écran en entier, rail compris. */
+  body {
+    padding-left: var(--rail);
+  }
+
+  .app {
+    max-width: 1080px;
+    padding: calc(var(--appbar-h) + 44px) 40px 80px;
+  }
+
+  /* Un formulaire de compte seul se lit mieux dans une colonne étroite et
+     centrée que couché sur toute la largeur de l'écran. */
+  body.avant-connexion .app {
+    max-width: 640px;
+  }
+
+  .app > header {
+    margin-bottom: 32px;
+  }
+
+  .app > header h1 {
+    font-size: 2.35rem;
+  }
+
+  /* --- La barre d'onglets se relève en colonne ---------------------------- */
+
+  .tabbar {
+    top: var(--appbar-h);
+    right: auto;
+    bottom: 0;
+    width: var(--rail);
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px 14px 28px;
+    overflow-y: auto;
+    background: var(--nuit);
+    border-top: none;
+    border-right: 1px solid var(--line);
+    backdrop-filter: none;
+  }
+
+  .tabbar > .tab-groupe,
+  .tab-annexe {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  /* Le second groupe — ce qui était caché derrière « Plus ». */
+  .tab-annexe {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+
+  .tab-titre {
+    padding: 0 12px 8px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* Le bouton « Plus » n'a plus de raison d'être : tout est déjà visible. */
+  #tab-plus {
+    display: none;
+  }
+
+  .tab {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: var(--r-sm);
+    font-size: 0.895rem;
+    font-weight: 500;
+    letter-spacing: -0.006em;
+    text-align: left;
+    color: var(--ink-muted);
+    transition: background 0.14s ease, color 0.14s ease;
+  }
+
+  .tab svg {
+    width: 19px;
+    height: 19px;
+    flex: 0 0 auto;
+  }
+
+  .tab:hover {
+    background: var(--raised);
+    color: var(--ink);
+  }
+
+  /* L'onglet courant est le seul endroit coloré du rail. */
+  .tab.active {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+
+  .tab-pastille {
+    position: static;
+    transform: none;
+    margin-left: auto;
+  }
+
+  /* --- Les listes de cartes se rangent en grille -------------------------- */
+
+  #places-list,
+  #duos-list,
+  .offres {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+
+  /* Dans une grille, c'est l'écart qui espace : la marge des cartes ferait
+     double emploi et décalerait la première ligne. */
+  #places-list > .card,
+  #duos-list > .card {
+    margin-top: 0;
+  }
+
+  /* --- Le panneau des notifications ---------------------------------------
+     Sur un téléphone il monte du bas, sous le pouce. Sur un ordinateur il
+     descend de la cloche, là où on vient de cliquer. */
+  .sheet-notifications {
+    top: calc(var(--appbar-h) + 10px);
+    right: 18px;
+    bottom: auto;
+    left: auto;
+    width: 400px;
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    transform: none;
+    border-radius: var(--r-lg);
+    padding: 8px 12px 16px;
+  }
+
+  .sheet-notifications .sheet-poignee {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   26. Le très grand écran : deux colonnes
+
+   Le palier précédent relève la navigation à gauche ; il reste alors, sur un
+   écran de portable, une colonne de contenu d'environ 600 px — la largeur
+   d'une bonne page, mais pas de quoi en mettre deux côte à côte. C'est à
+   partir d'ici qu'il y a la place pour ranger les cartes en deux colonnes
+   sans que rien ne soit à l'étroit.
+   --------------------------------------------------------------------------- */
+
+@media (min-width: 1160px) {
+  .colonnes {
+    display: grid;
+    grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr);
+    gap: 20px;
+    /* Chaque colonne s'arrête à sa propre hauteur au lieu de s'étirer sur
+       celle de sa voisine. */
+    align-items: start;
+  }
+
+  /* Une colonne étroite pour agir, une large pour lire : le formulaire d'un
+     côté, ce qu'il produit de l'autre. */
+  .colonnes.agir-et-lire {
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  }
+
+  .colonne {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* Avant la connexion il n'y a qu'un formulaire à montrer : deux colonnes
+     n'auraient rien à se répartir, et le site s'ouvrirait de travers. */
+  body.avant-connexion .colonnes,
+  body.avant-connexion .colonne {
+    display: contents;
+  }
+
+  /* L'arbre des missions : les paliers d'un côté, la fiche de la mission
+     choisie de l'autre. Sur un téléphone la fiche s'ouvre sous l'arbre, ce
+     qui oblige à faire l'aller-retour ; ici elle reste sous les yeux pendant
+     qu'on parcourt l'arbre. */
+  .arbre-corps {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 22px;
+  }
+
+  .paliers {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .noeud-detail {
+    flex: 0 0 320px;
+    position: sticky;
+    top: calc(var(--appbar-h) + 24px);
+  }
 }

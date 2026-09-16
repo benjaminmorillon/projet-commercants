@@ -6,7 +6,9 @@
   <title>Projet Commerçant — Profil joueur</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<!-- La classe de départ évite que la page s'ouvre une fraction de seconde en
+     deux colonnes avant que le script sache si quelqu'un est connecté. -->
+<body class="avant-connexion">
   <main class="app">
 
     <header>
@@ -17,6 +19,13 @@
     <!-- Le bandeau des offres : la vitrine des commerçants sur la page
          d'accueil du joueur. Masqué tant qu'aucune offre n'est en cours. -->
     <a id="bandeau-offres" class="bandeau" href="offres.html" hidden></a>
+
+    <!-- Sur un ordinateur, ces cartes se rangent en deux colonnes ; sur un
+         téléphone, les deux boîtes disparaissent du rendu et tout s'empile
+         dans l'ordre où c'est écrit ici. Voir « 25. L'écran d'ordinateur »
+         dans style.css. -->
+    <div class="colonnes">
+      <div class="colonne">
 
     <section id="step-account" class="card">
       <div class="tab-bar" id="auth-tabs">
@@ -125,6 +134,9 @@
       <div id="badges-a-debloquer" class="badges-grid"></div>
     </section>
 
+      </div>
+      <div class="colonne">
+
     <section id="collection-section" class="card" hidden>
       <h2>Titres et collection</h2>
 
@@ -175,6 +187,9 @@
       <div id="wallet-history" class="wallet-history"></div>
       <p id="wallet-history-empty" class="hint" hidden>Aucun mouvement pour l'instant — <a href="missions.html">accomplis une mission</a> pour gagner tes premiers jetons.</p>
     </section>
+
+      </div>
+    </div>
   </main>
 
   <script src="nav.js"></script>

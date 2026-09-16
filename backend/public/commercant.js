@@ -1112,6 +1112,9 @@ async function loadBons() {
 function showDashboard() {
   stepAccount.hidden = true;
   dashboard.hidden = false;
+  // L'espace de travail a de quoi remplir les deux colonnes de l'écran large ;
+  // le formulaire de compte, lui, restait une colonne étroite et centrée.
+  document.body.classList.remove('avant-connexion');
   chargerPhotoEtablissement();
   loadJetons();
   loadEvents();

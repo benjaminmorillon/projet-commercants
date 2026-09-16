@@ -67,22 +67,39 @@ function construireCoquille() {
     </div>
   `;
 
+  // La même liste sert deux mises en page : sur un téléphone, une barre de
+  // cinq onglets en bas de l'écran ; sur un ordinateur, une colonne à gauche.
+  // Sur ordinateur il y a la place de tout montrer, alors le second groupe —
+  // ce que le bouton « Plus » cachait — s'affiche directement, et « Plus »
+  // s'efface. C'est la feuille de style qui décide laquelle des deux
+  // s'applique ; le HTML, lui, est écrit une seule fois.
+  const lien = (item) => `
+    <a class="tab${item.href === courante ? ' active' : ''}" href="${item.href}">
+      ${icone(item.icone)}
+      <span>${item.label}</span>
+    </a>
+  `;
+
   const tabbar = document.createElement('nav');
   tabbar.className = 'tabbar';
   tabbar.setAttribute('aria-label', 'Navigation principale');
-  tabbar.innerHTML =
-    ONGLETS.map(
-      (onglet) => `
-        <a class="tab${onglet.href === courante ? ' active' : ''}" href="${onglet.href}">
-          ${icone(onglet.icone)}
-          <span>${onglet.label}</span>
-        </a>
-      `,
-    ).join('') +
-    `<button type="button" class="tab${dansLeMenu ? ' active' : ''}" id="tab-plus">
-       ${icone('plus')}
-       <span>Plus</span>
-     </button>`;
+  tabbar.innerHTML = `
+    <div class="tab-groupe">
+      ${ONGLETS.map(lien).join('')}
+      <button type="button" class="tab${dansLeMenu ? ' active' : ''}" id="tab-plus">
+        ${icone('plus')}
+        <span>Plus</span>
+      </button>
+    </div>
+    <div class="tab-groupe tab-annexe">
+      <span class="tab-titre">Le reste du jeu</span>
+      ${SECONDAIRES.map(lien).join('')}
+    </div>
+    <div class="tab-groupe tab-annexe">
+      <span class="tab-titre">Professionnel</span>
+      ${lien({ href: 'commercant.html', label: 'Espace commerçant', icone: 'commercant' })}
+    </div>
+  `;
 
   document.body.prepend(appbar);
   document.body.appendChild(tabbar);

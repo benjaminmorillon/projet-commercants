@@ -7,7 +7,10 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
-<body>
+<!-- Tant que le commerçant n'est pas connecté, la page reste une colonne
+     étroite et centrée : un formulaire de compte seul n'a rien à mettre dans
+     la seconde colonne de l'écran large. -->
+<body class="avant-connexion">
   <main class="app">
 
     <header>
@@ -69,6 +72,9 @@
 
       <!-- ONGLET 1 : ACTIVITE -->
       <section class="tab-panel" data-panel="activite">
+        <div class="colonnes">
+          <div class="colonne">
+
         <section class="card">
           <h2>Ma vitrine</h2>
           <p class="hint">La photo de ton établissement s'affiche sur la carte, dans la liste des lieux et sur ta fiche partenaire. C'est la première chose qu'un joueur voit de toi.</p>
@@ -145,6 +151,10 @@
           <p id="event-success" class="success" hidden></p>
         </section>
 
+
+          </div>
+          <div class="colonne">
+
         <section class="card">
           <h2>Tes événements</h2>
           <div id="events-list" class="missions-list"></div>
@@ -216,10 +226,15 @@
           <div id="business-missions" class="missions-list"></div>
           <p id="business-missions-empty" class="hint" hidden>Tu n'as pas encore posté de mission.</p>
         </section>
+          </div>
+        </div>
       </section>
 
       <!-- ONGLET 2 : CLIENTS -->
       <section class="tab-panel" data-panel="clients" hidden>
+        <div class="colonnes agir-et-lire">
+          <div class="colonne">
+
         <section class="card">
           <h2>Scanner un client</h2>
           <p class="hint">
@@ -249,6 +264,10 @@
           <p id="scan-erreur" class="error" hidden></p>
         </section>
 
+
+          </div>
+          <div class="colonne">
+
         <section class="card">
           <h2 id="clients-count">Mes clients</h2>
           <p class="hint">
@@ -258,10 +277,15 @@
           <div id="clients-list"></div>
           <p id="clients-empty" class="hint" hidden>Personne n'a encore fait scanner son code chez toi.</p>
         </section>
+          </div>
+        </div>
       </section>
 
       <!-- ONGLET 3 : OFFRES -->
       <section class="tab-panel" data-panel="offres" hidden>
+        <div class="colonnes agir-et-lire">
+          <div class="colonne">
+
         <section class="card">
           <h2>Publier une offre</h2>
           <p class="hint">
@@ -342,6 +366,10 @@
           </form>
         </section>
 
+
+          </div>
+          <div class="colonne">
+
         <section class="card">
           <h2 id="offres-count">Mes offres</h2>
           <div id="offres-list" class="missions-list"></div>
@@ -357,10 +385,15 @@
           <div id="bons-list" class="missions-list"></div>
           <p id="bons-empty" class="hint" hidden>Personne n'a encore ouvert tes offres.</p>
         </section>
+          </div>
+        </div>
       </section>
 
       <!-- ONGLET 4 : CIBLAGE -->
       <section class="tab-panel" data-panel="ciblage" hidden>
+        <div class="colonnes agir-et-lire">
+          <div class="colonne">
+
         <section class="card">
           <h2>Cibler des joueurs</h2>
           <form id="campaign-form">
@@ -422,15 +455,24 @@
           <p id="campaign-success" class="success" hidden></p>
         </section>
 
+
+          </div>
+          <div class="colonne">
+
         <section class="card">
           <h2>Résultats de tes campagnes</h2>
           <div id="campaigns-list" class="missions-list"></div>
           <p id="campaigns-empty" class="hint" hidden>Aucune campagne envoyée pour l'instant.</p>
         </section>
+          </div>
+        </div>
       </section>
 
       <!-- ONGLET 5 : CONCURRENCE -->
       <section class="tab-panel" data-panel="concurrence" hidden>
+        <div class="colonnes agir-et-lire">
+          <div class="colonne">
+
         <section class="card">
           <h2>Filtrer</h2>
           <form id="concurrence-filters" class="filters">
@@ -465,6 +507,10 @@
           </form>
         </section>
 
+
+          </div>
+          <div class="colonne">
+
         <div id="concurrence-map" class="map"></div>
         <p id="concurrence-map-empty" class="hint" hidden>Aucun lieu ne correspond à ces filtres.</p>
 
@@ -472,6 +518,8 @@
           <h2 id="concurrence-count">Établissements</h2>
           <div id="concurrence-list" class="missions-list"></div>
         </section>
+          </div>
+        </div>
       </section>
     </section>
   </main>

@@ -503,6 +503,10 @@ restartButton.addEventListener('click', () => {
 });
 
 function reinitialiserAffichage() {
+  // Déconnecté, il n'y a qu'un formulaire à montrer : sur un ordinateur la
+  // page redevient une colonne étroite et centrée plutôt qu'un formulaire
+  // collé à gauche avec un grand vide à droite.
+  document.body.classList.add('avant-connexion');
   accountForm.reset();
   questionnaireForm.reset();
   walletSection.hidden = true;
@@ -597,6 +601,9 @@ async function initialiser() {
   playerId = utilisateur.id;
   moi = utilisateur;
   localStorage.setItem('playerId', playerId);
+
+  // Il y a désormais de quoi remplir les deux colonnes de l'écran large.
+  document.body.classList.remove('avant-connexion');
 
   document.getElementById('compte-section').hidden = false;
   afficherMonAvatar();

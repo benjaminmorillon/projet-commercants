@@ -17,7 +17,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { appeler } from '../../src/api/client';
 import { useSession } from '../../src/api/session';
-import { Aide, Bouton, Carte, Erreur, SousTitre, Titre } from '../../src/design/composants';
+import { Aide, Bouton, Carte, Erreur, Halo, Signature, SousTitre, Titre } from '../../src/design/composants';
 import { couleurs, espaces, rayons, typo } from '../../src/design/theme';
 
 interface Commerce {
@@ -107,7 +107,9 @@ export default function Code() {
 
   return (
     <SafeAreaView style={styles.ecran} edges={['top']}>
+      <Halo nom="code" />
       <ScrollView contentContainerStyle={styles.contenu}>
+        <Signature nom="code" />
         <Titre>Mon code</Titre>
         <Aide>
           Montre-le au commerçant : c'est ce qui enregistre ta venue et lève son quartier sur ta

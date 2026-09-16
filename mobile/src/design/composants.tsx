@@ -17,12 +17,55 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { couleurs, espaces, lueurAccent, rayons, typo } from './theme';
+import { NomUnivers, couleurs, espaces, lueurAccent, rayons, typo, univers } from './theme';
 
 // --- Carte -----------------------------------------------------------------
 
 export function Carte({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   return <View style={[styles.carte, style]}>{children}</View>;
+}
+
+// --- La couleur de l'écran -------------------------------------------------
+
+/**
+ * Le trait de signature, au-dessus du titre de l'écran.
+ *
+ * C'est la marque la plus visible de l'univers : trente-huit pixels de
+ * couleur, et on sait où on est avant d'avoir lu le titre.
+ */
+export function Signature({ nom = 'defaut' }: { nom?: NomUnivers }) {
+  return <View style={[styles.signature, { backgroundColor: univers[nom].teinte }]} />;
+}
+
+/**
+ * Le halo du haut de l'écran.
+ *
+ * Sur le site c'est un dégradé d'une ligne de CSS. React Native n'en a pas :
+ * il faudrait embarquer une bibliothèque entière pour un fondu de deux cents
+ * pixels. On l'empile donc à la main — quatorze bandes dont l'opacité
+ * décroît au carré, ce qui donne un fondu plus doux qu'une décroissance
+ * régulière, et dont les marches sont invisibles à ces opacités-là.
+ *
+ * Il se pose en premier dans l'écran : tout ce qui vient après le recouvre.
+ */
+const BANDES = 14;
+
+export function Halo({ nom = 'defaut' }: { nom?: NomUnivers }) {
+  const { halo } = univers[nom];
+
+  return (
+    <View pointerEvents="none" style={styles.halo}>
+      {Array.from({ length: BANDES }, (_, i) => (
+        <View
+          key={i}
+          style={{
+            flex: 1,
+            backgroundColor: `rgba(${halo}, ${(0.14 * (1 - i / BANDES) ** 2).toFixed(3)})`,
+          }}
+        />
+      ))}
+    </View>
+  );
 }
 
 // --- Titres ----------------------------------------------------------------
@@ -200,6 +243,17 @@ const styles = StyleSheet.create({
   boutonTextePrincipal: { color: couleurs.encreInverse },
   boutonTexteDiscret: { color: couleurs.encre },
   boutonTexteInactif: { color: couleurs.encreFaible },
+
+  signature: {
+    width: 38,
+    height: 3,
+    borderRadius: rayons.plein,
+    // L'écran espace ses blocs de 12 px ; le trait doit rester collé au
+    // titre qu'il signe, pas flotter entre deux.
+    marginBottom: -6,
+  },
+
+  halo: { position: 'absolute', top: 0, left: 0, right: 0, height: 210 },
 
   champBloc: { gap: espaces.sm },
   champEtiquette: { ...typo.minuscule, color: couleurs.encreDouce },

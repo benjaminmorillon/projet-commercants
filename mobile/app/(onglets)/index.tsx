@@ -23,7 +23,9 @@ import {
   Badge,
   Bouton,
   Carte,
+  Halo,
   initialesDe,
+  Signature,
   SousTitre,
   teinteDe,
   Titre,
@@ -97,6 +99,7 @@ export default function MonProfil() {
 
   return (
     <SafeAreaView style={styles.ecran} edges={['top']}>
+      <Halo nom="profil" />
       <ScrollView
         contentContainerStyle={styles.contenu}
         refreshControl={
@@ -107,6 +110,7 @@ export default function MonProfil() {
           />
         }
       >
+        <Signature nom="profil" />
         <View style={styles.entete}>
           <View style={[styles.avatar, { backgroundColor: teinte.fond }]}>
             {photo ? (

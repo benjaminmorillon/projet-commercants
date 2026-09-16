@@ -32,7 +32,17 @@ import {
   quartierSurLePlan,
   versLePlan,
 } from '../../src/carte/projection';
-import { Aide, Badge, Bouton, Carte, Erreur, SousTitre, Titre } from '../../src/design/composants';
+import {
+  Aide,
+  Badge,
+  Bouton,
+  Carte,
+  Erreur,
+  Halo,
+  Signature,
+  SousTitre,
+  Titre,
+} from '../../src/design/composants';
 import { couleurs, espaces, rayons, typo } from '../../src/design/theme';
 
 interface MissionDuLieu {
@@ -142,7 +152,9 @@ export default function CartePlan() {
 
   return (
     <SafeAreaView style={styles.ecran} edges={['top']}>
+      <Halo nom="carte" />
       <ScrollView contentContainerStyle={styles.contenu}>
+        <Signature nom="carte" />
         <Titre>Le quartier</Titre>
         <Aide>
           {leves > 0

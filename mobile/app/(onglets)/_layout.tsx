@@ -4,7 +4,7 @@
  */
 import { Tabs } from 'expo-router';
 import { ColorValue, Text } from 'react-native';
-import { couleurs } from '../../src/design/theme';
+import { NomUnivers, couleurs, univers } from '../../src/design/theme';
 
 /**
  * Les icônes, dessinées au texte pour l'instant.
@@ -17,12 +17,28 @@ function Icone({ symbole, couleur }: { symbole: string; couleur: ColorValue }) {
   return <Text style={{ fontSize: 19, color: couleur }}>{symbole}</Text>;
 }
 
+/**
+ * Quels onglets ont une couleur à eux.
+ *
+ * Les autres — Lieux, Offres, Amis, Duos — gardent le violet du site. Quatre
+ * teintes, pas huit : au-delà, ce n'est plus un repère, c'est un
+ * arc-en-ciel.
+ */
+const UNIVERS_PAR_ONGLET: Record<string, NomUnivers> = {
+  index: 'profil',
+  missions: 'missions',
+  carte: 'carte',
+  code: 'code',
+};
+
 export default function Onglets() {
   return (
     <Tabs
-      screenOptions={{
+      // Les options dépendent de l'onglet : chacun allume son icône dans SA
+      // couleur, celle de l'écran où il mène.
+      screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: couleurs.accentEncre,
+        tabBarActiveTintColor: univers[UNIVERS_PAR_ONGLET[route.name] ?? 'defaut'].encre,
         tabBarInactiveTintColor: couleurs.encreFaible,
         tabBarStyle: {
           backgroundColor: couleurs.carte,
@@ -32,7 +48,7 @@ export default function Onglets() {
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         sceneStyle: { backgroundColor: couleurs.fond },
-      }}
+      })}
     >
       <Tabs.Screen
         name="index"

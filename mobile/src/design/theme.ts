@@ -11,8 +11,11 @@
  * l'action, la hiérarchie par la lumière.
  */
 export const couleurs = {
-  nuit: '#0b0913',
-  fond: '#100d1b',
+  // Le fond est volontairement très bas : c'est l'écart avec les cartes, et
+  // lui seul, qui les fait remonter vers le lecteur. Il reste bleu-violet —
+  // ce n'est jamais un noir d'écran éteint.
+  nuit: '#050410',
+  fond: '#08060f',
   carte: '#171327',
   surface: '#1e1932',
   haut: '#282141',
@@ -71,4 +74,54 @@ export const lueurAccent = {
   shadowRadius: 14,
   shadowOffset: { width: 0, height: 6 },
   elevation: 6,
+};
+
+/**
+ * La couleur des écrans.
+ *
+ * Tout l'écran était du même bleu-violet, page après page : rien ne disait
+ * au joueur qu'il venait de changer d'endroit.
+ *
+ * Ce n'est PAS l'action qui change de couleur. Si les boutons changeaient de
+ * teinte d'un écran à l'autre, on perdrait le seul repère fiable de
+ * l'interface — et l'écran du quartier, avec ses boutons verts, dirait
+ * « réussi » sur chacun d'eux. Le violet reste la couleur de l'action.
+ *
+ * C'est l'ÉCRAN qui a une teinte, et elle n'apparaît qu'à trois endroits :
+ * un trait court au-dessus du titre, l'onglet courant dans la barre du bas,
+ * et un halo très pâle en haut. Trois touches, jamais une quatrième.
+ *
+ * Mêmes valeurs que le site, à l'identique — voir « 27. La couleur des
+ * pages » dans backend/public/style.css.
+ */
+export type NomUnivers = 'defaut' | 'profil' | 'missions' | 'carte' | 'code';
+
+interface Univers {
+  /** Le trait de signature et l'icône de l'onglet courant. */
+  teinte: string;
+  /** La même couleur, éclaircie pour rester lisible sur le fond noir. */
+  encre: string;
+  /** Les trois composantes du halo, à donner à `rgba()` avec l'opacité. */
+  halo: string;
+}
+
+export const univers: Record<NomUnivers, Univers> = {
+  // Les écrans sans identité propre — Lieux, Offres, Amis, Duos, l'espace
+  // commerçant — gardent le violet du site. Quatre teintes, pas onze :
+  // au-delà, ce n'est plus un repère, c'est un arc-en-ciel.
+  defaut: { teinte: '#7c5cff', encre: '#c3b2ff', halo: '124, 92, 255' },
+
+  // La page de soi garde la couleur mère.
+  profil: { teinte: '#7c5cff', encre: '#c3b2ff', halo: '124, 92, 255' },
+
+  // Déjà la couleur de la première voie de l'arbre.
+  missions: { teinte: '#38bdf8', encre: '#7dd3fc', halo: '56, 189, 248' },
+
+  // Un vert d'eau, plus bleu que le vert « réussi » (#34d399) : on ne les
+  // confond pas.
+  carte: { teinte: '#2dd4bf', encre: '#5eead4', halo: '45, 212, 191' },
+
+  // L'écran qu'on tend à quelqu'un par-dessus un comptoir : le plus présent
+  // des quatre.
+  code: { teinte: '#f59e0b', encre: '#fcd34d', halo: '245, 158, 11' },
 };

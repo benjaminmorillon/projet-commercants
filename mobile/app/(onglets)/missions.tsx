@@ -31,6 +31,8 @@ import {
   Carte,
   Champ,
   Erreur,
+  Halo,
+  Signature,
   SousTitre,
   Titre,
 } from '../../src/design/composants';
@@ -188,6 +190,7 @@ export default function Missions() {
 
   return (
     <SafeAreaView style={styles.ecran} edges={['top']}>
+      <Halo nom="missions" />
       <ScrollView
         contentContainerStyle={styles.contenu}
         refreshControl={
@@ -202,6 +205,7 @@ export default function Missions() {
           />
         }
       >
+        <Signature nom="missions" />
         <Titre>Missions</Titre>
 
         {arbre && (

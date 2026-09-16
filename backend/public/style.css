@@ -49,6 +49,15 @@
   --line: #241e3a;
   --line-strong: #342c52;
 
+  /* --- Les deux barres -----------------------------------------------------
+     Elles sont translucides et floutées : ce qui passe dessous se devine.
+     Leur couleur est celle du fond et celle des cartes, avec un voile — d'où
+     ces valeurs en toutes lettres plutôt qu'un `var()`, qui ne sait pas
+     rendre une couleur transparente. Elles sont ici, avec les autres, pour
+     qu'un changement de fond ne les laisse pas en arrière. */
+  --voile-haut: rgba(16, 13, 27, 0.88);
+  --voile-bas: rgba(23, 19, 39, 0.92);
+
   /* --- L'accent -----------------------------------------------------------
      Un violet lumineux, la seule couleur vive de l'interface. */
   --accent: #7c5cff;
@@ -130,7 +139,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   padding: 0 20px;
-  background: rgba(16, 13, 27, 0.88);
+  background: var(--voile-haut);
   backdrop-filter: saturate(160%) blur(16px);
   border-bottom: 1px solid var(--line);
 }
@@ -270,7 +279,7 @@ body {
   padding-left: max(0px, calc((100% - 560px) / 2));
   padding-right: max(0px, calc((100% - 560px) / 2));
   display: flex;
-  background: rgba(23, 19, 39, 0.92);
+  background: var(--voile-bas);
   backdrop-filter: saturate(160%) blur(18px);
   border-top: 1px solid var(--line);
 }
@@ -3081,4 +3090,28 @@ textarea:user-invalid {
     position: sticky;
     top: calc(var(--appbar-h) + 24px);
   }
+}
+
+/* ---------------------------------------------------------------------------
+   27. ESSAI — un fond plus sombre
+
+   La remarque est juste : entre le fond de page (#100d1b) et les cartes
+   (#171327) il n'y avait qu'un cheveu. Les bannières et les cartes ne se
+   décollaient pas du fond, elles s'y fondaient.
+
+   On ne touche pas aux cartes : on creuse SOUS elles. Le fond descend de
+   #100d1b à #08060f — presque deux fois plus sombre, mais toujours un
+   bleu-violet, jamais un noir d'écran éteint. Les cartes, elles, ne bougent
+   pas d'un pixel : c'est l'écart qui les fait remonter.
+
+   Cette section ne s'applique qu'aux pages qui portent la classe
+   `fond-sombre` sur leur <body>. Le temps de l'essai, c'est la page d'accueil
+   seulement — les autres gardent l'ancien fond, pour pouvoir comparer en
+   passant de l'une à l'autre.
+   --------------------------------------------------------------------------- */
+
+body.fond-sombre {
+  --nuit: #050410;
+  --paper: #08060f;
+  --voile-haut: rgba(8, 6, 15, 0.9);
 }

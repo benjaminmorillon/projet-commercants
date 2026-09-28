@@ -2,6 +2,12 @@
 
 Application (escape game urbain géolocalisé connectant joueurs et commerçants locaux). Voir `docs/` pour les spécifications complètes du projet.
 
+> **Vous voulez juste ouvrir le prototype et le regarder ?**
+> Ce fichier-ci est le journal de bord du projet : il raconte chaque brique et
+> pourquoi elle est faite ainsi. Pour le mode d'emploi pas-à-pas — installer,
+> lancer, se connecter, savoir quoi regarder — allez plutôt dans
+> **[DEMARRER.md](DEMARRER.md)**.
+
 Ce dépôt contient, brique par brique, l'implémentation du projet.
 
 - ✅ **Brique 1 : le profil joueur** — questionnaire à sliders et calcul des 4 scores d'archétypes de Bartle.
@@ -98,7 +104,7 @@ Elle affiche à la fin **la liste des comptes et de leurs mots de passe**, pour 
 
 Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur. Vous devriez voir la page "Ton profil de joueur" avec le formulaire de création de compte : pseudo, email, mot de passe. Créez votre compte, répondez au questionnaire, et vérifiez que vos 4 scores s'affichent bien à la fin. Vous restez connecté pendant 30 jours ; le bouton "Se déconnecter" se trouve en bas de la page "Mon profil".
 
-La navigation se fait par la **barre d'onglets en bas de l'écran** — Profil, Missions, Carte, Duos — le bouton "Plus" ouvrant le reste (Lieux, Validation, Invitations, Amis) et l'espace commerçant étant accessible en haut à droite.
+La navigation change de forme selon la largeur de l'écran. **Sur un téléphone** (moins de 900 px), c'est une barre d'onglets en bas — Profil, Missions, Carte, Mon code — le bouton « Plus » ouvrant le reste (Lieux, Validation, Invitations, Amis, Duos, Offres). **Sur un ordinateur**, cette barre se relève en colonne à gauche, et comme la place ne manque plus, le bouton « Plus » disparaît : ses destinations sont affichées directement. L'espace commerçant reste accessible en haut à droite, et depuis le bas de la colonne.
 
 L'onglet "Missions" mène au catalogue de missions (35 missions importées automatiquement depuis `docs/missions-catalogue.json` au premier démarrage), avec des filtres par archétype, durée, thème et mode d'interaction.
 

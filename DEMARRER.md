@@ -29,6 +29,11 @@ une fois pour toutes.
 
 C'est tout. Il n'y a rien à configurer.
 
+> **Rien d'autre à installer.** En particulier, **ni Python, ni Visual
+> Studio**. Si une commande te réclame l'un des deux, ce n'est pas normal :
+> va voir « npm install s'arrête sur une erreur Python » dans la section
+> « Si ça coince », plus bas.
+
 ---
 
 ## Étape 2 — Récupérer le code
@@ -258,6 +263,44 @@ rechargement.
 Vérifie que la fenêtre du terminal affiche toujours `Serveur démarré`. Si elle
 affiche autre chose, ou si elle est revenue à la ligne de commande, le serveur
 s'est arrêté : relance `npm start`.
+
+**`npm install` s'arrête sur une erreur Python / node-gyp**
+
+Le message contient `gyp ERR! find Python`, `Could not find any Python
+installation to use`, et un peu plus haut `No prebuilt binaries found`.
+
+**N'installe surtout pas Python.** Ce que ça veut dire, c'est que le projet
+demandait une version d'une brique (`better-sqlite3`) qui n'était pas
+fournie toute prête pour ta version de Node, et qui essayait donc de se
+fabriquer sur place — ce qui, sur Windows, réclame Python et Visual Studio.
+
+**C'est corrigé dans le projet depuis le 30 septembre 2026.** Deux solutions :
+
+- **Le plus simple** : re-télécharge le ZIP (étape 2), et recommence. La
+  bonne version est maintenant demandée d'emblée.
+- **Sans re-télécharger** : dans le dossier `backend/`, ferme tout ce qui
+  pourrait ouvrir des fichiers du projet (éditeur, explorateur), puis :
+
+```bash
+rmdir /s /q node_modules          ← sur Windows
+rm -rf node_modules               ← sur Mac
+npm install better-sqlite3@^12.11.1
+```
+
+  Cette seule commande réinstalle tout et corrige la version au passage.
+  Reprends ensuite à `npm run demo`.
+
+**Après une erreur, les commandes suivantes échouent en cascade**
+
+Si `npm install` a échoué, `npm run demo` répondra `'ts-node' n'est pas
+reconnu` et `npm start` répondra `'nest' n'est pas reconnu`. Ce ne sont pas
+de nouveaux problèmes : ces outils font partie de ce que `npm install`
+devait installer. Répare l'installation, et les deux suivantes marcheront.
+
+> Et si tu colles par erreur une ligne de résultat attendu (par exemple
+> `Serveur démarré sur http://localhost:3000`), le terminal répondra
+> `'Serveur' n'est pas reconnu`. C'est sans conséquence : il essayait
+> simplement d'exécuter cette phrase comme une commande.
 
 **« Cannot find module » au démarrage**
 L'installation s'est interrompue. Relance `npm install` dans `backend/` et

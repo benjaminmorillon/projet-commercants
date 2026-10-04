@@ -148,3 +148,150 @@ Sur un vrai téléphone, choisir un fichier rend un chemin `file://` que
 l'application convertit avant de l'envoyer. Ce chemin-là n'a pas pu être
 exercé ici — seule la version web du sélecteur l'a été, et elle rend
 directement le fichier encodé.
+
+---
+
+## 4. L'économie du jeu : ce qui a été tranché
+
+**Décidé le :** 4 octobre 2026, après relecture du document de concept et
+confrontation avec le code existant. **Rien de cette section n'est encore
+construit.**
+
+### Le basculement
+
+L'application récompensait en **jetons**, c'est-à-dire en argent à dépenser
+chez le commerçant. Le concept, lui, place les **pouvoirs** au centre : des
+fonctions de l'application débloquées temporairement. Décision : on bascule
+vers les pouvoirs, sans supprimer le jeton.
+
+| | Ce que c'est | Où ça se gagne | Où ça se dépense |
+| --- | --- | --- | --- |
+| **Jeton** | de l'argent | offres ouvertes puis visitées, récompense exceptionnelle et aléatoire | **uniquement chez un commerçant** |
+| **XP** | de la progression | toute action, y compris lire une offre | débloque niveaux, missions, fonctionnalités |
+| **Pouvoir** | une fonction de l'app, temporaire | récompense de mission, récompense de niveau | dans le jeu, dehors |
+
+### Les décisions, une par une
+
+1. **Le jeton ne disparaît pas**, mais il n'a plus qu'un usage : se dépenser
+   chez un commerçant. Il peut aussi tomber comme récompense exceptionnelle et
+   aléatoire.
+2. **Une offre lue rapporte de l'XP, toujours. Elle ne rapporte un jeton que
+   si le joueur vient réellement chez CE commerçant.** Aujourd'hui le jeton
+   tombe à la lecture, à la seule condition d'une venue récente chez
+   *n'importe quel* partenaire (`eligibilite.ts`). C'est l'argent du
+   commerçant qu'on déplace vers un résultat — ce que le concept appelle le
+   « paiement à la visite validée ».
+3. **Le ciblage coûtera moins de 30 centimes au commerçant**, et l'écart entre
+   ce qu'il paie et ce qui part au joueur devient la marge. Le montant exact
+   reste à fixer : il appartient au catalogue de réglages du back-office, donc
+   il se changera sans code.
+4. **Les commerçants ne délivrent pas de pouvoirs.** Les pouvoirs viennent de
+   la progression dans les missions et des paliers de niveau, ces derniers
+   variant selon le profil du joueur. *Conséquence à traiter : le concept
+   prévoyait un « passe-partout offert » par le commerçant, « un pouvoir rare
+   au lieu d'une réduction ». Il faudra lui trouver un remplaçant — une
+   mission exclusive, une invitation, un objet de collection sans pouvoir.*
+
+### Le QG
+
+5. **Le QG est attaché au domicile**, par géolocalisation. *À construire avec
+   précaution : le concept impose une zone approximative stockée sur
+   l'appareil, jamais partagée. Enregistrer une adresse d'habitation exacte
+   serait une donnée personnelle sensible de plus à protéger, pour aucun gain
+   de jeu — une zone arrondie suffit à savoir qu'on est « chez soi ».*
+6. **Une seule matière de construction** au départ. On diversifiera plus tard.
+7. **Le QG est un menu de fonctions**, et ce qu'on y construit donne des
+   capacités, pas de la décoration : décoder plus vite, recharger deux
+   pouvoirs à la fois, stocker davantage.
+8. **Le QG de poche** existe en deux versions : un objet rare à nombre
+   d'utilisations limité, et un objet très rare sans limite. *Point de
+   vigilance : un QG de poche illimité supprime définitivement, pour ce
+   joueur, la raison de rentrer — c'est-à-dire un tiers de la boucle. Piste
+   pour le garder vivant : qu'il ne s'ouvre que dans un commerce partenaire.*
+
+### Les balises physiques
+
+9. **QR code pour commencer, partout.** Le NFC est gardé pour plus tard.
+
+   > **À ÉVOQUER** quand Benjamin demandera ce qu'il reste à faire : passer
+   > les balises au NFC. Raison du report — le NFC ne se lit pas depuis un
+   > site web sur iPhone (Web NFC n'existe que sur Android/Chrome), et dans
+   > l'application il demande un module natif, ce qui met fin aux essais avec
+   > Expo Go : il faudrait fabriquer une version de l'application à chaque
+   > test. Coût pour le fondateur, pas pour le code.
+
+10. **Deux supports par commerce**, parce que les deux usages s'opposent : un
+    QR **visible** en vitrine, qui recrute ceux qui n'ont pas l'application,
+    et une balise **cachée** à l'intérieur, qui est l'objet de jeu.
+11. **Le terrain, c'est le centre de Nantes**, tous types de commerces de
+    proximité. Les supports doivent être peu chers mais soignés — un
+    accessoire en carton posé dans le commerce, que les joueurs auront envie
+    de chercher, pas une affiche sur une vitre. *Conséquence immédiate : le
+    quartier de démonstration est encore à Paris (Marais, Oberkampf) dans
+    `backend/src/demo/donnees-demo.ts`. Il doit passer à Nantes.*
+
+### Les compétiteurs
+
+12. **On construit a) et b) :** classements et records, puis duels consentis
+    entre deux joueurs présents dans le même lieu.
+
+    > **À ÉVOQUER** quand Benjamin demandera ce qu'il reste à faire : c) les
+    > territoires pris et repris entre équipes. Reporté parce qu'un territoire
+    > n'a de sens qu'avec de la densité de joueurs, et parce qu'il fabrique
+    > des perdants — or un perdant s'en va.
+
+13. **Les joueurs forment leurs équipes eux-mêmes**, comme des maisons. **La
+    mixité des profils paie** : certaines missions ne s'ouvrent qu'à une
+    équipe aux archétypes variés, et les récompenses y sont plus élevées.
+    C'est ce qui donne enfin un rôle au moteur de Bartle au-delà du profil
+    individuel.
+
+### L'arbre de missions
+
+14. **L'arbre reste, et son mystère avec.** Le contenu d'une mission doit être
+    simple à comprendre ; l'arbre, non — on le comprend en jouant. Un mot
+    d'accueil le dira : c'est normal de ne pas tout saisir, des choses
+    apparaissent au fil du jeu, et selon ses choix on ne débloque pas les
+    mêmes fonctionnalités que son voisin.
+
+    **Règle à ne pas franchir :** le mystère ne doit jamais devenir du
+    blocage. On cache ce qui vient après, mais il y a toujours au moins deux
+    ou trois missions faisables tout de suite.
+
+### Le consentement au ciblage
+
+15. À construire. Le ciblage par personnalité tourne déjà dans le prototype
+    sans que personne n'ait rien accepté ; c'est du profilage publicitaire au
+    sens du RGPD, et le concept exige un consentement explicite et
+    désactivable.
+
+### Mis de côté, avec les raisons
+
+**Crypto-monnaie et NFT.** L'idée d'une monnaie calibrée sur le total des
+jetons émis, et d'objets de jeu convertis en NFT échangeables, est écartée
+pour l'instant — pas rejetée.
+
+- Une monnaie dont la valeur est calibrée sur autre chose entre, en Europe,
+  dans les catégories les plus encadrées du règlement MiCA (applicable depuis
+  fin 2024), celles qui demandent un agrément. Ce n'est pas une fonctionnalité
+  à côté d'un jeu, c'est un métier régulé. **À faire confirmer par un juriste
+  avant toute décision.**
+- Un objet qui donne une fonctionnalité ET s'achète en jetons rend les jetons
+  convertibles en pouvoir. Or le concept interdit explicitement le
+  pay-to-win, et les commerçants rechargent déjà leur compte en euros
+  (`rechargement.entity.ts`) : il existerait donc un chemin de l'euro vers le
+  pouvoir.
+- La fonctionnalité serait de toute façon accordée par le serveur, pas par la
+  chaîne. Le NFT serait un reçu ; l'autorité resterait la base de données.
+- Et le public visé — quelqu'un qui veut découvrir une boulangerie à Nantes —
+  devrait tenir un portefeuille crypto pour posséder son objet.
+
+**Ce qu'on garde de l'idée, sans la chaîne :** les objets et pouvoirs
+**s'échangent entre joueurs**, mais uniquement **en personne, chez un
+commerçant**, comme le prévoit le concept. L'échange devient une raison de se
+croiser. Zéro contrainte réglementaire, et ça sert la vision.
+
+**L'argent réel pour les meilleurs joueurs** reste possible, mais par la porte
+propre : rémunérer des **ambassadeurs** pour un travail d'animation et de
+promotion, avec un contrat. C'est une relation commerciale ordinaire, pas une
+sortie de jeu convertie en espèces.

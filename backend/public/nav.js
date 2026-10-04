@@ -18,6 +18,7 @@ const ICONES = {
   offres: '<path d="M12 3.4 3.6 6.2v6c0 4.4 3.4 7.4 8.4 8.4 5-1 8.4-4 8.4-8.4v-6Z"/><path d="m9.4 14.6 5.2-5.2"/><circle cx="9.6" cy="9.8" r="1"/><circle cx="14.4" cy="14.2" r="1"/>',
   commercant: '<path d="M4 9.5 5.4 4.6h13.2L20 9.5a2.7 2.7 0 0 1-5.3.6 2.7 2.7 0 0 1-5.4 0 2.7 2.7 0 0 1-5.3-.6Z"/><path d="M5.4 11.6v7.8h13.2v-7.8"/>',
   cloche: '<path d="M18 9.6a6 6 0 1 0-12 0c0 4.6-1.6 6-1.6 6h15.2S18 14.2 18 9.6Z"/><path d="M13.7 19.4a2 2 0 0 1-3.4 0"/>',
+  pouvoirs: '<path d="M13.2 2.8 5.4 13.2h5.2l-.8 8 7.8-10.4h-5.2Z"/>',
 };
 
 function icone(nom) {
@@ -34,6 +35,7 @@ const ONGLETS = [
 
 // Le reste de la navigation, dans la feuille « Plus ».
 const SECONDAIRES = [
+  { href: 'pouvoirs.html', label: 'Mes pouvoirs', icone: 'pouvoirs' },
   { href: 'lieux.html', label: 'Lieux partenaires', icone: 'lieux' },
   { href: 'validation.html', label: 'Validation de missions', icone: 'validation' },
   { href: 'invitations.html', label: 'Invitations', icone: 'invitations' },

@@ -21,6 +21,7 @@ import { EventsService } from '../events/events.service';
 import { FriendsService } from '../friends/friends.service';
 import { JetonsService } from '../ledger/jetons.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { ArbreService } from '../missions/arbre.service';
 import { MissionsService } from '../missions/missions.service';
 import { PlayersService } from '../players/players.service';
 import { ValidationsService } from '../validations/validations.service';
@@ -56,6 +57,7 @@ async function main() {
   const players = app.get(PlayersService);
   const businesses = app.get(BusinessesService);
   const missionsService = app.get(MissionsService);
+  const arbre = app.get(ArbreService);
   const jetons = app.get(JetonsService);
   const checkins = app.get(CheckinsService);
   const validations = app.get(ValidationsService);
@@ -147,32 +149,80 @@ async function main() {
 
   // --- 4. Des missions accomplies, validées par un tiers -------------------
 
-  // Chaque joueur demande la validation d'une mission du lieu où il est passé ;
-  // le commerçant confirme. La limite de missions par jour s'applique.
-  const missionsSolo = (indexLieu: number) =>
-    LIEUX[indexLieu].missions
-      .map((mission, i) => ({ mission, id: lieux[indexLieu].missions[i] }))
-      .filter((m) => m.mission.modeInteraction === 'solo');
+  // Chaque joueur accomplit des missions OUVERTES DANS SON ARBRE, chez un
+  // commerçant où il est passé ; le commerçant confirme.
+  //
+  // C'est l'arbre qui décide, pas le lieu : prendre les missions d'un
+  // établissement au hasard reviendrait à demander des missions verrouillées,
+  // et la démonstration se remplirait de refus. On redemande l'arbre entre
+  // chaque mission, puisque chacune peut en ouvrir d'autres — et c'est
+  // justement comme ça qu'un palier finit par être franchi.
+  const missionsOuvertesChez = async (playerId: string, lieuxVisites: string[]) => {
+    const arbreDuJoueur = await arbre.pourLeJoueur(playerId);
+    const ouvertes: { id: string; titre: string; businessId: string | null }[] = [];
 
-  for (const [index, joueur] of JOUEURS.entries()) {
-    for (const indexLieu of joueur.visites) {
-      for (const { mission, id } of missionsSolo(indexLieu)) {
-        const demande = await essayer(
-          journal,
-          `${joueur.pseudo} accomplit « ${mission.titre} »`,
-          () =>
-            validations.requestValidation(joueurs[index].id, id, {
-              choix: index % 3 === 0 ? 'accumulation' : 'depense',
-            }),
-        );
-        if (demande) {
-          await essayer(
-            journal,
-            `${LIEUX[indexLieu].nom} valide la mission de ${joueur.pseudo}`,
-            () => validations.resolve(demande.id, 'validee', lieux[indexLieu].userId),
-          );
+    for (const voie of arbreDuJoueur.voies) {
+      for (const palier of voie.paliers) {
+        if (!palier.ouvert) continue;
+        for (const noeud of palier.noeuds) {
+          if (noeud.etat !== 'ouverte') continue;
+          if (noeud.modeInteraction !== 'solo') continue;
+          // Une mission liée à un lieu n'est accomplissable que si le joueur
+          // y est passé : c'est la règle du jeu, pas une commodité de
+          // démonstration. Les missions du catalogue commun, elles, se
+          // valident entre joueurs.
+          if (noeud.businessId && !lieuxVisites.includes(noeud.businessId)) continue;
+          ouvertes.push({
+            id: noeud.missionId,
+            titre: noeud.titre,
+            businessId: noeud.businessId,
+          });
         }
       }
+    }
+
+    return ouvertes;
+  };
+
+  for (const [index, joueur] of JOUEURS.entries()) {
+    const lieuxVisites = joueur.visites.map((i) => lieux[i].id);
+    const commercantDe = new Map(joueur.visites.map((i) => [lieux[i].id, lieux[i].userId]));
+
+    // Trois tentatives : de quoi franchir un palier, sans vider le quota du
+    // jour de tout le monde.
+    for (let tour = 0; tour < 5; tour += 1) {
+      const ouvertes = await missionsOuvertesChez(joueurs[index].id, lieuxVisites);
+      if (ouvertes.length === 0) break;
+
+      const choisie = ouvertes[0];
+      const demande = await essayer(
+        journal,
+        `${joueur.pseudo} accomplit « ${choisie.titre} »`,
+        () =>
+          validations.requestValidation(joueurs[index].id, choisie.id, {
+            choix: index % 3 === 0 ? 'accumulation' : 'depense',
+            // Une mission du catalogue commun exige qu'on désigne le joueur
+            // qui la validera ; une mission de commerce, non.
+            ...(choisie.businessId
+              ? {}
+              : { validatorPseudo: JOUEURS[(index + 1) % JOUEURS.length].pseudo }),
+          }),
+      );
+
+      if (!demande) break;
+
+      // Qui valide : le commerçant quand la mission est chez lui, un autre
+      // joueur quand elle vient du catalogue commun.
+      const valideur = choisie.businessId
+        ? commercantDe.get(choisie.businessId)
+        : joueurs[(index + 1) % joueurs.length].id;
+      if (!valideur) break;
+
+      await essayer(
+        journal,
+        `${choisie.businessId ? 'Le commerçant' : 'Un autre joueur'} valide la mission de ${joueur.pseudo}`,
+        () => validations.resolve(demande.id, 'validee', valideur),
+      );
     }
   }
 

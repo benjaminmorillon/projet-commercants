@@ -13,6 +13,7 @@ import { ArbreService } from '../missions/arbre.service';
 import { Mission } from '../missions/mission.entity';
 import { PlayerEventType } from '../player-events/event-weights';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PouvoirsService } from '../pouvoirs/pouvoirs.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
@@ -56,6 +57,7 @@ export class ValidationsService {
     private readonly playerEvents: PlayerEventsService,
     private readonly unlocking: UnlockingService,
     private readonly notifications: NotificationsService,
+    private readonly pouvoirs: PouvoirsService,
   ) {}
 
   private async getPlayerOrThrow(playerId: string): Promise<User> {
@@ -223,7 +225,7 @@ export class ValidationsService {
     if (statut === 'validee') {
       const mission = await this.missions.findOne({ where: { id: record.missionId } });
       if (mission) {
-        const recompenseFinale = await this.recompenseFinale(mission);
+        const recompenseFinale = await this.recompenseFinale(mission, record.playerId, true);
 
         await this.wallet.applyMissionReward(
           record.playerId,
@@ -232,6 +234,19 @@ export class ValidationsService {
           record.choix,
           `Mission : ${mission.titre}`,
         );
+
+        // Franchir un palier de l'arbre donne un pouvoir de la VOIE — pas du
+        // profil du joueur. Progresser dans la voie du curieux récompense en
+        // pouvoirs d'explorateur, même quelqu'un qui n'en est pas un.
+        const palier = await this.arbre.palierFranchi(record.playerId, record.missionId);
+        if (palier) {
+          await this.pouvoirs.attribuerPourPalier(
+            record.playerId,
+            palier.archetype,
+            palier.numero,
+            palier.nomVoie,
+          );
+        }
 
         // Le type de mission accomplie déplace le profil du joueur
         // (section 2.1 : le profil évolue à chaque action).
@@ -264,12 +279,23 @@ export class ValidationsService {
    * créditer le portefeuille et à annoncer le montant au joueur. Deux copies
    * finiraient par annoncer un chiffre et en verser un autre.
    */
-  private async recompenseFinale(mission: Mission): Promise<number> {
+  private async recompenseFinale(
+    mission: Mission,
+    playerId: string,
+    consommer: boolean,
+  ): Promise<number> {
     const [lieu, palier] = await Promise.all([
       this.balancing.getMultiplier(mission.businessId),
       this.arbre.primeDePalier(mission.id),
     ]);
-    return Math.round(mission.recompenseBase * lieu * palier * 100) / 100;
+
+    // Les pouvoirs actifs du joueur s'ajoutent aux deux primes existantes.
+    // `consommer` est le garde-fou : cette fonction sert à ANNONCER le montant
+    // autant qu'à le créditer, et annoncer ne doit jamais brûler une Double
+    // mise.
+    const pouvoir = await this.pouvoirs.multiplicateur(playerId, lieu > 1, consommer);
+
+    return Math.round(mission.recompenseBase * lieu * palier * pouvoir * 100) / 100;
   }
 
   // Dire au joueur ce que le validateur a décidé, et ce que ça lui rapporte.
@@ -289,7 +315,7 @@ export class ValidationsService {
       {
         pseudo: validateur?.pseudo,
         mission: mission?.titre,
-        credits: mission ? await this.recompenseFinale(mission) : undefined,
+        credits: mission ? await this.recompenseFinale(mission, record.playerId, false) : undefined,
       },
     );
   }

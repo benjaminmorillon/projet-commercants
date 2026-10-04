@@ -8,6 +8,7 @@ import { Mission } from '../missions/mission.entity';
 import { MissionsModule } from '../missions/missions.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PlayerEventsModule } from '../player-events/player-events.module';
+import { PouvoirsModule } from '../pouvoirs/pouvoirs.module';
 import { UnlockingModule } from '../unlocking/unlocking.module';
 import { User } from '../users/user.entity';
 import { WalletModule } from '../wallet/wallet.module';
@@ -27,6 +28,7 @@ import { ValidationsService } from './validations.service';
     PlayerEventsModule,
     UnlockingModule,
     NotificationsModule,
+    PouvoirsModule,
   ],
   controllers: [
     PlayerValidationsController,

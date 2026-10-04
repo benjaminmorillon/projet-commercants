@@ -3226,3 +3226,119 @@ body::before {
 body.carte-body::before {
   display: none;
 }
+
+/* ---------------------------------------------------------------------------
+   28. Les pouvoirs
+
+   Un pouvoir est périssable : c'est l'information principale de sa carte,
+   et elle est posée tout en haut, à côté du nom. Le reste — ce que ça fait,
+   d'où ça vient — se lit après.
+
+   La couleur de la carte est celle de l'archétype qui l'a donnée, et c'est
+   une donnée, pas une décoration : c'est elle qui fait voir d'un coup d'œil
+   qu'on a reçu trois pouvoirs d'explorateur et aucun de compétiteur.
+   --------------------------------------------------------------------------- */
+
+.pouvoirs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.pouvoir {
+  position: relative;
+  padding: 16px 18px;
+  border-radius: var(--r-md);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  /* Le trait de couleur sur la tranche gauche : l'archétype d'un coup d'œil. */
+  border-left: 3px solid var(--teinte, var(--accent));
+}
+
+.pouvoir-entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pouvoir-entete strong {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.pouvoir-chrono {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* En cours, le compte à rebours prend la couleur du pouvoir : c'est le seul
+   moment où il faut le regarder. */
+.pouvoir-chrono.actif {
+  color: var(--teinte, var(--accent));
+}
+
+.pouvoir-effet {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.pouvoir-conseil {
+  margin: 8px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.pouvoir-pied {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pouvoir-profil {
+  color: var(--teinte, var(--accent));
+}
+
+.pouvoir-origine {
+  color: var(--ink-faint);
+}
+
+.pouvoir .utiliser {
+  margin-top: 14px;
+  width: 100%;
+}
+
+.pouvoir-erreur {
+  margin: 10px 0 0;
+}
+
+/* Un pouvoir passé s'efface sans disparaître : il reste pour qu'on voie ce
+   qu'on a laissé filer. */
+.pouvoir-passe {
+  opacity: 0.55;
+  border-left-color: var(--line-strong);
+}
+
+@media (min-width: 900px) {
+  .pouvoirs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    align-items: start;
+  }
+}

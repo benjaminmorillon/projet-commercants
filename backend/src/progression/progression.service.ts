@@ -5,6 +5,9 @@ import { ReglagesService } from '../admin/reglages.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PlayerEventType } from '../player-events/event-weights';
 import { PlayerEvent } from '../player-events/player-event.entity';
+import { PlayerProfile } from '../players/player-profile.entity';
+import { PouvoirsService } from '../pouvoirs/pouvoirs.service';
+import type { ProfilPouvoir } from '../pouvoirs/pouvoirs';
 import { PlayerBadge } from './player-badge.entity';
 import { PlayerProgression } from './player-progression.entity';
 import {
@@ -32,7 +35,36 @@ export class ProgressionService {
     private readonly events: Repository<PlayerEvent>,
     private readonly notifications: NotificationsService,
     private readonly reglages: ReglagesService,
+    @InjectRepository(PlayerProfile)
+    private readonly profils: Repository<PlayerProfile>,
+    private readonly pouvoirs: PouvoirsService,
   ) {}
+
+  /**
+   * L'archétype le plus haut du joueur, pour choisir le pouvoir qu'on lui
+   * donne en montant de niveau.
+   *
+   * Deux personnes qui passent niveau 4 le même soir ne reçoivent donc pas la
+   * même chose — c'est exactement ce que le mot d'accueil de l'arbre annonce :
+   * selon tes choix, tu ne débloques pas la même chose que ton voisin.
+   */
+  private async profilDominant(playerId: string): Promise<ProfilPouvoir> {
+    const profil = await this.profils.findOne({ where: { userId: playerId } });
+    if (!profil) {
+      return 'explorateur';
+    }
+
+    const scores: [ProfilPouvoir, number][] = [
+      ['explorateur', profil.scoreExplorateur],
+      ['accomplisseur', profil.scoreAccomplisseur],
+      ['competiteur', profil.scoreCompetiteur],
+      ['socialisateur', profil.scoreSocialisateur],
+    ];
+
+    return scores.reduce((meilleur, candidat) =>
+      candidat[1] > meilleur[1] ? candidat : meilleur,
+    )[0];
+  }
 
   private async getOrCreate(playerId: string): Promise<PlayerProgression> {
     const existing = await this.progressions.findOne({ where: { playerId } });
@@ -89,6 +121,17 @@ export class ProgressionService {
       await this.notifications.prevenir(playerId, 'niveau_atteint', {
         niveau: progression.niveauActuel,
       });
+
+      // Un niveau donne un pouvoir, et le pouvoir dépend de qui on est.
+      // On passe par chaque niveau franchi : gagner deux niveaux d'un coup
+      // ne doit pas en faire perdre un.
+      for (let niveau = niveauAvant + 1; niveau <= progression.niveauActuel; niveau += 1) {
+        await this.pouvoirs.attribuerPourNiveau(
+          playerId,
+          await this.profilDominant(playerId),
+          niveau,
+        );
+      }
     }
 
     await this.syncBadges(playerId);

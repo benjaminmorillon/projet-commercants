@@ -6,6 +6,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { PlayerEventsService } from '../player-events/player-events.service';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { CollectionService } from '../collection/collection.service';
+import { PouvoirsService } from '../pouvoirs/pouvoirs.service';
 import { UnlockingService } from '../unlocking/unlocking.service';
 import { User, UserType } from '../users/user.entity';
 import { MissionValidation } from '../validations/mission-validation.entity';
@@ -50,6 +51,7 @@ export class FriendsService {
     private readonly missions: Repository<Mission>,
     private readonly playerEvents: PlayerEventsService,
     private readonly unlocking: UnlockingService,
+    private readonly pouvoirs: PouvoirsService,
     private readonly collection: CollectionService,
     private readonly notifications: NotificationsService,
     private readonly photos: PhotosService,
@@ -193,8 +195,16 @@ export class FriendsService {
     // accomplie (section 2.9).
     await this.unlocking.assertOuverte(playerId, 'profils_joueurs');
     const friendship = await this.findBetween(playerId, friendId);
-    if (!friendship || friendship.statut !== 'acceptee') {
-      throw new NotFoundException('Vous devez être amis pour voir ce profil.');
+    const amis = friendship?.statut === 'acceptee';
+
+    // « Lever le voile » ouvre le profil d'un joueur pendant une heure sans
+    // qu'on soit son ami. C'est le seul contournement, il est temporaire, et
+    // il a coûté un pouvoir : c'est ce qui en fait un pouvoir social plutôt
+    // qu'une fuite.
+    if (!amis && !(await this.pouvoirs.voitLeProfil(playerId, friendId))) {
+      throw new NotFoundException(
+        'Vous devez être amis pour voir ce profil — ou avoir levé le voile dessus.',
+      );
     }
 
     const friend = await this.getPlayerOrThrow(friendId);

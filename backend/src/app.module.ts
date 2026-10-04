@@ -55,6 +55,8 @@ import { OuverturePublicite } from './publicites/ouverture.entity';
 import { Photo } from './photos/photo.entity';
 import { PieceJointe } from './fichiers/piece-jointe.entity';
 import { FichiersModule } from './fichiers/fichiers.module';
+import { PouvoirJoueur } from './pouvoirs/pouvoir-joueur.entity';
+import { PouvoirsModule } from './pouvoirs/pouvoirs.module';
 import { CodePresence } from './presence/code-presence.entity';
 import { RetraitClient } from './presence/retrait-client.entity';
 import { PresenceModule } from './presence/presence.module';
@@ -67,6 +69,7 @@ import { JournalAdmin } from './admin/journal-admin.entity';
       type: 'better-sqlite3',
       database: join(__dirname, '..', 'data', 'app.sqlite'),
       entities: [
+        PouvoirJoueur,
         User,
         PlayerProfile,
         Mission,
@@ -129,6 +132,7 @@ import { JournalAdmin } from './admin/journal-admin.entity';
     PublicitesModule,
     PresenceModule,
     FichiersModule,
+    PouvoirsModule,
   ],
   // Le garde s'applique à TOUTES les routes : une route oubliée est protégée
   // par défaut, plutôt que l'inverse.

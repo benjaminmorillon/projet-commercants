@@ -4,6 +4,7 @@ import { CheckIn } from '../checkins/checkin.entity';
 import { PlayerEvent } from '../player-events/player-event.entity';
 import { PlayerProfile } from '../players/player-profile.entity';
 import { PlayerProgression } from '../progression/player-progression.entity';
+import { PouvoirsModule } from '../pouvoirs/pouvoirs.module';
 import { ProgressionModule } from '../progression/progression.module';
 import { MissionValidation } from '../validations/mission-validation.entity';
 import { UnlockingController } from './unlocking.controller';
@@ -21,6 +22,7 @@ import { ZoneDecouverte } from './zone-decouverte.entity';
       ZoneDecouverte,
     ]),
     ProgressionModule,
+    PouvoirsModule,
   ],
   controllers: [UnlockingController],
   providers: [UnlockingService],

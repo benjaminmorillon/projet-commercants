@@ -20,6 +20,7 @@ import {
   xpDecouverteZone,
   zonesVoisines,
 } from './unlock-rules';
+import { PouvoirsService } from '../pouvoirs/pouvoirs.service';
 import { ZoneDecouverte } from './zone-decouverte.entity';
 import { ReglagesService } from '../admin/reglages.service';
 
@@ -54,6 +55,7 @@ export class UnlockingService {
     private readonly validations: Repository<MissionValidation>,
     @InjectRepository(ZoneDecouverte)
     private readonly zones: Repository<ZoneDecouverte>,
+    private readonly pouvoirs: PouvoirsService,
     private readonly progression: ProgressionService,
     private readonly reglages: ReglagesService,
   ) {}
@@ -91,11 +93,17 @@ export class UnlockingService {
 
   async getMissionsDuJour(playerId: string, etat?: EtatJoueur): Promise<MissionsDuJour> {
     const niveau = (etat ?? (await this.getEtat(playerId))).niveau;
-    const limite = limiteMissionsParJour(
-      niveau,
-      this.reglages.entier('missions.parJourDepart'),
-      this.reglages.entier('missions.parJourMax'),
-    );
+
+    // Le plafond du niveau, plus ce que « Second souffle » ajoute pour
+    // aujourd'hui. Le pouvoir s'ajoute APRÈS le plafond du réglage : il sert
+    // précisément à dépasser sa journée, sinon il ne servirait à rien à
+    // quelqu'un qui a atteint le maximum de son niveau.
+    const limite =
+      limiteMissionsParJour(
+        niveau,
+        this.reglages.entier('missions.parJourDepart'),
+        this.reglages.entier('missions.parJourMax'),
+      ) + (await this.pouvoirs.bonusMissions(playerId));
 
     // Une demande refusée ne doit pas consommer le quota du joueur.
     const utilisees = await this.validations.count({
@@ -183,6 +191,12 @@ export class UnlockingService {
         this.reglages.nombre('carte.tailleZoneDegres'),
       ).forEach((cle) => visibles.add(cle));
     }
+
+    // « Vision lointaine » lève un quartier pour deux heures. Ces zones-là ne
+    // sont PAS enregistrées comme découvertes : le brouillard revient quand le
+    // pouvoir s'éteint, et seule une vraie venue lève un quartier pour de bon.
+    (await this.pouvoirs.zonesLevees(playerId)).forEach((cle) => visibles.add(cle));
+
     return visibles;
   }
 

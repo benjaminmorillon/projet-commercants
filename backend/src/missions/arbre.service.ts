@@ -76,6 +76,32 @@ export class ArbreService {
     });
   }
 
+  /**
+   * Le palier que cette mission vient de compléter, s'il y en a un.
+   *
+   * Appelé APRÈS avoir crédité la mission : si le palier compte exactement le
+   * nombre de missions requises, c'est que celle-ci était la dernière, et
+   * qu'on vient donc de le franchir. Un palier déjà dépassé renvoie `null` —
+   * sinon chaque mission suivante redonnerait un pouvoir.
+   */
+  async palierFranchi(
+    playerId: string,
+    missionId: string,
+  ): Promise<{ archetype: string; numero: number; nomVoie: string } | null> {
+    const arbre = await this.pourLeJoueur(playerId);
+
+    for (const voie of arbre.voies) {
+      for (const palier of voie.paliers) {
+        const contient = palier.noeuds.some((n) => n.missionId === missionId);
+        if (contient && palier.accomplies === palier.requises) {
+          return { archetype: voie.archetype, numero: palier.numero, nomVoie: voie.nom };
+        }
+      }
+    }
+
+    return null;
+  }
+
   /** Le nœud d'une mission dans l'arbre de ce joueur, s'il existe. */
   async noeud(playerId: string, missionId: string): Promise<Noeud | null> {
     const arbre = await this.pourLeJoueur(playerId);

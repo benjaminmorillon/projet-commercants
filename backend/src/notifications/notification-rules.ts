@@ -15,7 +15,8 @@ export type TypeNotification =
   | 'invitation_repondue'
   | 'niveau_atteint'
   | 'badge_obtenu'
-  | 'offre_annoncee';
+  | 'offre_annoncee'
+  | 'pouvoir_obtenu';
 
 export interface DonneesNotification {
   // De qui ou de quoi il est question, selon le type.
@@ -27,6 +28,8 @@ export interface DonneesNotification {
   credits?: number;
   reponse?: string;
   offre?: string;
+  pouvoir?: string;
+  effet?: string;
 }
 
 export interface NotificationRendue {
@@ -109,6 +112,13 @@ const RENDUS: Record<TypeNotification, (d: DonneesNotification) => NotificationR
     titre: 'Nouveau badge',
     corps: `Tu viens de débloquer « ${d.badge ?? 'un badge'} ».`,
     lien: 'index.html',
+  }),
+  // L'effet est dit dès la notification, et pas seulement le nom : un pouvoir
+  // dont on ignore ce qu'il fait périme dans l'inventaire sans qu'on l'ouvre.
+  pouvoir_obtenu: (d) => ({
+    titre: `Pouvoir : ${d.pouvoir ?? 'nouveau pouvoir'}`,
+    corps: `${d.effet ?? ''} Il ne se garde pas éternellement.`.trim(),
+    lien: 'pouvoirs.html',
   }),
   // Envoyée par un commerce à ceux qui y sont déjà passés. Le nom du lieu
   // vient en premier : c'est lui qui donne le droit d'interrompre quelqu'un,

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projet Commerçant — Pouvoirs</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+
+    <header>
+      <h1>Mes pouvoirs</h1>
+      <p class="subtitle">Ce que tu gagnes en montant de niveau et en progressant dans l'arbre. Ça ne se garde pas : ça s'utilise.</p>
+    </header>
+
+    <p id="connexion" class="verrou" hidden>
+      <a href="index.html">Crée ton profil joueur</a> pour avoir des pouvoirs.
+    </p>
+
+    <section class="card" id="bloc-actifs" hidden>
+      <h2 id="actifs-titre">En cours</h2>
+      <p class="hint">Leur effet court en ce moment. Sors en profiter.</p>
+      <div id="actifs" class="pouvoirs"></div>
+    </section>
+
+    <section class="card" id="bloc-disponibles" hidden>
+      <h2 id="disponibles-titre">Prêts à servir</h2>
+      <div id="disponibles" class="pouvoirs"></div>
+      <p id="disponibles-vide" class="hint" hidden>
+        Aucun pouvoir en réserve. Accomplis des missions et monte de niveau : chaque palier en donne un.
+      </p>
+    </section>
+
+    <section class="card" id="bloc-passes" hidden>
+      <h2 id="passes-titre">Déjà passés</h2>
+      <p class="hint" id="passes-aide"></p>
+      <div id="passes" class="pouvoirs"></div>
+    </section>
+
+    <section class="card">
+      <h2>Comment ça marche</h2>
+      <ol class="etapes">
+        <li>Un pouvoir s'obtient en <strong>montant de niveau</strong> — et celui que tu reçois dépend de ton profil — ou en <strong>franchissant un palier</strong> de l'arbre des missions.</li>
+        <li>Il <strong>périme</strong> au bout de quelques jours. C'est volontaire : un pouvoir qu'on garde pour plus tard ne sert jamais.</li>
+        <li>Il <strong>s'utilise dehors</strong>, ou sur ce qui s'y rapporte. Aucun ne se consomme utilement depuis le canapé.</li>
+      </ol>
+      <p class="hint">
+        Un commerçant ne peut pas t'en offrir. Ce serait acheter de la puissance de jeu, et le jeu
+        doit rester entier sans payer.
+      </p>
+    </section>
+  </main>
+
+  <script src="nav.js"></script>
+  <script src="utils.js"></script>
+  <script src="pouvoirs.js"></script>
+</body>
+</html>

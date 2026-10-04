@@ -67,7 +67,7 @@ async function main() {
 
   const journal: Journal = { faits: [], refus: [] };
 
-  console.log('\n◆ Quartier de démonstration — Le Marais / Oberkampf\n');
+  console.log('\n◆ Quartier de démonstration — le centre de Nantes\n');
 
   // --- 1. Les commerçants, leurs lieux, leurs missions et leurs jetons ------
 
@@ -279,11 +279,13 @@ async function main() {
     }
   }
 
-  await essayer(journal, 'Bistrot du Marais lance une publicité large', () =>
-    campaigns.create(lieux[1].id, {
+  // L'index 7 est « Chez Talensac » : le nom vient des données, pour qu'il
+  // suive le jour où le quartier de démonstration changera encore.
+  await essayer(journal, `${LIEUX[7].nom} lance une publicité large`, () =>
+    campaigns.create(lieux[7].id, {
       type: 'publicite',
       message:
-        'Notre plat hors carte change chaque soir. Passez voir l’ardoise, il n’y en a jamais plus de dix.',
+        'Le plat du marché change chaque midi. Passez voir l’ardoise, il n’y en a jamais plus de douze.',
       montantParCible: 1.5,
     } as never),
   );

@@ -120,7 +120,7 @@ npm run demo
 ```
 
 Sans ça, le site serait vide et il n'y aurait rien à regarder. Cette commande
-crée cinq commerces du Marais et d'Oberkampf, huit joueurs, leurs visites,
+crée dix commerces du centre de Nantes, huit joueurs, leurs visites,
 leurs avis, leurs missions accomplies, des amitiés, un duo, des offres et des
 jetons qui circulent.
 

@@ -87,7 +87,7 @@ Vous devriez voir s'afficher `Serveur démarré sur http://localhost:3000`.
 
 ### 3 bis. (Recommandé) Remplir le site avec un quartier de démonstration
 
-Pour juger le produit, mieux vaut ne pas partir d'une page vide. Une commande crée un quartier complet — cinq établissements du Marais et d'Oberkampf, huit joueurs, leurs visites, leurs avis, leurs missions accomplies, des amitiés, un duo, deux événements, trois campagnes de ciblage et des jetons qui circulent :
+Pour juger le produit, mieux vaut ne pas partir d'une page vide. Une commande crée un quartier complet — dix commerces du centre de Nantes, huit joueurs, leurs visites, leurs avis, leurs missions accomplies, des amitiés, un duo, trois événements, trois campagnes de ciblage et des jetons qui circulent :
 
 ```bash
 cd backend

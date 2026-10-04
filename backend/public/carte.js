@@ -200,7 +200,9 @@ const STYLE_PLAN = {
 const map = new maplibregl.Map({
   container: 'carte',
   style: STYLE_PLAN,
-  center: [2.3522, 48.8566],
+  // Le centre de Nantes : ce que voit quelqu'un qui ouvre la carte avant que
+  // les lieux ne soient chargés, ou qui n'a pas donné sa position.
+  center: [-1.5536, 47.2184],
   zoom: 12,
   pitch: 55,
   bearing: -18,
